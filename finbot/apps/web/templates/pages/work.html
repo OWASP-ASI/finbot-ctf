@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% block body_class %}overflow-x-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .project-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .category-filter {
+        transition: all 0.3s ease;
+    }
+
+    .category-filter.active {
+        background: linear-gradient(135deg, #D4AF37, #F4D03F);
+        color: #0F0F0F;
+    }
+
+    .project-overlay {
+        background: linear-gradient(to top, rgba(15, 15, 15, 0.9), rgba(15, 15, 15, 0.3), transparent);
+    }
+
+    .project-card.hidden {
+        display: none;
+    }
+
+    .project-card {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="pt-32 pb-20 bg-gradient-to-b from-cine-dark via-cine-gray to-cine-dark relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center">
+            <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+                <span class="bg-gradient-to-r from-cine-gold via-yellow-400 to-cine-gold bg-clip-text text-transparent">
+                    Our Creative Portfolio
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                Discover our award-winning collection of films, television series, commercials, and digital content that has captivated audiences worldwide and redefined visual storytelling.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Category Filters -->
+<section class="py-12 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap justify-center gap-4">
+            <button class="category-filter active px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300" data-category="all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    All Projects
+                </span>
+            </button>
+            <button class="category-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-category="film">
+                Feature Films
+            </button>
+            <button class="category-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-category="television">
+                Television
+            </button>
+            <button class="category-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-category="commercial">
+                Commercials
+            </button>
+            <button class="category-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-category="digital">
+                Digital Content
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Projects Grid -->
+<section class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="projects-grid">
+
+            <!-- Feature Films -->
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="film">
+                <div class="aspect-video bg-gradient-to-br from-red-500/30 to-purple-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Midnight Chronicles</h3>
+                            <p class="text-gray-300">Neo-Noir Thriller</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-cine-gold text-cine-dark px-3 py-1 rounded-full text-sm font-semibold">Feature Film</span>
+                    </div>
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Award Winner</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">A gripping noir thriller that redefined the genre, earning critical acclaim at Cannes Film Festival and multiple international awards.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • 127 min</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="film">
+                <div class="aspect-video bg-gradient-to-br from-blue-500/30 to-teal-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Ocean's Edge</h3>
+                            <p class="text-gray-300">Environmental Drama</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-cine-gold text-cine-dark px-3 py-1 rounded-full text-sm font-semibold">Feature Film</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">A powerful environmental drama exploring humanity's relationship with nature, featuring breathtaking cinematography and compelling performances.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2022 • 142 min</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="film">
+                <div class="aspect-video bg-gradient-to-br from-orange-500/30 to-red-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">The Last Stand</h3>
+                            <p class="text-gray-300">Action Thriller</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-cine-gold text-cine-dark px-3 py-1 rounded-full text-sm font-semibold">Feature Film</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">High-octane action thriller with cutting-edge stunts and visual effects that pushed the boundaries of modern filmmaking.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • 118 min</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Television -->
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="television">
+                <div class="aspect-video bg-gradient-to-br from-purple-500/30 to-pink-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5l-1 2v1h8v-1l-1-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H3V5h18v10z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Tech Titans</h3>
+                            <p class="text-gray-300">Drama Series</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Television</span>
+                    </div>
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Emmy Nominated</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">A groundbreaking tech drama series exploring Silicon Valley innovation, featuring complex characters and cutting-edge storytelling.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • 3 Seasons</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="television">
+                <div class="aspect-video bg-gradient-to-br from-green-500/30 to-blue-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5l-1 2v1h8v-1l-1-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H3V5h18v10z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">City Lights</h3>
+                            <p class="text-gray-300">Crime Drama</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Television</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">Gritty urban crime drama that explores the complexities of modern city life through interconnected storylines.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2022 • 2 Seasons</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commercials -->
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="commercial">
+                <div class="aspect-video bg-gradient-to-br from-yellow-500/30 to-orange-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Luxury Redefined</h3>
+                            <p class="text-gray-300">Global Campaign</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Commercial</span>
+                    </div>
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Cannes Lions</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">Visually stunning luxury brand campaign that elevated storytelling in advertising, winning multiple international awards.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • Global</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="commercial">
+                <div class="aspect-video bg-gradient-to-br from-cyan-500/30 to-blue-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Innovation Forward</h3>
+                            <p class="text-gray-300">Tech Brand Series</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Commercial</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">Innovative commercial series for leading tech brand, showcasing cutting-edge products through compelling narratives.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • Series</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Digital Content -->
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="digital">
+                <div class="aspect-video bg-gradient-to-br from-pink-500/30 to-purple-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Digital Frontiers</h3>
+                            <p class="text-gray-300">Interactive Experience</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Digital</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">Groundbreaking interactive digital experience that blends storytelling with cutting-edge technology and user engagement.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2023 • Interactive</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card rounded-2xl overflow-hidden group" data-category="digital">
+                <div class="aspect-video bg-gradient-to-br from-teal-500/30 to-green-600/30 relative overflow-hidden">
+                    <div class="project-overlay absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center z-10">
+                            <div class="w-16 h-16 bg-cine-gold rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </div>
+                            <h3 class="font-display text-2xl font-bold text-white mb-2">Virtual Worlds</h3>
+                            <p class="text-gray-300">VR Documentary</p>
+                        </div>
+                    </div>
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Digital</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-300 mb-4">Immersive VR documentary experience that transports viewers into unexplored worlds through innovative storytelling techniques.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cine-gold font-semibold">2022 • VR</span>
+                        <button class="text-cine-gold hover:text-yellow-400 transition-colors duration-300">
+                            View Details →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 bg-gradient-to-r from-cine-gold to-yellow-500 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-cine-dark mb-6">
+            Ready to Create Your Next Masterpiece?
+        </h2>
+        <p class="text-xl text-cine-dark/80 mb-8 max-w-2xl mx-auto">
+            Let's collaborate to bring your vision to life with the same passion and excellence showcased in our portfolio
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/contact" class="bg-cine-dark text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gray transition-all duration-300 transform hover:scale-105">
+                Start Your Project
+            </a>
+            <a href="/about" class="border-2 border-cine-dark text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-dark hover:text-cine-gold transition-all duration-300 transform hover:scale-105">
+                Meet Our Team
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Category filtering
+    const categoryButtons = document.querySelectorAll('.category-filter');
+    const projectCards = document.querySelectorAll('[data-category]');
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const category = button.getAttribute('data-category');
+            const isCurrentlyActive = button.classList.contains('active');
+
+            // If clicking the same active filter (except "all"), reset to "all"
+            if (isCurrentlyActive && category !== 'all') {
+                // Reset to "All Projects"
+                const allButton = document.querySelector('[data-category="all"]');
+                setActiveFilter(allButton, 'all');
+                return;
+            }
+
+            // Otherwise, set the clicked filter as active
+            setActiveFilter(button, category);
+        });
+    });
+
+    // Helper function to set active filter
+    function setActiveFilter(activeButton, category) {
+        // Update active button
+        categoryButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.add('text-gray-300', 'hover:text-white');
+            btn.classList.remove('text-cine-dark');
+        });
+
+        activeButton.classList.add('active');
+        activeButton.classList.remove('text-gray-300', 'hover:text-white');
+        activeButton.classList.add('text-cine-dark');
+
+        // Filter projects
+        projectCards.forEach(card => {
+            if (category === 'all' || card.getAttribute('data-category') === category) {
+                card.classList.remove('hidden');
+                // Trigger reflow to restart animation
+                card.style.animation = 'none';
+                card.offsetHeight; // Trigger reflow
+                card.style.animation = null;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+</script>
+{% endblock %}

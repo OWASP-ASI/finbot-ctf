@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Access Forbidden | CineFlow Productions</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/common/favicon.ico">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cine-gold': '#D4AF37',
+                        'cine-dark': '#0F0F0F',
+                        'cine-gray': '#1A1A1A',
+                        'cine-light': '#F8F8F8',
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'shake': 'shake 0.5s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-2px)' },
+                            '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' },
+                            '100%': { boxShadow: '0 0 30px rgba(212, 175, 55, 0.6)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-cine-dark text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-red-900/20 via-cine-dark to-cine-gray">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23EF4444" fill-opacity="0.05"%3E%3Cpath d="M30 30l15-15v30z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <!-- 403 Number -->
+        <div class="mb-8">
+            <h1 class="text-9xl md:text-[12rem] font-display font-bold text-red-500 animate-pulse-slow leading-none">
+                4<span class="animate-shake inline-block">0</span>3
+            </h1>
+        </div>
+
+        <!-- Security Guard Icon -->
+        <div class="mb-8 animate-float">
+            <div class="relative">
+                <svg class="w-32 h-32 mx-auto text-red-500 opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,17.4 15.4,18 14.8,18H9.2C8.6,18 8,17.4 8,16V13C8,12.4 8.6,11.5 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
+                </svg>
+                <!-- Animated "X" overlay -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="w-16 h-16 text-red-400 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+                VIP Area Only!
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
+                Whoa there, hotshot! This is a restricted set. 🚫
+            </p>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                You need special clearance to access this area. Our security team is very thorough -
+                they once caught someone trying to sneak into craft services with a fake ID!
+            </p>
+        </div>
+
+        <!-- Security Level Indicator -->
+        <div class="mb-8 p-4 bg-red-900/20 border border-red-500/30 rounded-lg animate-glow">
+            <div class="flex items-center justify-center gap-2 text-red-400">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L13.09 8.26L22 9L17 14L18.18 23L12 19.77L5.82 23L7 14L2 9L10.91 8.26L12 2Z"/>
+                </svg>
+                <span class="font-semibold">SECURITY LEVEL: CLASSIFIED</span>
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L13.09 8.26L22 9L17 14L18.18 23L12 19.77L5.82 23L7 14L2 9L10.91 8.26L12 2Z"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/"
+               class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Return to Public Area
+            </a>
+
+            <button onclick="window.history.back()"
+                    class="group bg-transparent border-2 border-red-500 hover:bg-red-500 hover:text-white text-red-500 font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414a1 1 0 010-1.414L6.293 6.707a1 1 0 011.414 1.414L5.414 10H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Back Away Slowly
+            </button>
+        </div>
+
+        <!-- Fun Quote -->
+        <div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-red-500/20 backdrop-blur-sm">
+            <p class="text-red-400 font-display text-lg italic">
+                "Access denied is just another way of saying 'You're not ready for this level of awesome yet!'"
+            </p>
+            <p class="text-gray-400 text-sm mt-2">- Chief Security Officer</p>
+        </div>
+    </div>
+
+    <!-- Floating Warning Signs -->
+    <div class="absolute top-10 left-10 text-red-500/20 animate-pulse">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+        </svg>
+    </div>
+
+    <div class="absolute bottom-10 right-10 text-red-500/20 animate-shake">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>
+        </svg>
+    </div>
+
+    <div class="absolute top-1/4 right-20 text-red-500/10 animate-float">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18,8A6,6 0 0,0 12,2A6,6 0 0,0 6,8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V10A2,2 0 0,0 20,8H18M12,4A4,4 0 0,1 16,8H8A4,4 0 0,1 12,4Z"/>
+        </svg>
+    </div>
+</body>
+</html>

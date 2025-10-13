@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>503 - Service Unavailable | CineFlow Productions</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/common/favicon.ico">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cine-gold': '#D4AF37',
+                        'cine-dark': '#0F0F0F',
+                        'cine-gray': '#1A1A1A',
+                        'cine-light': '#F8F8F8',
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'sleep': 'sleep 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'snore': 'snore 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        sleep: {
+                            '0%, 100%': { transform: 'rotate(-2deg)' },
+                            '50%': { transform: 'rotate(2deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        snore: {
+                            '0%, 100%': { opacity: '0.3', transform: 'scale(0.8)' },
+                            '50%': { opacity: '1', transform: 'scale(1.2)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-cine-dark text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-cine-dark to-indigo-900/20">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%233B82F6" fill-opacity="0.03"%3E%3Cpath d="M30 30c0-8.284-6.716-15-15-15s-15 6.716-15 15 6.716 15 15 15 15-6.716 15-15z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <!-- 503 Number -->
+        <div class="mb-8">
+            <h1 class="text-9xl md:text-[12rem] font-display font-bold text-blue-500 animate-sleep leading-none">
+                5<span class="animate-pulse-slow inline-block">0</span>3
+            </h1>
+        </div>
+
+        <!-- Sleeping Server Icon -->
+        <div class="mb-8 animate-float">
+            <div class="relative">
+                <svg class="w-32 h-32 mx-auto text-blue-500 opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4,6H20V16H4M20,18A2,2 0 0,0 22,16V6C22,4.89 21.1,4 20,4H4C2.89,4 2,4.89 2,6V16A2,2 0 0,0 4,18H0V20H24V18H20Z"/>
+                </svg>
+                <!-- Sleeping Z's -->
+                <div class="absolute -top-4 -right-4">
+                    <div class="text-blue-400 text-2xl animate-snore">Z</div>
+                </div>
+                <div class="absolute -top-8 -right-8">
+                    <div class="text-blue-400 text-lg animate-snore" style="animation-delay: 0.5s">z</div>
+                </div>
+                <div class="absolute -top-12 -right-12">
+                    <div class="text-blue-400 text-sm animate-snore" style="animation-delay: 1s">z</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+                Taking a Power Nap!
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
+                Shh... Our servers are catching some Z's! 😴
+            </p>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                Even the hardest working servers need their beauty sleep sometimes.
+                We're currently undergoing maintenance or experiencing high traffic.
+                Don't worry, they'll be back up and running soon!
+            </p>
+        </div>
+
+        <!-- Status Indicator -->
+        <div class="mb-8 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+            <div class="flex items-center justify-center gap-3 text-blue-400">
+                <svg class="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z"/>
+                </svg>
+                <span class="font-semibold">SERVICE STATUS: TEMPORARILY SNOOZING</span>
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/"
+               class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Wait in the Lobby
+            </a>
+
+            <button onclick="setTimeout(() => window.location.reload(), 5000)"
+                    class="group bg-transparent border-2 border-blue-500 hover:bg-blue-500 hover:text-white text-blue-500 font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-spin" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                </svg>
+                Try Again in 5s
+            </button>
+        </div>
+
+        <!-- Fun Quote -->
+        <div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-blue-500/20 backdrop-blur-sm">
+            <p class="text-blue-400 font-display text-lg italic">
+                "Even the most powerful servers need their coffee breaks!"
+            </p>
+            <p class="text-gray-400 text-sm mt-2">- System Administrator</p>
+        </div>
+
+        <!-- Countdown Timer -->
+        <div class="mt-8">
+            <p class="text-sm text-gray-500">Estimated wake-up time: Soon™</p>
+        </div>
+    </div>
+
+    <!-- Floating Sleep Elements -->
+    <div class="absolute top-10 left-10 text-blue-500/20 animate-float">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M7,14L12,9L17,14H7Z"/>
+        </svg>
+    </div>
+
+    <div class="absolute bottom-10 right-10 text-blue-500/20 animate-pulse">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2,21V19H6V16C6,15.4 6.4,15 7,15H9C9.6,15 10,15.4 10,16V19H14V16C14,15.4 14.4,15 15,15H17C17.6,15 18,15.4 18,16V19H22V21H2M4,14V10C4,8.9 4.9,8 6,8H18C19.1,8 20,8.9 20,10V14H4Z"/>
+        </svg>
+    </div>
+
+    <div class="absolute top-1/4 left-20 text-blue-500/10 animate-snore">
+        <div class="text-4xl">💤</div>
+    </div>
+</body>
+</html>

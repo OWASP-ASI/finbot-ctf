@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWASP Agentic AI CTF - FinBot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            background-image: url('/static/images/common/cyber-security-bg.png');
+            background-size: cover;
+            background-attachment: fixed;
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .matrix-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        .owasp-logo {
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.3));
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(0, 255, 136, 0.8); }
+            to { text-shadow: 0 0 30px rgba(0, 255, 136, 1), 0 0 40px rgba(0, 255, 136, 0.8); }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #00ccff;
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            flex: 1;
+            align-items: start;
+        }
+
+        .left-panel {
+            background: rgba(0, 20, 40, 0.9);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .right-panel {
+            background: rgba(0, 20, 40, 0.9);
+            border: 2px solid #00ccff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 204, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .finbot-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .finbot-image {
+            max-width: 200px;
+            height: auto;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+        }
+
+        .description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #cccccc;
+        }
+
+        .highlight {
+            color: #00ccff;
+            font-weight: bold;
+        }
+
+        .warning {
+            background: rgba(255, 100, 100, 0.1);
+            border: 1px solid #ff6464;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #ff9999;
+        }
+
+        .policy-section {
+            background: rgba(0, 40, 80, 0.8);
+            border: 1px solid #00ccff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .policy-title {
+            color: #00ccff;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .policy-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .policy-list li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #cccccc;
+        }
+
+        .policy-list li:before {
+            content: "▶";
+            color: #00ff88;
+            position: absolute;
+            left: 0;
+        }
+
+        .agreement-section {
+            background: rgba(0, 60, 120, 0.8);
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .checkbox-container {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .custom-checkbox {
+            width: 25px;
+            height: 25px;
+            border: 2px solid #00ccff;
+            border-radius: 5px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox.checked {
+            background: #00ccff;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.6);
+        }
+
+        .custom-checkbox.checked:after {
+            content: "✓";
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .checkbox-label {
+            color: #cccccc;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+
+        .enter-button {
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .enter-button:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .enter-button:not(:disabled):hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 30px rgba(0, 255, 136, 0.6);
+        }
+
+        .links-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .link {
+            color: #00ccff;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: all 0.3s ease;
+        }
+
+        .link:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+        }
+
+        .project-leads {
+            background: rgba(0, 40, 80, 0.8);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .lead-title {
+            color: #00ff88;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .lead-info {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .lead {
+            text-align: center;
+            color: #cccccc;
+        }
+
+        .lead-name {
+            color: #00ccff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .lead-link {
+            color: #00ff88;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .lead-link:hover {
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.8);
+        }
+
+        .security-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            display: block;
+            filter: drop-shadow(0 0 10px rgba(0, 204, 255, 0.5));
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .left-panel, .right-panel {
+                padding: 20px;
+            }
+        }
+
+        .terminal-text {
+            font-family: 'Courier New', monospace;
+            color: #00ff88;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #00ff88;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <img src="/static/images/common/GenAI_OWASP_Logo.png" alt="OWASP GenAI Security Project" class="owasp-logo">
+            <h1 class="title">AGENTIC AI CTF</h1>
+            <p class="subtitle">Explore AI Security Vulnerabilities in a Safe Environment</p>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="finbot-container">
+                    <img src="/static/images/common/finbot.png" alt="FinBot AI Assistant" class="finbot-image">
+                    <h2 class="section-title">🧠 Meet FinBot</h2>
+                </div>
+
+                <div class="description">
+                    This platform features <span class="highlight">FinBot</span>, an AI-powered assistant designed for the
+                    <span class="highlight">OWASP Agentic AI Capture-the-Flag (CTF)</span> experience.
+                    It explores real-world security risks, safe design practices, and behavior modeling in agentic systems.
+                </div>
+
+                <div class="terminal-text">
+                    <strong>$ whoami</strong><br>
+                    > Ethical Security Researcher<br>
+                    <strong>$ mission</strong><br>
+                    > Learn AI vulnerabilities responsibly<br>
+                    <strong>$ challenges</strong><br>
+                    > Read CTF walkthrough <a href="https://github.com/OWASP-ASI/finbot-ctf/blob/main/docs/FinBot-CTF-walkthrough.md" target="_blank" style="color: #00ccff; text-decoration: underline;">here</a>
+                </div>
+
+                <div class="project-leads">
+                    <div class="lead-title">🎯 FinBot CTF Project Leads</div>
+                    <div class="lead-info">
+                        <div class="lead">
+                            <div class="lead-name">Helen Oakley</div>
+                            <a href="https://www.linkedin.com/in/helen-oakley/" target="_blank" class="lead-link">LinkedIn Profile</a>
+                        </div>
+                        <div class="lead">
+                            <div class="lead-name">Venkata Sai Kishore Modalavalasa</div>
+                            <a href="https://www.linkedin.com/in/saikishu/" target="_blank" class="lead-link">LinkedIn Profile</a>
+                        </div>
+                        <div class="lead">
+                            <div class="lead-name">Allie Howe</div>
+                            <a href="https://www.linkedin.com/in/allisonhowe/" target="_blank" class="lead-link">LinkedIn Profile</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="links-section">
+                    <a href="https://genai.owasp.org/initiatives/#agenticinitiative" target="_blank" class="link">
+                        🔗 OWASP ASI Initiative
+                    </a>
+                    <a href="https://github.com/OWASP-ASI/finbot-ctf" target="_blank" class="link">
+                        📁 GitHub Repository
+                    </a>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <img src="/static/images/common/ai-security-icon.png" alt="AI Security" class="security-icon">
+                <h2 class="section-title">🛡️ Security Agreement</h2>
+
+                <div class="warning">
+                    <strong>⚠️ ETHICAL USE ONLY</strong><br>
+                    This is a controlled environment for educational purposes.
+                    All activities are monitored and logged.
+                </div>
+
+                <div class="policy-section">
+                    <div class="policy-title">📜 Participation Policy</div>
+                    <ul class="policy-list">
+                        <li>Use the system responsibly and for learning/testing purposes only</li>
+                        <li>Do not attempt to exploit, damage, or misuse the system beyond its intended CTF design</li>
+                        <li>Treat the system, data, and other users with respect</li>
+                        <li>Understand that interactions may be logged for educational and monitoring purposes</li>
+                        <li>Violations may result in access restrictions</li>
+                    </ul>
+                </div>
+
+                <div class="agreement-section">
+                    <div class="checkbox-container">
+                        <div class="custom-checkbox" id="agreementCheckbox"></div>
+                        <label for="agreementCheckbox" class="checkbox-label">
+                            I agree to the site policy and rules
+                        </label>
+                    </div>
+
+                    <button class="enter-button" id="enterButton" disabled>
+                        🚀 Enter Platform
+                    </button>
+
+                    <div class="terminal-text" style="margin-top: 20px; font-size: 0.9em;">
+                        <strong>$ access_granted</strong><br>
+                        > Button enabled after agreement ✓
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Agreement checkbox functionality
+        const checkbox = document.getElementById('agreementCheckbox');
+        const enterButton = document.getElementById('enterButton');
+        const checkboxLabel = document.querySelector('.checkbox-label');
+
+        function toggleCheckbox() {
+            checkbox.classList.toggle('checked');
+            const isChecked = checkbox.classList.contains('checked');
+            enterButton.disabled = !isChecked;
+
+            if (isChecked) {
+                localStorage.setItem('agreedToRules', 'yes');
+                // Set cookie as well for backend enforcement
+                document.cookie = 'agreedToRules=yes; Path=/; SameSite=Lax';
+            } else {
+                localStorage.removeItem('agreedToRules');
+                document.cookie = 'agreedToRules=; Path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            }
+        }
+
+        checkbox.addEventListener('click', toggleCheckbox);
+        checkboxLabel.addEventListener('click', toggleCheckbox);
+
+        // Enter button functionality
+        enterButton.addEventListener('click', function() {
+            if (!enterButton.disabled) {
+                // Log agreement (optional)
+                logAgreement();
+
+                // Redirect to main application
+                window.location.href = '/';
+            }
+        });
+
+        // Log agreement function
+        function logAgreement() {
+            const agreementData = {
+                agreed: true,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                referrer: document.referrer || 'direct'
+            };
+
+            // Send to backend (optional - implement if needed)
+            fetch('/api/log-agreement', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(agreementData)
+            }).catch(error => {
+                console.log('Agreement logging not implemented on backend');
+            });
+        }
+
+        // Check if user already agreed (for returning users)
+        if (localStorage.getItem('agreedToRules') === 'yes') {
+            checkbox.classList.add('checked');
+            enterButton.disabled = false;
+        }
+
+        // Matrix rain effect (optional enhancement)
+        function createMatrixRain() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '0';
+            canvas.style.opacity = '0.1';
+            canvas.style.pointerEvents = 'none';
+            document.body.appendChild(canvas);
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+            const matrixArray = matrix.split("");
+
+            const fontSize = 10;
+            const columns = canvas.width / fontSize;
+
+            const drops = [];
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff88';
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            setInterval(draw, 35);
+        }
+
+        // Initialize matrix effect
+        createMatrixRain();
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+</html>
+

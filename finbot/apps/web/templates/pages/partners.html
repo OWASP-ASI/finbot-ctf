@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block body_class %}overflow-x-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .benefit-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .benefit-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .process-step {
+        background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .testimonial-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="pt-32 pb-20 bg-gradient-to-b from-cine-dark via-cine-gray to-cine-dark relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center">
+            <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+                <span class="bg-gradient-to-r from-cine-gold via-yellow-400 to-cine-gold bg-clip-text text-transparent">
+                    Collaborate with CineFlow
+                </span>
+            </h1>
+            <p class="text-2xl md:text-3xl font-semibold text-white mb-6">
+                Your Success is Our Priority
+            </p>
+            <p class="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-10">
+                At CineFlow Productions, we believe that strong partnerships are the foundation of great content. We work with a diverse network of vendors, freelancers, and service providers who share our commitment to excellence and innovation.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="/vendor/onboarding" class="bg-gradient-to-r from-cine-gold to-yellow-500 text-cine-dark px-10 py-4 rounded-full font-bold text-xl hover:from-yellow-500 hover:to-cine-gold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    Begin Vendor Onboarding
+                </a>
+                <a href="#benefits" class="border-2 border-cine-gold text-cine-gold px-8 py-4 rounded-full font-semibold text-lg hover:bg-cine-gold hover:text-cine-dark transition-all duration-300 transform hover:scale-105">
+                    Learn More
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section id="benefits" class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    When You Partner With CineFlow
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                You gain access to industry-leading benefits and opportunities
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Streamlined Operations -->
+            <div class="benefit-card rounded-3xl p-8 group">
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Streamlined Operations</h3>
+                        <p class="text-gray-300 leading-relaxed">
+                            Our advanced internal systems, powered by our FinBot AI assistant, ensure efficient communication and rapid processing of invoices and payments, allowing you to focus on your craft.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timely Payments -->
+            <div class="benefit-card rounded-3xl p-8 group">
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Timely Payments</h3>
+                        <p class="text-gray-300 leading-relaxed">
+                            We understand the importance of consistent cash flow. Our automated financial systems are designed for accuracy and speed, ensuring you get paid on time, every time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diverse Projects -->
+            <div class="benefit-card rounded-3xl p-8 group">
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Diverse Project Opportunities</h3>
+                        <p class="text-gray-300 leading-relaxed">
+                            Work on a wide range of exciting projects across film, television, and digital media, from blockbuster features to cutting-edge digital campaigns.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaborative Environment -->
+            <div class="benefit-card rounded-3xl p-8 group">
+                <div class="flex items-start gap-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H16c-.8 0-1.5.7-1.5 1.5v3.48L9.5 9C8.1 8.24 6.4 8.5 5.4 9.5L4 11l1.4 1.4 1.4-1.4c.4-.4 1-.4 1.4 0L11 14v6h2v-6l2.5-2.5V18h2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Collaborative Environment</h3>
+                        <p class="text-gray-300 leading-relaxed">
+                            Join a community of passionate professionals dedicated to bringing captivating stories to life. We foster an environment where creativity thrives and partnerships flourish.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Onboarding Process -->
+<section class="py-24 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Simple Onboarding Process
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                Getting started with CineFlow is easy and straightforward
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Step 1 -->
+            <div class="process-step rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    1
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Submit Application</h3>
+                <p class="text-gray-300 text-sm">Complete our comprehensive vendor application with your company details and portfolio.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="process-step rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    2
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Review & Verification</h3>
+                <p class="text-gray-300 text-sm">Our AI Agents reviews your application and verifies credentials, typically within minutes.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="process-step rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    3
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">System Setup</h3>
+                <p class="text-gray-300 text-sm">Get access to our vendor portal and FinBot platform for seamless project management.</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="process-step rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    4
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Start Collaborating</h3>
+                <p class="text-gray-300 text-sm">Begin receiving project opportunities and join our creative community.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Partner Categories -->
+<section class="py-24 bg-gradient-to-b from-cine-gray to-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Partner Categories
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                We work with professionals across all aspects of production
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Production Services -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Production Services</h3>
+                <p class="text-gray-300 text-sm">Camera operators, sound engineers, lighting technicians, and production assistants.</p>
+            </div>
+
+            <!-- Post-Production -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Post-Production</h3>
+                <p class="text-gray-300 text-sm">Editors, VFX artists, colorists, sound designers, and motion graphics specialists.</p>
+            </div>
+
+            <!-- Creative Services -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Creative Services</h3>
+                <p class="text-gray-300 text-sm">Writers, directors, producers, casting directors, and creative consultants.</p>
+            </div>
+
+            <!-- Equipment Rental -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z M17 5.5C17 4.67 16.33 4 15.5 4S14 4.67 14 5.5s.67 1.5 1.5 1.5S17 6.33 17 5.5z M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Equipment Rental</h3>
+                <p class="text-gray-300 text-sm">Camera equipment, lighting gear, audio equipment, and specialized production tools.</p>
+            </div>
+
+            <!-- Location Services -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Location Services</h3>
+                <p class="text-gray-300 text-sm">Location scouts, venue providers, transportation, and logistics coordinators.</p>
+            </div>
+
+            <!-- Support Services -->
+            <div class="benefit-card rounded-2xl p-6 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H16c-.8 0-1.5.7-1.5 1.5v3.48L9.5 9C8.1 8.24 6.4 8.5 5.4 9.5L4 11l1.4 1.4 1.4-1.4c.4-.4 1-.4 1.4 0L11 14v6h2v-6l2.5-2.5V18h2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-3">Support Services</h3>
+                <p class="text-gray-300 text-sm">Catering, security, legal services, insurance providers, and administrative support.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-24 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    What Our Partners Say
+                </span>
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="testimonial-card rounded-2xl p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-full flex items-center justify-center mr-4">
+                        <span class="text-cine-dark font-bold">JS</span>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white">Jake Sullivan</h4>
+                        <p class="text-gray-400 text-sm">Cinematographer</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 italic">"Working with CineFlow has been incredible. Their FinBot system makes invoicing seamless, and I always get paid on time. The projects are consistently high-quality and creatively fulfilling."</p>
+            </div>
+
+            <!-- Testimonial 2 -->
+            <div class="testimonial-card rounded-2xl p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-full flex items-center justify-center mr-4">
+                        <span class="text-cine-dark font-bold">MR</span>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white">Maria Rodriguez</h4>
+                        <p class="text-gray-400 text-sm">VFX Supervisor</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 italic">"CineFlow's commitment to innovation aligns perfectly with my work. They provide the resources and creative freedom needed to push visual effects to new heights."</p>
+            </div>
+
+            <!-- Testimonial 3 -->
+            <div class="testimonial-card rounded-2xl p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-full flex items-center justify-center mr-4">
+                        <span class="text-cine-dark font-bold">DK</span>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white">David Kim</h4>
+                        <p class="text-gray-400 text-sm">Equipment Rental</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 italic">"The partnership with CineFlow has transformed our business. Their streamlined processes and reliable payment system have made collaboration effortless and profitable."</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 bg-gradient-to-r from-cine-gold to-yellow-500 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-cine-dark mb-6">
+            Ready to Join Our Network?
+        </h2>
+        <p class="text-xl text-cine-dark/80 mb-8 max-w-2xl mx-auto">
+            Start your onboarding process today and become part of the CineFlow Productions creative community
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/vendor/onboarding" class="bg-cine-dark text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gray transition-all duration-300 transform hover:scale-105">
+                Begin Vendor Onboarding
+            </a>
+            <a href="/work" class="border-2 border-cine-dark text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-dark hover:text-cine-gold transition-all duration-300 transform hover:scale-105">
+                View Our Projects
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

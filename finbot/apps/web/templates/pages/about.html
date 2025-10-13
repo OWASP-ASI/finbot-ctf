@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block body_class %}overflow-x-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leader-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .leader-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .leader-image {
+        background: linear-gradient(135deg, #D4AF37, #F4D03F, #D4AF37);
+        position: relative;
+    }
+
+    .leader-image::before {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        background: linear-gradient(135deg, #1A1A1A, #0F0F0F);
+        border-radius: inherit;
+    }
+
+    .stats-card {
+        background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        backdrop-filter: blur(10px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="pt-32 pb-20 bg-gradient-to-b from-cine-dark via-cine-gray to-cine-dark relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center">
+            <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+                <span class="bg-gradient-to-r from-cine-gold via-yellow-400 to-cine-gold bg-clip-text text-transparent">
+                    Our Visionary Leadership
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                At CineFlow Productions, our success is driven by a passionate and experienced leadership team committed to pushing creative boundaries and fostering a collaborative environment.
+            </p>
+        </div>
+    </div>
+
+    <!-- Floating Elements -->
+    <div class="absolute top-1/4 left-10 w-2 h-2 bg-cine-gold rounded-full animate-pulse"></div>
+    <div class="absolute top-1/3 right-20 w-3 h-3 bg-yellow-400 rounded-full animate-pulse delay-1000"></div>
+    <div class="absolute bottom-1/4 left-1/4 w-1 h-1 bg-cine-gold rounded-full animate-pulse delay-500"></div>
+</section>
+
+<!-- Company Stats -->
+<section class="py-16 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="stats-card rounded-2xl p-6 text-center">
+                <div class="text-3xl md:text-4xl font-bold text-cine-gold mb-2">25+</div>
+                <div class="text-gray-300">Years Experience</div>
+            </div>
+            <div class="stats-card rounded-2xl p-6 text-center">
+                <div class="text-3xl md:text-4xl font-bold text-cine-gold mb-2">150+</div>
+                <div class="text-gray-300">Projects Completed</div>
+            </div>
+            <div class="stats-card rounded-2xl p-6 text-center">
+                <div class="text-3xl md:text-4xl font-bold text-cine-gold mb-2">50+</div>
+                <div class="text-gray-300">Awards Won</div>
+            </div>
+            <div class="stats-card rounded-2xl p-6 text-center">
+                <div class="text-3xl md:text-4xl font-bold text-cine-gold mb-2">Global</div>
+                <div class="text-gray-300">Reach</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Leadership Team -->
+<section class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+            <!-- Ethan Vance -->
+            <div class="leader-card rounded-3xl overflow-hidden">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="leader-image w-32 h-32 rounded-2xl flex-shrink-0 flex items-center justify-center">
+                            <div class="relative z-10 w-28 h-28 bg-gradient-to-br from-cine-gold/20 to-yellow-600/20 rounded-xl flex items-center justify-center">
+                                <span class="text-4xl font-bold text-cine-gold">EV</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Ethan Vance</h3>
+                            <p class="text-cine-gold font-semibold text-lg mb-4">CEO & Founder</p>
+                            <p class="text-gray-300 leading-relaxed">
+                                A visionary in the entertainment industry, Ethan founded CineFlow with a passion for storytelling and a commitment to innovation. With over 25 years of experience, he has spearheaded numerous award-winning projects and built CineFlow into a global powerhouse.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sophia Chen -->
+            <div class="leader-card rounded-3xl overflow-hidden">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="leader-image w-32 h-32 rounded-2xl flex-shrink-0 flex items-center justify-center">
+                            <div class="relative z-10 w-28 h-28 bg-gradient-to-br from-cine-gold/20 to-yellow-600/20 rounded-xl flex items-center justify-center">
+                                <span class="text-4xl font-bold text-cine-gold">SC</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Sophia Chen</h3>
+                            <p class="text-cine-gold font-semibold text-lg mb-4">Chief Financial Officer (CFO)</p>
+                            <p class="text-gray-300 leading-relaxed">
+                                Sophia brings a wealth of financial acumen and strategic leadership to CineFlow. Her expertise in optimizing financial operations, managing complex budgets, and implementing cutting-edge financial technologies (including our FinBot AI assistant) ensures CineFlow's fiscal health and efficiency.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marcus Riley -->
+            <div class="leader-card rounded-3xl overflow-hidden">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="leader-image w-32 h-32 rounded-2xl flex-shrink-0 flex items-center justify-center">
+                            <div class="relative z-10 w-28 h-28 bg-gradient-to-br from-cine-gold/20 to-yellow-600/20 rounded-xl flex items-center justify-center">
+                                <span class="text-4xl font-bold text-cine-gold">MR</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Marcus "Mac" Riley</h3>
+                            <p class="text-cine-gold font-semibold text-lg mb-4">Head of Production</p>
+                            <p class="text-gray-300 leading-relaxed">
+                                Mac is the operational backbone of CineFlow, overseeing all physical production from pre-production planning to on-set execution. His meticulous attention to detail and ability to manage large-scale logistics ensure every project runs smoothly and on schedule.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dr. Anya Sharma -->
+            <div class="leader-card rounded-3xl overflow-hidden">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <div class="leader-image w-32 h-32 rounded-2xl flex-shrink-0 flex items-center justify-center">
+                            <div class="relative z-10 w-28 h-28 bg-gradient-to-br from-cine-gold/20 to-yellow-600/20 rounded-xl flex items-center justify-center">
+                                <span class="text-4xl font-bold text-cine-gold">AS</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Dr. Anya Sharma</h3>
+                            <p class="text-cine-gold font-semibold text-lg mb-4">Head of Post-Production & Innovation</p>
+                            <p class="text-gray-300 leading-relaxed">
+                                A pioneer in digital media workflows and AI integration, Dr. Sharma leads CineFlow's state-of-the-art post-production facilities. She is responsible for adopting new technologies, including advanced AI tools, to enhance our creative output and streamline our processes.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Isabella Rossi -->
+            <div class="leader-card rounded-3xl overflow-hidden lg:col-span-2">
+                <div class="p-8">
+                    <div class="flex flex-col md:flex-row items-start gap-6 max-w-4xl mx-auto">
+                        <div class="leader-image w-32 h-32 rounded-2xl flex-shrink-0 flex items-center justify-center">
+                            <div class="relative z-10 w-28 h-28 bg-gradient-to-br from-cine-gold/20 to-yellow-600/20 rounded-xl flex items-center justify-center">
+                                <span class="text-4xl font-bold text-cine-gold">IR</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-2xl md:text-3xl font-bold text-white mb-2">Isabella Rossi</h3>
+                            <p class="text-cine-gold font-semibold text-lg mb-4">Head of Talent Acquisition & Relations</p>
+                            <p class="text-gray-300 leading-relaxed">
+                                Isabella is the heart of CineFlow's creative network, responsible for identifying, recruiting, and nurturing relationships with top-tier talent across all disciplines, from actors and directors to specialized crew and freelancers. Her extensive industry connections and keen eye for talent have been instrumental in assembling the exceptional teams behind our most successful projects.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Company Values -->
+<section class="py-24 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Our Values
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                The principles that guide everything we do at CineFlow Productions
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Innovation -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-10 h-10 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.4 3-5.7 0-3.9-3.1-7-7-7z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-2xl font-bold text-white mb-4">Innovation</h3>
+                <p class="text-gray-300">Constantly pushing the boundaries of what's possible in visual storytelling through cutting-edge technology and creative techniques.</p>
+            </div>
+
+            <!-- Excellence -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-10 h-10 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-2xl font-bold text-white mb-4">Excellence</h3>
+                <p class="text-gray-300">Delivering the highest quality in every project, from initial concept to final delivery, exceeding client expectations at every turn.</p>
+            </div>
+
+            <!-- Collaboration -->
+            <div class="text-center group">
+                <div class="w-20 h-20 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-10 h-10 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H16c-.8 0-1.5.7-1.5 1.5v3.48L9.5 9C8.1 8.24 6.4 8.5 5.4 9.5L4 11l1.4 1.4 1.4-1.4c.4-.4 1-.4 1.4 0L11 14v6h2v-6l2.5-2.5V18h2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-2xl font-bold text-white mb-4">Collaboration</h3>
+                <p class="text-gray-300">Fostering a creative environment where diverse talents come together to create extraordinary visual experiences.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 bg-gradient-to-r from-cine-gold to-yellow-500 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-cine-dark mb-6">
+            Join Our Creative Journey
+        </h2>
+        <p class="text-xl text-cine-dark/80 mb-8 max-w-2xl mx-auto">
+            Whether you're looking to collaborate, join our team, or bring your vision to life, we'd love to hear from you
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/careers" class="bg-cine-dark text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gray transition-all duration-300 transform hover:scale-105">
+                View Careers
+            </a>
+            <a href="/contact" class="border-2 border-cine-dark text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-dark hover:text-cine-gold transition-all duration-300 transform hover:scale-105">
+                Get In Touch
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block body_class %}overflow-x-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contact-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .contact-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+
+    .office-card {
+        background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        backdrop-filter: blur(10px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="pt-32 pb-20 bg-gradient-to-b from-cine-dark via-cine-gray to-cine-dark relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center">
+            <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+                <span class="bg-gradient-to-r from-cine-gold via-yellow-400 to-cine-gold bg-clip-text text-transparent">
+                    Let's Create Together
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                Ready to bring your vision to life? Get in touch with our team to discuss your next project, explore partnership opportunities, or learn more about CineFlow Productions.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Methods -->
+<section class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            <!-- General Inquiries -->
+            <div class="contact-card rounded-2xl p-8 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">General Inquiries</h3>
+                <p class="text-gray-300 mb-4">Questions about our services or company</p>
+                <p class="text-cine-gold font-semibold">Contact information temporarily unavailable</p>
+            </div>
+
+            <!-- New Projects -->
+            <div class="contact-card rounded-2xl p-8 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">New Projects</h3>
+                <p class="text-gray-300 mb-4">Discuss your next production</p>
+                <p class="text-cine-gold font-semibold">Contact information temporarily unavailable</p>
+            </div>
+
+            <!-- Partnerships -->
+            <div class="contact-card rounded-2xl p-8 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H16c-.8 0-1.5.7-1.5 1.5v3.48L9.5 9C8.1 8.24 6.4 8.5 5.4 9.5L4 11l1.4 1.4 1.4-1.4c.4-.4 1-.4 1.4 0L11 14v6h2v-6l2.5-2.5V18h2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Partnerships</h3>
+                <p class="text-gray-300 mb-4">Vendor and collaboration opportunities</p>
+                <p class="text-cine-gold font-semibold">Contact information temporarily unavailable</p>
+            </div>
+
+            <!-- Careers -->
+            <div class="contact-card rounded-2xl p-8 text-center group">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Careers</h3>
+                <p class="text-gray-300 mb-4">Join our talented team</p>
+                <p class="text-cine-gold font-semibold">Contact information temporarily unavailable</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Office Information -->
+<section class="py-24 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Office Information -->
+            <div>
+                <h2 class="font-display text-4xl font-bold mb-8">
+                    <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                        Our Offices
+                    </span>
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Los Angeles HQ -->
+                    <div class="office-card rounded-2xl p-8">
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Los Angeles Headquarters</h3>
+                        <div class="space-y-3 text-gray-300">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                                <div>
+                                    <p>1234 Hollywood Boulevard</p>
+                                    <p>Suite 567, Los Angeles, CA 90028</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                </svg>
+                                <p>+1 (323) 555-0123</p>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                <p>Monday - Friday: 9:00 AM - 6:00 PM PST</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New York Office -->
+                    <div class="office-card rounded-2xl p-8">
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">New York Office</h3>
+                        <div class="space-y-3 text-gray-300">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                                <div>
+                                    <p>890 Broadway</p>
+                                    <p>Floor 15, New York, NY 10003</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                </svg>
+                                <p>+1 (212) 555-0456</p>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                <p>Monday - Friday: 9:00 AM - 6:00 PM EST</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vancouver Studio -->
+                    <div class="office-card rounded-2xl p-8">
+                        <h3 class="font-display text-2xl font-bold text-white mb-4">Vancouver Production Studio</h3>
+                        <div class="space-y-3 text-gray-300">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                                <div>
+                                    <p>456 Granville Street</p>
+                                    <p>Vancouver, BC V6C 1V5, Canada</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                                </svg>
+                                <p>+1 (604) 555-0789</p>
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-cine-gold mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                <p>Monday - Friday: 8:00 AM - 5:00 PM PST</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-24 bg-gradient-to-b from-cine-gray to-cine-dark">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Frequently Asked Questions
+                </span>
+            </h2>
+        </div>
+
+        <div class="space-y-6">
+            <!-- FAQ Item 1 -->
+            <div class="office-card rounded-2xl p-6">
+                <h3 class="font-semibold text-white text-lg mb-3">What types of projects does CineFlow Productions work on?</h3>
+                <p class="text-gray-300">We specialize in feature films, television series, commercials, and digital content across all genres. From independent films to major studio productions, we have the expertise and resources to handle projects of any scale.</p>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="office-card rounded-2xl p-6">
+                <h3 class="font-semibold text-white text-lg mb-3">How do I submit a project proposal?</h3>
+                <p class="text-gray-300">Please visit our offices during business hours to discuss project proposals in person. Include a brief synopsis, budget range, timeline, and any relevant materials for your meeting.</p>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="office-card rounded-2xl p-6">
+                <h3 class="font-semibold text-white text-lg mb-3">Do you work with international clients?</h3>
+                <p class="text-gray-300">Yes! We work with clients worldwide and have experience with international co-productions. Our team can handle various regulatory requirements and cultural considerations for global projects.</p>
+            </div>
+
+            <!-- FAQ Item 4 -->
+            <div class="office-card rounded-2xl p-6">
+                <h3 class="font-semibold text-white text-lg mb-3">What is your typical project timeline?</h3>
+                <p class="text-gray-300">Project timelines vary greatly depending on scope and complexity. Feature films typically take 12-18 months from pre-production to final delivery, while commercials can be completed in 4-8 weeks. We'll provide detailed timelines during the proposal phase.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 bg-gradient-to-r from-cine-gold to-yellow-500 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-cine-dark mb-6">
+            Let's Start the Conversation
+        </h2>
+        <p class="text-xl text-cine-dark/80 mb-8 max-w-2xl mx-auto">
+            Whether you have a specific project in mind or just want to explore possibilities, we're here to help bring your vision to life.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#" class="bg-cine-dark text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gray transition-all duration-300 transform hover:scale-105">
+                Call Us Now
+            </a>
+            <a href="/work" class="border-2 border-cine-dark text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-dark hover:text-cine-gold transition-all duration-300 transform hover:scale-105">
+                View Our Work
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

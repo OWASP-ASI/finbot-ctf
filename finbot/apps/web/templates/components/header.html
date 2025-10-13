@@ -1,0 +1,86 @@
+<header class="fixed top-0 w-full z-50 bg-cine-dark/95 backdrop-blur-md border-b border-cine-gold/20" role="banner">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex items-center justify-between h-20" role="navigation" aria-label="Main navigation">
+            <!-- Logo/Brand -->
+            <div class="flex items-center">
+                <a href="/" class="flex items-center space-x-3 group no-underline hover:no-underline">
+                    <div class="w-10 h-10 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <span class="text-cine-dark font-bold text-xl">CF</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-display text-2xl font-bold bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                            CineFlow
+                        </span>
+                        <span class="text-sm text-cine-gold/80 font-medium -mt-1">
+                            Powered by OWASP ASI FinBot
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-white hover:text-cine-gold transition-colors duration-300 font-medium">
+                    Home
+                </a>
+                <a href="/about" class="text-white hover:text-cine-gold transition-colors duration-300 font-medium">
+                    About
+                </a>
+                <a href="/work" class="text-white hover:text-cine-gold transition-colors duration-300 font-medium">
+                    Our Work
+                </a>
+                <a href="/partners" class="text-white hover:text-cine-gold transition-colors duration-300 font-medium">
+                    Partners
+                </a>
+                <a href="/careers" class="text-white hover:text-cine-gold transition-colors duration-300 font-medium">
+                    Careers
+                </a>
+                <a href="/admin" class="border-2 border-cine-gold/60 text-cine-gold px-6 py-2 rounded-full font-semibold hover:border-cine-gold hover:bg-cine-gold/10 transition-all duration-300">
+                    Admin Portal
+                </a>
+                <a href="/vendor" class="bg-cine-gold text-cine-dark px-6 py-2 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Vendor Portal
+                </a>
+            </div>
+
+            <!-- Mobile menu button -->
+            <button class="md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-cine-gray hover:bg-cine-gold/20 transition-colors duration-300"
+                    type="button"
+                    id="mobile-menu-button"
+                    aria-controls="mobile-menu"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <!-- Mobile Navigation Menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-cine-gray rounded-lg mt-2">
+                <a href="/" class="block px-3 py-2 text-white hover:text-cine-gold hover:bg-cine-dark rounded-md transition-colors duration-300">
+                    Home
+                </a>
+                <a href="/about" class="block px-3 py-2 text-white hover:text-cine-gold hover:bg-cine-dark rounded-md transition-colors duration-300">
+                    About
+                </a>
+                <a href="/work" class="block px-3 py-2 text-white hover:text-cine-gold hover:bg-cine-dark rounded-md transition-colors duration-300">
+                    Our Work
+                </a>
+                <a href="/partners" class="block px-3 py-2 text-white hover:text-cine-gold hover:bg-cine-dark rounded-md transition-colors duration-300">
+                    Partners
+                </a>
+                <a href="/careers" class="block px-3 py-2 text-white hover:text-cine-gold hover:bg-cine-dark rounded-md transition-colors duration-300">
+                    Careers
+                </a>
+                <a href="/admin" class="block mx-3 my-2 px-3 py-2 border-2 border-cine-gold/60 text-cine-gold rounded-md font-semibold text-center hover:border-cine-gold hover:bg-cine-gold/10 transition-all duration-300">
+                    Admin Portal
+                </a>
+                <a href="/vendor" class="block mx-3 my-2 px-3 py-2 bg-cine-gold text-cine-dark rounded-md font-semibold text-center hover:bg-yellow-400 transition-colors duration-300">
+                    Vendor Portal
+                </a>
+            </div>
+        </div>
+    </div>
+</header>

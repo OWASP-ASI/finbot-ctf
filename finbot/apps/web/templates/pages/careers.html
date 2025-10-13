@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+
+{% block body_class %}overflow-x-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-card {
+        background: linear-gradient(145deg, #1A1A1A, #0F0F0F);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .job-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .benefit-card {
+        background: linear-gradient(145deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .department-filter {
+        transition: all 0.3s ease;
+    }
+
+    .department-filter.active {
+        background: linear-gradient(135deg, #D4AF37, #F4D03F);
+        color: #0F0F0F;
+    }
+
+    .job-card.hidden {
+        display: none;
+    }
+
+    .job-card {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="pt-32 pb-20 bg-gradient-to-b from-cine-dark via-cine-gray to-cine-dark relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center">
+            <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+                <span class="bg-gradient-to-r from-cine-gold via-yellow-400 to-cine-gold bg-clip-text text-transparent">
+                    Shape the Future of Entertainment
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
+                Join CineFlow Productions and be part of a team that's redefining visual storytelling. We're looking for passionate, creative professionals who share our commitment to excellence and innovation.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#open-positions" class="bg-cine-gold text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-400 transition-all duration-300 transform hover:scale-105">
+                    View Open Positions
+                </a>
+                <a href="#culture" class="border-2 border-cine-gold text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gold hover:text-cine-dark transition-all duration-300 transform hover:scale-105">
+                    Our Culture
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Work With Us -->
+<section class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray" id="culture">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Why Choose CineFlow?
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                We believe in empowering our team members to do their best work
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Creative Freedom -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.4 3-5.7 0-3.9-3.1-7-7-7z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Creative Freedom</h3>
+                <p class="text-gray-300">Express your artistic vision with the support and resources to bring innovative ideas to life.</p>
+            </div>
+
+            <!-- Cutting-Edge Technology -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Cutting-Edge Technology</h3>
+                <p class="text-gray-300">Work with the latest equipment and software, including AI-powered tools like our FinBot system.</p>
+            </div>
+
+            <!-- Professional Growth -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Professional Growth</h3>
+                <p class="text-gray-300">Advance your career with mentorship, training programs, and opportunities to lead high-profile projects.</p>
+            </div>
+
+            <!-- Competitive Benefits -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Competitive Benefits</h3>
+                <p class="text-gray-300">Comprehensive health coverage, retirement plans, flexible PTO, and performance-based bonuses.</p>
+            </div>
+
+            <!-- Global Projects -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.41 4L12 7.41 13.41 6 17 9.59 15.59 11 12 7.41 8.41 11 7 9.59 10.59 6z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Global Projects</h3>
+                <p class="text-gray-300">Work on international productions and collaborate with talent from around the world.</p>
+            </div>
+
+            <!-- Work-Life Balance -->
+            <div class="benefit-card rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-cine-gold to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-cine-dark" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7H16c-.8 0-1.5.7-1.5 1.5v3.48L9.5 9C8.1 8.24 6.4 8.5 5.4 9.5L4 11l1.4 1.4 1.4-1.4c.4-.4 1-.4 1.4 0L11 14v6h2v-6l2.5-2.5V18h2z"/>
+                    </svg>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white mb-4">Work-Life Balance</h3>
+                <p class="text-gray-300">Flexible schedules, remote work options, and a supportive environment that values personal well-being.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Department Filters -->
+<section class="py-12 bg-cine-dark" id="open-positions">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Open Positions
+                </span>
+            </h2>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+            <button class="department-filter active px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300" data-department="all">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    All Departments
+                </span>
+            </button>
+            <button class="department-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-department="production">
+                Production
+            </button>
+            <button class="department-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-department="post-production">
+                Post-Production
+            </button>
+            <button class="department-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-department="creative">
+                Creative
+            </button>
+            <button class="department-filter px-6 py-3 rounded-full font-semibold border border-cine-gold/30 hover:border-cine-gold transition-all duration-300 text-gray-300 hover:text-white" data-department="business">
+                Business
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Job Listings -->
+<section class="py-24 bg-gradient-to-b from-cine-dark to-cine-gray">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="jobs-grid">
+
+            <!-- Production Jobs -->
+            <div class="job-card rounded-2xl p-8 group" data-department="production">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Senior Cinematographer</h3>
+                        <p class="text-cine-gold font-semibold">Production Department</p>
+                        <p class="text-gray-400">Los Angeles, CA • Full-time</p>
+                    </div>
+                    <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">New</span>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Lead cinematography for high-profile film and television projects. Work with cutting-edge camera technology and collaborate with award-winning directors to create visually stunning content.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">5+ years experience</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">RED/ARRI certified</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Feature films</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <div class="job-card rounded-2xl p-8 group" data-department="production">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Production Manager</h3>
+                        <p class="text-cine-gold font-semibold">Production Department</p>
+                        <p class="text-gray-400">New York, NY • Full-time</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Oversee day-to-day production operations, manage budgets, coordinate schedules, and ensure projects are delivered on time and within budget. Experience with large-scale productions preferred.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Project management</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Budget oversight</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Team leadership</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <!-- Post-Production Jobs -->
+            <div class="job-card rounded-2xl p-8 group" data-department="post-production">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Lead VFX Artist</h3>
+                        <p class="text-cine-gold font-semibold">Post-Production Department</p>
+                        <p class="text-gray-400">Vancouver, BC • Full-time</p>
+                    </div>
+                    <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Urgent</span>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Create stunning visual effects for blockbuster films and premium television series. Work with industry-leading software and collaborate with our innovation team on AI-enhanced workflows.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Maya/Houdini</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Nuke compositing</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Team leadership</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <div class="job-card rounded-2xl p-8 group" data-department="post-production">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Senior Editor</h3>
+                        <p class="text-cine-gold font-semibold">Post-Production Department</p>
+                        <p class="text-gray-400">Los Angeles, CA • Full-time</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Edit feature films, television series, and commercial content. Work closely with directors and producers to craft compelling narratives using state-of-the-art editing suites.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Avid Media Composer</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Premiere Pro</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Narrative editing</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <!-- Creative Jobs -->
+            <div class="job-card rounded-2xl p-8 group" data-department="creative">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Creative Director</h3>
+                        <p class="text-cine-gold font-semibold">Creative Department</p>
+                        <p class="text-gray-400">Los Angeles, CA • Full-time</p>
+                    </div>
+                    <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-semibold">Senior Level</span>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Lead creative vision for major projects, collaborate with clients and internal teams, and drive innovative storytelling approaches across all media formats.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Creative leadership</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Client relations</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Brand strategy</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <div class="job-card rounded-2xl p-8 group" data-department="creative">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Screenwriter</h3>
+                        <p class="text-cine-gold font-semibold">Creative Department</p>
+                        <p class="text-gray-400">Remote • Contract</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Develop original screenplays and adapt existing properties for film and television. Collaborate with directors and producers to refine scripts and create compelling narratives.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Original content</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Adaptations</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Genre expertise</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <!-- Business Jobs -->
+            <div class="job-card rounded-2xl p-8 group" data-department="business">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Business Development Manager</h3>
+                        <p class="text-cine-gold font-semibold">Business Department</p>
+                        <p class="text-gray-400">Los Angeles, CA • Full-time</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Identify new business opportunities, build strategic partnerships, and drive revenue growth across all business units. Experience in entertainment industry preferred.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Partnership development</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Revenue growth</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Strategic planning</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+
+            <div class="job-card rounded-2xl p-8 group" data-department="business">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h3 class="font-display text-2xl font-bold text-white mb-2">Financial Analyst</h3>
+                        <p class="text-cine-gold font-semibold">Business Department</p>
+                        <p class="text-gray-400">New York, NY • Full-time</p>
+                    </div>
+                </div>
+                <p class="text-gray-300 mb-6">
+                    Support financial planning and analysis for production budgets, work with our FinBot AI system, and provide insights to drive business decisions across all departments.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Financial modeling</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">Budget analysis</span>
+                    <span class="bg-cine-gold/20 text-cine-gold px-3 py-1 rounded-full text-sm">AI systems</span>
+                </div>
+                <button class="w-full bg-cine-gold text-cine-dark py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors duration-300">
+                    Apply Now
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Application Process -->
+<section class="py-24 bg-cine-dark">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                <span class="bg-gradient-to-r from-cine-gold to-yellow-400 bg-clip-text text-transparent">
+                    Application Process
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                Our streamlined hiring process is designed to find the best talent efficiently
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Step 1 -->
+            <div class="benefit-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    1
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Apply Online</h3>
+                <p class="text-gray-300 text-sm">Submit your application with portfolio and resume through our online system.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="benefit-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    2
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Initial Review</h3>
+                <p class="text-gray-300 text-sm">Our talent team reviews applications and conducts initial phone screenings.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="benefit-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    3
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Interview Process</h3>
+                <p class="text-gray-300 text-sm">Meet with hiring managers and team members through virtual or in-person interviews.</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="benefit-card rounded-2xl p-6 text-center">
+                <div class="w-12 h-12 bg-cine-gold text-cine-dark rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                    4
+                </div>
+                <h3 class="font-semibold text-white text-lg mb-3">Welcome Aboard</h3>
+                <p class="text-gray-300 text-sm">Join the CineFlow family with comprehensive onboarding and mentorship.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24 bg-gradient-to-r from-cine-gold to-yellow-500 relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <h2 class="font-display text-4xl md:text-5xl font-bold text-cine-dark mb-6">
+            Ready to Join Our Team?
+        </h2>
+        <p class="text-xl text-cine-dark/80 mb-8 max-w-2xl mx-auto">
+            Don't see the perfect role? We're always looking for exceptional talent. Send us your information and we'll keep you in mind for future opportunities.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/contact" class="bg-cine-dark text-cine-gold px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-gray transition-all duration-300 transform hover:scale-105">
+                Submit General Application
+            </a>
+            <a href="/about" class="border-2 border-cine-dark text-cine-dark px-8 py-4 rounded-full font-bold text-lg hover:bg-cine-dark hover:text-cine-gold transition-all duration-300 transform hover:scale-105">
+                Meet Our Team
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Department filtering
+    const departmentButtons = document.querySelectorAll('.department-filter');
+    const jobCards = document.querySelectorAll('[data-department]');
+
+    departmentButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const department = button.getAttribute('data-department');
+            const isCurrentlyActive = button.classList.contains('active');
+
+            // If clicking the same active filter (except "all"), reset to "all"
+            if (isCurrentlyActive && department !== 'all') {
+                // Reset to "All Departments"
+                const allButton = document.querySelector('[data-department="all"]');
+                setActiveDepartment(allButton, 'all');
+                return;
+            }
+
+            // Otherwise, set the clicked filter as active
+            setActiveDepartment(button, department);
+        });
+    });
+
+    // Helper function to set active department filter
+    function setActiveDepartment(activeButton, department) {
+        // Update active button
+        departmentButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.add('text-gray-300', 'hover:text-white');
+            btn.classList.remove('text-cine-dark');
+        });
+
+        activeButton.classList.add('active');
+        activeButton.classList.remove('text-gray-300', 'hover:text-white');
+        activeButton.classList.add('text-cine-dark');
+
+        // Filter jobs
+        jobCards.forEach(card => {
+            if (department === 'all' || card.getAttribute('data-department') === department) {
+                card.classList.remove('hidden');
+                // Trigger reflow to restart animation
+                card.style.animation = 'none';
+                card.offsetHeight; // Trigger reflow
+                card.style.animation = null;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    }
+</script>
+{% endblock %}

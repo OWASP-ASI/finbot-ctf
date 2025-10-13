@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | CineFlow Productions</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/common/favicon.ico">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cine-gold': '#D4AF37',
+                        'cine-dark': '#0F0F0F',
+                        'cine-gray': '#1A1A1A',
+                        'cine-light': '#F8F8F8',
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-cine-dark text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-cine-dark via-cine-gray to-cine-dark">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23D4AF37" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <!-- 404 Number -->
+        <div class="mb-8">
+            <h1 class="text-9xl md:text-[12rem] font-display font-bold text-cine-gold animate-pulse-slow leading-none">
+                4<span class="animate-wiggle inline-block">0</span>4
+            </h1>
+        </div>
+
+        <!-- Movie Camera Icon -->
+        <div class="mb-8 animate-float">
+            <svg class="w-32 h-32 mx-auto text-cine-gold opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.6"/>
+            </svg>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+                Scene Not Found!
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
+                Looks like this page took an unscheduled break from filming. 🎬
+            </p>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                Our director is frantically searching through the script, but this scene seems to have wandered off set.
+                Don't worry though - the show must go on!
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/"
+               class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Back to Main Stage
+            </a>
+
+            <button onclick="window.history.back()"
+                    class="group bg-transparent border-2 border-cine-gold hover:bg-cine-gold hover:text-cine-dark text-cine-gold font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414a1 1 0 010-1.414L6.293 6.707a1 1 0 011.414 1.414L5.414 10H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Previous Scene
+            </button>
+        </div>
+
+        <!-- Fun Quote -->
+        <div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-cine-gold/20 backdrop-blur-sm">
+            <p class="text-cine-gold font-display text-lg italic">
+                "In the cinema, as in life, sometimes you take a wrong turn... but that's where the adventure begins!"
+            </p>
+            <p class="text-gray-400 text-sm mt-2">- Anonymous Film Director</p>
+        </div>
+    </div>
+
+    <!-- Floating Elements -->
+    <div class="absolute top-10 left-10 text-cine-gold/20 animate-bounce-slow">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+    </div>
+
+    <div class="absolute bottom-10 right-10 text-cine-gold/20 animate-pulse-slow">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+    </div>
+</body>
+</html>

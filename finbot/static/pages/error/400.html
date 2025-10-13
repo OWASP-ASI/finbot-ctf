@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>400 - Bad Request | CineFlow Productions</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/common/favicon.ico">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cine-gold': '#D4AF37',
+                        'cine-dark': '#0F0F0F',
+                        'cine-gray': '#1A1A1A',
+                        'cine-light': '#F8F8F8',
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'confused': 'confused 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        confused: {
+                            '0%, 100%': { transform: 'rotate(0deg)' },
+                            '25%': { transform: 'rotate(-5deg)' },
+                            '75%': { transform: 'rotate(5deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-cine-dark text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-cine-dark to-cine-gray">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%238B5CF6" fill-opacity="0.05"%3E%3Cpath d="M30 15a15 15 0 100 30 15 15 0 000-30zm0 5a3 3 0 110 6 3 3 0 010-6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        <!-- 400 Number -->
+        <div class="mb-8">
+            <h1 class="text-9xl md:text-[12rem] font-display font-bold text-purple-500 animate-pulse-slow leading-none">
+                4<span class="animate-confused inline-block">0</span>0
+            </h1>
+        </div>
+
+        <!-- Confused Director Icon -->
+        <div class="mb-8 animate-float">
+            <svg class="w-32 h-32 mx-auto text-purple-500 opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,17A1.5,1.5 0 0,1 10.5,15.5A1.5,1.5 0 0,1 12,14A1.5,1.5 0 0,1 13.5,15.5A1.5,1.5 0 0,1 12,17M12,13C11.45,13 11,12.55 11,12V8C11,7.45 11.45,7 12,7C12.55,7 13,7.45 13,8V12C13,12.55 12.55,13 12,13Z"/>
+            </svg>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
+                Script Error!
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
+                Your request got lost in translation! 🤔
+            </p>
+            <p class="text-lg text-gray-400 max-w-2xl mx-auto">
+                It seems like your request was written in a language our servers don't understand.
+                Maybe you mixed up the script pages? Don't worry, even Shakespeare had rough drafts!
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/"
+               class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Start Over
+            </a>
+
+            <button onclick="window.history.back()"
+                    class="group bg-transparent border-2 border-purple-500 hover:bg-purple-500 hover:text-white text-purple-500 font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414a1 1 0 010-1.414L6.293 6.707a1 1 0 011.414 1.414L5.414 10H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                </svg>
+                Go Back
+            </button>
+        </div>
+
+        <!-- Fun Quote -->
+        <div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-purple-500/20 backdrop-blur-sm">
+            <p class="text-purple-400 font-display text-lg italic">
+                "The best requests are like good movies - clear, well-structured, and easy to follow!"
+            </p>
+            <p class="text-gray-400 text-sm mt-2">- Senior Script Reviewer</p>
+        </div>
+    </div>
+
+    <!-- Floating Question Marks -->
+    <div class="absolute top-10 left-10 text-purple-500/20 animate-wiggle">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z"/>
+        </svg>
+    </div>
+
+    <div class="absolute bottom-10 right-10 text-purple-500/20 animate-pulse">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M15.07,11.25L14.17,12.17C13.45,12.89 13,13.5 13,15H11V14.5C11,13.39 11.45,12.39 12.17,11.67L13.41,10.41C13.78,10.05 14,9.55 14,9C14,7.89 13.1,7 12,7A2,2 0 0,0 10,9H8A4,4 0 0,1 12,5A4,4 0 0,1 16,9C16,9.88 15.64,10.67 15.07,11.25M13,19H11V17H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12C22,6.47 17.5,2 12,2Z"/>
+        </svg>
+    </div>
+</body>
+</html>
