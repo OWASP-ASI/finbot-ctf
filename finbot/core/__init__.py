@@ -1,1 +1,1 @@
-"""FinBot Core"""
+"""FinBot Core functionality shared across the platform"""

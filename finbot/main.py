@@ -5,13 +5,16 @@ FinBot Platform Main Application
 
 import os
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from finbot.apps.vendor.main import app as vendor_app
 from finbot.apps.web.routes import router as web_router
+from finbot.core.auth.middleware import SessionMiddleware, get_session_context
+from finbot.core.auth.session import SessionContext, session_manager
 
 app = FastAPI(
     title="FinBot Platform",
@@ -19,13 +22,15 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.add_middleware(SessionMiddleware)
+
 # Mount Static Files
 app.mount("/static", StaticFiles(directory="finbot/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 # Mount all the applications for the platform
-
+app.mount("/vendor", vendor_app)
 # Web application is mounted at the root of the platform
 app.include_router(web_router)
 
@@ -35,11 +40,28 @@ app.include_router(web_router)
 async def agreement(_: Request):
     """FinBot Agreement page"""
     try:
+        # (TODO) cache this to reduce disk I/O
         with open("finbot/static/pages/agreement.html", "r", encoding="utf-8") as f:
             content = f.read()
         return HTMLResponse(content=content, status_code=200)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail="Agreement page not found") from e
+
+
+# Session health check endpoint
+@app.get("/api/session/status")
+async def session_status(
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Get current session status and security information"""
+    return {
+        "session_id": session_context.session_id[:8] + "...",
+        "user_id": session_context.user_id,
+        "is_temporary": session_context.is_temporary,
+        "namespace": session_context.namespace,
+        "security_status": session_context.get_security_status(),
+        "csrf_token": session_context.csrf_token,
+    }
 
 
 # Helper functions for error handling
@@ -185,6 +207,16 @@ async def internal_server_error_handler(request: Request, exc: HTTPException):
         return HTMLResponse(
             content="<h1>Error 500</h1><p>Internal Server Error</p>", status_code=500
         )
+
+
+# (TODO): add to lifecycle management
+@app.on_event("startup")
+async def startup_event():
+    """Application startup tasks"""
+    # Clean up expired sessions on startup
+    cleaned_count = session_manager.cleanup_expired_sessions()
+    if cleaned_count > 0:
+        print(f"🧹 Cleaned up {cleaned_count} expired sessions on startup")
 
 
 if __name__ == "__main__":

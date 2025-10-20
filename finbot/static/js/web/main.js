@@ -1,6 +1,6 @@
 /**
  * CineFlow Productions Web App Main JavaScript
- * Handles common functionality for the public website
+ * Handles web-specific functionality for the public website
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -91,8 +91,6 @@ function initializeScrollEffects() {
  * Initialize form functionality
  */
 function initializeForms() {
-    // Forms removed - no longer handling newsletter or contact submissions
-
     // Auth forms
     const authForms = document.querySelectorAll('.auth-form');
     authForms.forEach(form => {
@@ -106,8 +104,6 @@ function initializeForms() {
         input.addEventListener('input', debounce(validateField, 500));
     });
 }
-
-
 
 /**
  * Handle auth form submission
@@ -335,111 +331,5 @@ function openChat() {
     }
 }
 
-// Make openChat available globally
+// Make web-specific functions available globally
 window.openChat = openChat;
-
-/**
- * Initialize CTF header functionality
- */
-function initializeCTFHeader() {
-    // CTF Details & Policy button functionality
-    const ctfDetailsButton = document.querySelector('[data-ctf-details]');
-
-    if (ctfDetailsButton) {
-        ctfDetailsButton.addEventListener('click', () => {
-            showCTFDetailsModal();
-        });
-    }
-}
-
-/**
- * Show CTF Details & Policy modal
- */
-function showCTFDetailsModal() {
-    // Create modal content
-    const modalContent = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 z-70 flex items-center justify-center p-4">
-            <div class="bg-gray-900 border border-green-400 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                                </svg>
-                            </div>
-                            <h2 class="text-xl font-bold text-green-400">OWASP Agentic AI CTF Details & Policy</h2>
-                        </div>
-                        <button class="text-gray-400 hover:text-white" onclick="closeCTFModal()">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="space-y-4 text-gray-300">
-                        <div class="bg-green-900/20 border border-green-400/30 rounded-lg p-4">
-                            <h3 class="text-green-400 font-semibold mb-2">🎯 CTF Objective</h3>
-                            <p class="text-sm">This is an educational Capture The Flag (CTF) environment designed to demonstrate AI security vulnerabilities and defensive techniques in a controlled setting.</p>
-                        </div>
-
-                        <div class="bg-blue-900/20 border border-blue-400/30 rounded-lg p-4">
-                            <h3 class="text-blue-400 font-semibold mb-2">📋 OWASP Guidelines</h3>
-                            <ul class="text-sm space-y-1">
-                                <li>• Follow responsible disclosure practices</li>
-                                <li>• Respect system boundaries and limitations</li>
-                                <li>• Use findings for educational purposes only</li>
-                                <li>• Report vulnerabilities through proper channels</li>
-                            </ul>
-                        </div>
-
-                        <div class="bg-yellow-900/20 border border-yellow-400/30 rounded-lg p-4">
-                            <h3 class="text-yellow-400 font-semibold mb-2">⚠️ Important Notices</h3>
-                            <ul class="text-sm space-y-1">
-                                <li>• All activities are logged and monitored</li>
-                                <li>• This environment is for educational purposes only</li>
-                                <li>• Malicious activities are prohibited</li>
-                                <li>• Data may be reset periodically</li>
-                            </ul>
-                        </div>
-
-                        <div class="bg-red-900/20 border border-red-400/30 rounded-lg p-4">
-                            <h3 class="text-red-400 font-semibold mb-2">🛡️ Ethical Use Policy</h3>
-                            <p class="text-sm">By using this CTF environment, you agree to use it ethically and responsibly. Any attempt to cause harm, access unauthorized systems, or violate the terms of use will result in immediate termination of access.</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-6 flex justify-end">
-                        <button onclick="closeCTFModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-300">
-                            Understood
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Add modal to page
-    const modalDiv = document.createElement('div');
-    modalDiv.id = 'ctf-modal';
-    modalDiv.innerHTML = modalContent;
-    document.body.appendChild(modalDiv);
-
-    // Prevent body scroll
-    document.body.style.overflow = 'hidden';
-}
-
-/**
- * Close CTF Details modal
- */
-function closeCTFModal() {
-    const modal = document.getElementById('ctf-modal');
-    if (modal) {
-        modal.remove();
-        document.body.style.overflow = '';
-    }
-}
-
-// Make CTF functions available globally
-window.showCTFDetailsModal = showCTFDetailsModal;
-window.closeCTFModal = closeCTFModal;

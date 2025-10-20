@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}FinBot Vendor Portal - OWASP ASI AI Security Platform{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}finbot, vendor portal, ai security, owasp asi, financial ai, vendor onboarding{% endblock %}">
+
+    <title>{% block title %}FinBot Vendor Portal - OWASP ASI{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Vendor Portal Colors (matching CSS variables)
+                        'vendor-primary': '#00d4ff',
+                        'vendor-secondary': '#7c3aed',
+                        'vendor-accent': '#06ffa5',
+                        'vendor-warning': '#ffb800',
+                        'vendor-danger': '#ff3366',
+
+                        // Interface Colors
+                        'portal-bg-primary': '#0a0a0f',
+                        'portal-bg-secondary': '#151520',
+                        'portal-bg-tertiary': '#1a1a2e',
+
+                        // Text Colors
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-bright': '#ffffff',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/portal.css') }}">
+    {% block extra_css %}{% endblock %}
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 quantum-primary px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
+
+    <!-- Header -->
+    <header class="relative z-20 bg-portal-bg-secondary/80 backdrop-blur-md border-b border-vendor-primary/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-vendor-primary to-vendor-secondary p-0.5 shadow-lg">
+                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-text-bright font-bold text-xl tracking-wide">FINBOT</span>
+                        <span class="text-vendor-primary text-xs font-mono tracking-wider">VENDOR PORTAL</span>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="vendor-nav-item">Dashboard</a>
+                    <a href="#" class="vendor-nav-item active">Onboarding</a>
+                    <a href="#" class="vendor-nav-item">Analytics</a>
+                    <a href="#" class="vendor-nav-item">Support</a>
+                </nav>
+
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <button class="vendor-btn quantum-secondary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        AI Assistant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="relative z-10 min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- CTF Footer -->
+    {% include 'components/ctf_footer.html' %}
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='js/common/agreement-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/vendor/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+
+    {% block analytics %}{% endblock %}
+</body>
+</html>

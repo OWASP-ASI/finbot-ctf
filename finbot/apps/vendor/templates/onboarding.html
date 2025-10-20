@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Join the FinBot ecosystem as a trusted vendor. Experience AI-powered onboarding with traditional forms and intelligent chat assistance.">
+    <meta name="keywords" content="finbot, vendor portal, ai security, owasp asi, financial ai, vendor onboarding">
+
+    <title>FinBot Vendor Onboarding - OWASP ASI</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Vendor Portal Colors (matching CSS variables)
+                        'vendor-primary': '#00d4ff',
+                        'vendor-secondary': '#7c3aed',
+                        'vendor-accent': '#06ffa5',
+                        'vendor-warning': '#ffb800',
+                        'vendor-danger': '#ff3366',
+
+                        // Interface Colors
+                        'portal-bg-primary': '#0a0a0f',
+                        'portal-bg-secondary': '#151520',
+                        'portal-bg-tertiary': '#1a1a2e',
+
+                        // Text Colors
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-bright': '#ffffff',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/portal.css') }}">
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 quantum-primary px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
+
+    <!-- Header -->
+    <header class="relative z-20 bg-portal-bg-secondary/80 backdrop-blur-md border-b border-vendor-primary/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-vendor-primary to-vendor-secondary p-0.5 shadow-lg">
+                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-text-bright font-bold text-xl tracking-wide">FINBOT</span>
+                        <span class="text-vendor-primary text-xs font-mono tracking-wider">VENDOR PORTAL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="relative z-10 min-h-screen">
+        <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+            <!-- Welcome Header -->
+            <div class="max-w-7xl mx-auto mb-12 text-center">
+                <div class="relative">
+                    <h1 class="text-text-bright font-bold text-4xl md:text-6xl mb-4 animate-fade-in">
+                        Welcome to <span class="text-vendor-primary">FinBot</span>
+                    </h1>
+                    <!-- <p class="text-xl md:text-2xl text-text-primary mb-2 animate-slide-up">
+                        Vendor Portal Onboarding
+                    </p> -->
+                    <p class="text-vendor-accent font-mono text-sm tracking-wider animate-slide-up">
+                        AI-POWERED • SECURE • EFFICIENT
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-8 lg:gap-12">
+                    <div class="space-y-6">
+                        <div class="holo-card">
+                            <div class="holo-header">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-vendor-warning to-vendor-accent flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-portal-bg-primary" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <h2 class="text-2xl font-semibold text-text-bright">Vendor Portal Onboarding</h2>
+                                </div>
+                            </div>
+
+                            <div class="holo-body">
+                                <form id="onboardingForm" class="space-y-6">
+                                    <!-- Company Information -->
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold text-vendor-primary border-b border-vendor-primary/30 pb-2">
+                                            Company Information
+                                        </h3>
+
+                                        <div class="vendor-form-group">
+                                            <label for="companyName" class="vendor-label">Company Name *</label>
+                                            <input type="text" id="companyName" name="companyName" required
+                                                class="vendor-input" placeholder="Enter your company name">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="vendor-form-group">
+                                                <label for="vendor_category" class="vendor-label">Category *</label>
+                                                <select id="vendor_category" name="vendor_category" required class="vendor-input">
+                                                    <option value="">Select Category</option>
+                                                    <option value="talent">Talent (Actors, Directors, Writers, Musicians)</option>
+                                                    <option value="crew">Crew (Camera, Sound, Lighting, Grip, Production Assistants)</option>
+                                                    <option value="equipment_rental">Equipment Rental (Cameras, Lenses, Lighting, Sound Gear)</option>
+                                                    <option value="location_scouting">Location Scouting &amp; Management</option>
+                                                    <option value="catering">Catering &amp; Craft Services</option>
+                                                    <option value="vfx_animation">Visual Effects (VFX) &amp; Animation</option>
+                                                    <option value="post_production">Post-Production Services (Editing, Color Grading, Sound Mixing)</option>
+                                                    <option value="legal_consulting">Legal &amp; Business Consulting</option>
+                                                    <option value="transportation">Transportation &amp; Logistics</option>
+                                                    <option value="set_design">Set Design &amp; Construction</option>
+                                                    <option value="costume_wardrobe">Costume &amp; Wardrobe</option>
+                                                    <option value="security">Security Services</option>
+                                                    <option value="other_specialized">Other Specialized Services</option>
+                                                </select>
+                                            </div>
+                                            <div class="vendor-form-group">
+                                                <label for="industry" class="vendor-label">Industry *</label>
+                                                <select id="industry" name="industry" required class="vendor-input">
+                                                    <option value="">Select Industry</option>
+                                                    <option value="film">Film, TV & Entertainment</option>
+                                                    <option value="fintech">FinTech</option>
+                                                    <option value="banking">Banking</option>
+                                                    <option value="insurance">Insurance</option>
+                                                    <option value="payments">Payments</option>
+                                                    <option value="lending">Lending</option>
+                                                    <option value="wealth">Wealth Management</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact Information -->
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold text-vendor-primary border-b border-vendor-primary/30 pb-2">
+                                            Primary Contact
+                                        </h3>
+
+                                        <div class="vendor-form-group">
+                                            <label for="name" class="vendor-label">Name *</label>
+                                            <input type="text" id="name" name="name" required
+                                                class="vendor-input" placeholder="Name">
+                                        </div>
+
+                                        <div class="vendor-form-group">
+                                            <label for="email" class="vendor-label">Business Email *</label>
+                                            <input type="email" id="email" name="email" required
+                                                class="vendor-input" placeholder="contact@company.com">
+                                        </div>
+
+                                        <div class="vendor-form-group">
+                                            <label for="phone" class="vendor-label">Phone Number</label>
+                                            <input type="tel" id="phone" name="phone"
+                                                class="vendor-input" placeholder="+1 (555) 123-4567">
+                                        </div>
+                                    </div>
+
+                                    <!-- Account Information -->
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold text-vendor-primary border-b border-vendor-primary/30 pb-2">
+                                            Account Information (Payments Profile)
+                                        </h3>
+
+                                        <div class="vendor-form-group">
+                                            <label for="tin" class="vendor-label">Tax Identification Number (TIN)/ Employer Identification Number (EIN) *</label>
+                                            <input type="text" id="tin" name="tin" required
+                                                class="vendor-input" placeholder="Enter your TIN/EIN">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="vendor-form-group">
+                                                <label for="bank_account_number" class="vendor-label">Bank Account Number *</label>
+                                                <input type="text" id="bank_account_number" name="bank_account_number" required
+                                                    class="vendor-input" placeholder="Enter your bank account number">
+                                            </div>
+                                            <div class="vendor-form-group">
+                                                <label for="bank_name" class="vendor-label">Bank Name *</label>
+                                                <input type="text" id="bank_name" name="bank_name" required
+                                                    class="vendor-input" placeholder="Enter your bank name">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="vendor-form-group">
+                                                <label for="bank_routing_number" class="vendor-label">Bank Routing Number/Swift Code *</label>
+                                                <input type="text" id="bank_routing_number" name="bank_routing_number" required
+                                                    class="vendor-input" placeholder="Enter your bank routing number">
+                                            </div>
+                                            <div class="vendor-form-group">
+                                                <label for="bank_account_holder_name" class="vendor-label">Bank Account Holder Name *</label>
+                                                <input type="text" id="bank_account_holder_name" name="bank_account_holder_name" required
+                                                    class="vendor-input" placeholder="Enter your bank account holder name">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Services -->
+                                    <div class="space-y-4">
+                                        <h3 class="text-lg font-semibold text-vendor-primary border-b border-vendor-primary/30 pb-2">
+                                            Services
+                                        </h3>
+
+                                        <div class="vendor-form-group">
+                                            <label for="services" class="vendor-label">Services Offered *</label>
+                                            <textarea id="services" name="services" rows="4" required
+                                                class="vendor-input resize-none"
+                                                placeholder="Describe the services or products you offer..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="pt-6">
+                                        <button type="submit" class="w-50 vendor-btn quantum-primary">
+                                            <span class="text-lg font-semibold">Submit Application</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- CTF Footer -->
+    {% include 'components/ctf_footer.html' %}
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='js/common/agreement-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/vendor/main.js') }}"></script>
+    <script>
+        ready(function() {
+            const onboardingForm = document.getElementById('onboardingForm');
+            const submitButton = onboardingForm.querySelector('button[type="submit"]');
+
+            // Add real-time email validation
+            const emailField = document.getElementById('email');
+            if (emailField) {
+                emailField.addEventListener('blur', function() {
+                    const email = this.value.trim();
+                    if (email && !isValidEmail(email)) {
+                        showFieldError(this, 'Please enter a valid email address');
+                    } else {
+                        clearFieldError(this);
+                    }
+                });
+            }
+
+            // Add phone number formatting
+            const phoneField = document.getElementById('phone');
+            if (phoneField) {
+                phoneField.addEventListener('input', function() {
+                    // Simple phone formatting (US format)
+                    let value = this.value.replace(/\D/g, '');
+                    if (value.length >= 6) {
+                        value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+                    } else if (value.length >= 3) {
+                        value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
+                    }
+                    this.value = value;
+                });
+            }
+
+            // Add TIN/EIN formatting
+            const tinField = document.getElementById('tin');
+            if (tinField) {
+                tinField.addEventListener('blur', function() {
+                    if (this.value) {
+                        this.value = formatTIN(this.value);
+                    }
+                });
+            }
+
+            // Add routing number formatting for display
+            const routingField = document.getElementById('bank_routing_number');
+            if (routingField) {
+                routingField.addEventListener('blur', function() {
+                    if (this.value) {
+                        // Only format for display, keep actual value clean for validation
+                        const cleanValue = this.value.replace(/\D/g, '');
+                        if (cleanValue.length === 9) {
+                            this.value = cleanValue; // Keep it clean for form submission
+                        }
+                    }
+                });
+            }
+
+            // Enhanced form submission with validation
+            onboardingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Clear any existing errors
+                clearAllFieldErrors(this);
+
+                // Validate form using utils.js helper
+                const validation = validateForm(this);
+
+                if (!validation.isValid) {
+                    // Display validation errors
+                    Object.keys(validation.errors).forEach(fieldName => {
+                        const field = this.querySelector(`[name="${fieldName}"]`);
+                        if (field) {
+                            showFieldError(field, validation.errors[fieldName][0]);
+                        }
+                    });
+
+                    showNotification('Please correct the errors below', 'error');
+                    return;
+                }
+
+                // Additional custom validations using utils.js functions
+                const customValidation = performCustomValidations();
+                if (!customValidation.isValid) {
+                    showNotification(customValidation.message, 'error');
+                    return;
+                }
+
+                const hideLoading = showLoading(submitButton, 'Processing Application...');
+
+                try {
+                    // Simulate API call (replace with actual API endpoint)
+                    await simulateFormSubmission();
+
+                    // Success state
+                    submitButton.innerHTML = `
+                        <span class="text-lg font-semibold text-vendor-accent">✓ Application Submitted</span>
+                        <div class="text-xs opacity-80 mt-1">Check your email for next steps</div>
+                    `;
+
+                    showNotification('Application submitted successfully! Check your email for next steps.', 'success');
+
+                    // Optionally disable form after successful submission
+                    this.style.opacity = '0.7';
+                    this.style.pointerEvents = 'none';
+
+                } catch (error) {
+                    hideLoading();
+                    showNotification('Failed to submit application. Please try again.', 'error');
+                    console.error('Form submission error:', error);
+                }
+            });
+
+
+
+            // Custom validation logic using utils.js functions
+            function performCustomValidations() {
+                const formData = new FormData(onboardingForm);
+                let hasErrors = false;
+
+                // Validate TIN/EIN using utils.js function
+                const tin = formData.get('tin');
+                if (tin) {
+                    const tinValidation = validateTIN(tin);
+                    if (!tinValidation.isValid) {
+                        const tinField = document.getElementById('tin');
+                        showFieldError(tinField, tinValidation.message);
+                        hasErrors = true;
+                    }
+                }
+
+                // Validate bank account number using utils.js function
+                const bankAccount = formData.get('bank_account_number');
+                if (bankAccount) {
+                    const bankValidation = validateBankAccount(bankAccount);
+                    if (!bankValidation.isValid) {
+                        const bankField = document.getElementById('bank_account_number');
+                        showFieldError(bankField, bankValidation.message);
+                        hasErrors = true;
+                    }
+                }
+
+                // Validate routing number using utils.js function
+                const routingNumber = formData.get('bank_routing_number');
+                if (routingNumber) {
+                    const routingValidation = validateRoutingNumber(routingNumber);
+                    if (!routingValidation.isValid) {
+                        const routingField = document.getElementById('bank_routing_number');
+                        showFieldError(routingField, routingValidation.message);
+                        hasErrors = true;
+                    }
+                }
+
+                return {
+                    isValid: !hasErrors,
+                    message: hasErrors ? 'Please correct the financial information errors' : ''
+                };
+            }
+
+            // Simulate form submission (replace with actual API call)
+            function simulateFormSubmission() {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        // Simulate success/failure
+                        if (Math.random() > 0.1) { // 90% success rate for demo
+                            resolve({ success: true });
+                        } else {
+                            reject(new Error('Submission failed'));
+                        }
+                    }, 2000);
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
+

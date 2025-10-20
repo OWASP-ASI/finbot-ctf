@@ -249,21 +249,6 @@ function submitForm(form, options = {}) {
     });
 }
 
-/**
- * Show loading state on element
- */
-function showLoading(element, text = 'Loading...') {
-    element.classList.add('loading');
-    const originalText = element.textContent;
-    element.textContent = text;
-    element.disabled = true;
-
-    return () => {
-        element.classList.remove('loading');
-        element.textContent = originalText;
-        element.disabled = false;
-    };
-}
 
 /**
  * Handle API errors globally
@@ -288,38 +273,10 @@ function handleAPIError(error, options = {}) {
     return message;
 }
 
-/**
- * Show alert message
- */
-function showAlert(message, type = 'info', duration = 5000) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible`;
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
-            <span>&times;</span>
-        </button>
-    `;
-
-    // Insert at top of main content or body
-    const target = document.querySelector('.main-content') || document.body;
-    target.insertBefore(alert, target.firstChild);
-
-    // Auto-remove after duration
-    if (duration > 0) {
-        setTimeout(() => {
-            if (alert.parentElement) {
-                alert.remove();
-            }
-        }, duration);
-    }
-}
 
 // Export for use in other modules
 window.FinBotAPI = FinBotAPI;
 window.APIError = APIError;
 window.api = api;
 window.submitForm = submitForm;
-window.showLoading = showLoading;
 window.handleAPIError = handleAPIError;
-window.showAlert = showAlert;

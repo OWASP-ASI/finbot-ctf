@@ -52,6 +52,8 @@ Thumbs.db
 # Project specific
 finbot.db
 finbot_test.db
+finbot.db*
+finbot_test.db*
 *.log
 uploads/
 !uploads/.gitkeep
