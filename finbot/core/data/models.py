@@ -106,23 +106,39 @@ class Vendor(Base):
 
     id = Column(Integer, primary_key=True)
     namespace = Column(String(64), nullable=False, index=True)
-    # Vendor data
-    name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=True)
-    phone = Column(String(50), nullable=True)
-    address = Column(Text, nullable=True)
-    status = Column(String(50), default="pending")
 
+    # Company Information
+    company_name = Column(String(255), nullable=False)
+    vendor_category = Column(String(100), nullable=False)
+    industry = Column(String(100), nullable=False)
+    services = Column(Text, nullable=False)
+
+    # Contact Information
+    contact_name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False)
+    phone = Column(String(50), nullable=True)
+
+    # Financial Information
+    tin = Column(String(20), nullable=False)  # Tax ID/EIN
+    bank_account_number = Column(String(50), nullable=False)
+    bank_name = Column(String(255), nullable=False)
+    bank_routing_number = Column(String(20), nullable=False)
+    bank_account_holder_name = Column(String(255), nullable=False)
+
+    # Metadata
+    status = Column(String(50), default="pending")
     created_at = Column(DateTime, default=datetime.now(UTC))
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC))
 
     __table_args__ = (
         Index("idx_vendors_namespace", "namespace"),
         Index("idx_vendors_namespace_status", "namespace", "status"),
+        Index("idx_vendors_email", "email"),
+        Index("idx_vendors_category", "vendor_category"),
     )
 
     def __repr__(self) -> str:
-        return f"<Vendor(id='{self.id}', name='{self.name}', namespace='{self.namespace}')>"
+        return f"<Vendor(id='{self.id}', company_name='{self.company_name}', namespace='{self.namespace}')>"
 
 
 class Invoice(Base):

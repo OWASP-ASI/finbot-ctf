@@ -114,9 +114,10 @@ class FinBotAPI {
     /**
      * POST request
      */
-    async post(endpoint, data = {}) {
+    async post(endpoint, data = {}, headers = {}) {
         return this.request(endpoint, {
             method: 'POST',
+            headers,
             body: JSON.stringify(data)
         });
     }
@@ -124,9 +125,10 @@ class FinBotAPI {
     /**
      * PUT request
      */
-    async put(endpoint, data = {}) {
+    async put(endpoint, data = {}, headers = {}) {
         return this.request(endpoint, {
             method: 'PUT',
+            headers,
             body: JSON.stringify(data)
         });
     }
@@ -134,9 +136,10 @@ class FinBotAPI {
     /**
      * DELETE request
      */
-    async delete(endpoint) {
+    async delete(endpoint, headers = {}) {
         return this.request(endpoint, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers
         });
     }
 
@@ -263,11 +266,28 @@ function handleAPIError(error, options = {}) {
         }
     }
 
+    // Handle CSRF errors specifically
+    if (error.status === 403 && error.data?.error?.type === 'csrf_error') {
+        if (options.showAlert !== false) {
+            showNotification(
+                'Security validation failed. The page will be refreshed to get a new security token.',
+                'warning'
+            );
+        }
+
+        // Refresh the page after a short delay to get new CSRF token
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+
+        return 'CSRF validation failed - refreshing page';
+    }
+
     // Show user-friendly error message
     const message = error.data?.message || error.message || 'An error occurred';
 
     if (options.showAlert !== false) {
-        showAlert(message, 'danger');
+        showNotification(message, 'danger');
     }
 
     return message;

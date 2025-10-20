@@ -63,17 +63,33 @@ class VendorRepository(NamespacedRepository):
 
     def create_vendor(
         self,
-        name: str,
+        company_name: str,
+        vendor_category: str,
+        industry: str,
+        services: str,
+        contact_name: str,
         email: str,
+        tin: str,
+        bank_account_number: str,
+        bank_name: str,
+        bank_routing_number: str,
+        bank_account_holder_name: str,
         phone: str | None = None,
-        address: str | None = None,
     ) -> Vendor:
-        """Create a new vendor"""
+        """Create a new vendor with all required fields"""
         vendor = Vendor(
-            name=name,
+            company_name=company_name,
+            vendor_category=vendor_category,
+            industry=industry,
+            services=services,
+            contact_name=contact_name,
             email=email,
+            tin=tin,
+            bank_account_number=bank_account_number,
+            bank_name=bank_name,
+            bank_routing_number=bank_routing_number,
+            bank_account_holder_name=bank_account_holder_name,
             phone=phone,
-            address=address,
             namespace=self.namespace,
             status="pending",
         )
@@ -83,8 +99,13 @@ class VendorRepository(NamespacedRepository):
 
         self.log_activity(
             "vendor_created",
-            f"Created vendor: {name}",
-            metadata={"vendor_id": vendor.id, "vendor_name": name},
+            f"Created vendor: {company_name}",
+            metadata={
+                "vendor_id": vendor.id,
+                "company_name": company_name,
+                "vendor_category": vendor_category,
+                "industry": industry,
+            },
         )
 
         return vendor
@@ -150,9 +171,7 @@ class VendorRepository(NamespacedRepository):
 
     def get_vendor_count(self) -> int:
         """Get count of vendors"""
-        return self._add_namespace_filter(
-            self.db.query(func.count(Vendor.id)), Vendor
-        ).scalar()
+        return self._add_namespace_filter(self.db.query(Vendor), Vendor).count()
 
 
 class InvoiceRepository(NamespacedRepository):

@@ -8,6 +8,8 @@
 
     <title>FinBot Vendor Onboarding - OWASP ASI</title>
 
+    {{ csrf_token_meta | safe }}
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
 
@@ -115,6 +117,9 @@
 
                             <div class="holo-body">
                                 <form id="onboardingForm" class="space-y-6">
+                                    <!-- CSRF Token -->
+                                    {{ csrf_token_field | safe }}
+
                                     <!-- Company Information -->
                                     <div class="space-y-4">
                                         <h3 class="text-lg font-semibold text-vendor-primary border-b border-vendor-primary/30 pb-2">
@@ -122,8 +127,8 @@
                                         </h3>
 
                                         <div class="vendor-form-group">
-                                            <label for="companyName" class="vendor-label">Company Name *</label>
-                                            <input type="text" id="companyName" name="companyName" required
+                                            <label for="company_name" class="vendor-label">Company Name *</label>
+                                            <input type="text" id="company_name" name="company_name" required
                                                 class="vendor-input" placeholder="Enter your company name">
                                         </div>
 
@@ -354,24 +359,53 @@
                 const hideLoading = showLoading(submitButton, 'Processing Application...');
 
                 try {
-                    // Simulate API call (replace with actual API endpoint)
-                    await simulateFormSubmission();
+                    // Submit form data to API
+                    const formData = new FormData(onboardingForm);
+                    const vendorData = {
+                        company_name: formData.get('company_name'),
+                        vendor_category: formData.get('vendor_category'),
+                        industry: formData.get('industry'),
+                        services: formData.get('services'),
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        phone: formData.get('phone'),
+                        tin: formData.get('tin'),
+                        bank_account_number: formData.get('bank_account_number'),
+                        bank_name: formData.get('bank_name'),
+                        bank_routing_number: formData.get('bank_routing_number'),
+                        bank_account_holder_name: formData.get('bank_account_holder_name')
+                    };
+
+                    const response = await api.post('/vendor/api/v1/vendors/register', vendorData);
 
                     // Success state
                     submitButton.innerHTML = `
                         <span class="text-lg font-semibold text-vendor-accent">✓ Application Submitted</span>
-                        <div class="text-xs opacity-80 mt-1">Check your email for next steps</div>
+                        <div class="text-xs opacity-80 mt-1">Vendor ID: ${response.data.vendor_id}</div>
                     `;
 
-                    showNotification('Application submitted successfully! Check your email for next steps.', 'success');
+                    showNotification('Application submitted successfully! Redirecting to dashboard...', 'success');
 
-                    // Optionally disable form after successful submission
+                    // Disable form after successful submission
                     this.style.opacity = '0.7';
                     this.style.pointerEvents = 'none';
 
+                    // Redirect to the dashboard
+                    setTimeout(() => {
+                        window.location.href = '/vendor/dashboard';
+                    }, 3000);
+
                 } catch (error) {
                     hideLoading();
-                    showNotification('Failed to submit application. Please try again.', 'error');
+
+                    // Handle API errors using the global error handler
+                    const errorMessage = handleAPIError(error, { showAlert: true });
+
+                    // Only show notification for non-CSRF errors (CSRF errors are handled by handleAPIError)
+                    if (!(error.status === 403 && error.data?.error?.type === 'csrf_error')) {
+                        showNotification(`Failed to submit application: ${errorMessage}`, 'error');
+                    }
+
                     console.error('Form submission error:', error);
                 }
             });
@@ -422,19 +456,6 @@
                 };
             }
 
-            // Simulate form submission (replace with actual API call)
-            function simulateFormSubmission() {
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        // Simulate success/failure
-                        if (Math.random() > 0.1) { // 90% success rate for demo
-                            resolve({ success: true });
-                        } else {
-                            reject(new Error('Submission failed'));
-                        }
-                    }, 2000);
-                });
-            }
         });
     </script>
 

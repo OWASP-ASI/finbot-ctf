@@ -985,6 +985,108 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* ==========================================================================
+   NOTIFICATION STYLES
+   ========================================================================== */
+
+.notification.error {
+    border-color: var(--vendor-danger) !important;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.3) !important;
+    background: linear-gradient(135deg,
+        rgba(255, 51, 102, 0.1),
+        rgba(220, 38, 38, 0.05)
+    ) !important;
+}
+
+.notification.success {
+    border-color: var(--vendor-accent) !important;
+    box-shadow: 0 0 20px rgba(6, 255, 165, 0.3) !important;
+    background: linear-gradient(135deg,
+        rgba(6, 255, 165, 0.1),
+        rgba(0, 255, 136, 0.05)
+    ) !important;
+}
+
+.notification.warning {
+    border-color: var(--vendor-warning) !important;
+    box-shadow: 0 0 20px rgba(255, 184, 0, 0.3) !important;
+    background: linear-gradient(135deg,
+        rgba(255, 184, 0, 0.1),
+        rgba(255, 140, 0, 0.05)
+    ) !important;
+}
+
+.notification.danger {
+    border-color: var(--vendor-danger) !important;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.3) !important;
+    background: linear-gradient(135deg,
+        rgba(255, 51, 102, 0.1),
+        rgba(220, 38, 38, 0.05)
+    ) !important;
+}
+
+.notification.info {
+    border-color: var(--vendor-primary) !important;
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3) !important;
+    background: linear-gradient(135deg,
+        rgba(0, 212, 255, 0.1),
+        rgba(124, 58, 237, 0.05)
+    ) !important;
+}
+
+/* Enhanced notification animations for different types */
+.notification.error {
+    animation: notification-error-pulse 0.5s ease-out;
+}
+
+.notification.success {
+    animation: notification-success-glow 0.6s ease-out;
+}
+
+.notification.warning {
+    animation: notification-warning-flash 0.4s ease-out;
+}
+
+@keyframes notification-error-pulse {
+    0% {
+        transform: translateX(100%) scale(0.9);
+        box-shadow: 0 0 5px rgba(255, 51, 102, 0.5);
+    }
+    50% {
+        transform: translateX(0) scale(1.02);
+        box-shadow: 0 0 25px rgba(255, 51, 102, 0.4);
+    }
+    100% {
+        transform: translateX(0) scale(1);
+        box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+    }
+}
+
+@keyframes notification-success-glow {
+    0% {
+        transform: translateX(100%);
+        box-shadow: 0 0 5px rgba(6, 255, 165, 0.5);
+    }
+    100% {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(6, 255, 165, 0.3);
+    }
+}
+
+@keyframes notification-warning-flash {
+    0% {
+        transform: translateX(100%);
+        box-shadow: 0 0 5px rgba(255, 184, 0, 0.5);
+    }
+    25% {
+        box-shadow: 0 0 30px rgba(255, 184, 0, 0.4);
+    }
+    100% {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(255, 184, 0, 0.3);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

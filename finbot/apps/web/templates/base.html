@@ -8,6 +8,9 @@
 
     <title>{% block title %}CineFlow Productions - OWASP ASI FinBot{% endblock %}</title>
 
+    <!-- CSRF Token -->
+    {{ csrf_token_meta | safe }}
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
 

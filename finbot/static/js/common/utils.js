@@ -539,33 +539,6 @@ function showLoading(element, text = 'Loading...') {
 }
 
 /**
- * Show alert message
- */
-function showAlert(message, type = 'info', duration = 5000) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible`;
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="alert-close" onclick="this.parentElement.remove()">
-            <span>&times;</span>
-        </button>
-    `;
-
-    // Insert at top of main content or body
-    const target = document.querySelector('.main-content') || document.body;
-    target.insertBefore(alert, target.firstChild);
-
-    // Auto-remove after duration
-    if (duration > 0) {
-        setTimeout(() => {
-            if (alert.parentElement) {
-                alert.remove();
-            }
-        }, duration);
-    }
-}
-
-/**
  * Show Notification
  */
 function showNotification(message, type = 'info') {
@@ -636,5 +609,4 @@ window.showFieldError = showFieldError;
 window.clearFieldError = clearFieldError;
 window.clearAllFieldErrors = clearAllFieldErrors;
 window.showLoading = showLoading;
-window.showAlert = showAlert;
 window.showNotification = showNotification;
