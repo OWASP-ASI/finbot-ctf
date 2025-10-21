@@ -58,7 +58,9 @@ async def select_vendor(
     request: Request, session_context: SessionContext = Depends(get_session_context)
 ):
     """Vendor selection page"""
-    if session_context.has_vendor_context():
+    # Check force parameter to bypass redirect
+    force = request.query_params.get("force", "").lower() == "true"
+    if not force and session_context.has_vendor_context():
         return RedirectResponse(url="/vendor/dashboard", status_code=302)
 
     return template_response(
