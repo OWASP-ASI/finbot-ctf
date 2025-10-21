@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Select your vendor account to access the FinBot Vendor Portal dashboard and manage your business operations.">
+    <meta name="keywords" content="finbot, vendor portal, vendor selection, ai security, owasp asi, financial ai">
+
+    <title>Select Vendor - FinBot Vendor Portal</title>
+
+    {{ csrf_token_meta | safe }}
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Vendor Portal Colors (matching CSS variables)
+                        'vendor-primary': '#00d4ff',
+                        'vendor-secondary': '#7c3aed',
+                        'vendor-accent': '#06ffa5',
+                        'vendor-warning': '#ffb800',
+                        'vendor-danger': '#ff3366',
+
+                        // Interface Colors
+                        'portal-bg-primary': '#0a0a0f',
+                        'portal-bg-secondary': '#151520',
+                        'portal-bg-tertiary': '#1a1a2e',
+                        'portal-surface': '#1e1e2e',
+
+                        // Text Colors
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-bright': '#ffffff',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'glow-pulse': 'glowPulse 2s ease-in-out infinite alternate',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+            to { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
+        }
+
+        .vendor-card {
+            background: linear-gradient(135deg, rgba(21, 21, 32, 0.8), rgba(30, 30, 46, 0.8));
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .vendor-card:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .vendor-card.selected {
+            border-color: #00d4ff;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(124, 58, 237, 0.1));
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .neural-bg {
+            background: radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(6, 255, 165, 0.05) 0%, transparent 50%);
+        }
+    </style>
+</head>
+
+<body class="bg-portal-bg-primary text-text-primary font-sans neural-bg min-h-screen">
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="fixed inset-0 bg-portal-bg-primary/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="flex flex-col items-center space-y-4">
+            <div class="w-12 h-12 border-4 border-vendor-primary/30 border-t-vendor-primary rounded-full animate-spin"></div>
+            <p class="text-text-secondary">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl">
+            <!-- Header -->
+            <div class="text-center mb-12 animate-fade-in">
+                <!-- Logo -->
+                <div class="flex items-center justify-center mb-6">
+                    <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot" class="h-12 w-auto">
+                    <div class="ml-3">
+                        <h1 class="text-2xl font-bold text-text-bright">FinBot</h1>
+                        <p class="text-sm text-vendor-primary">Vendor Portal</p>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h2 class="text-3xl font-bold text-text-bright mb-4">Select Your Vendor Account</h2>
+                <p class="text-text-secondary max-w-2xl mx-auto">
+                    Choose which vendor account you'd like to access. You can switch between accounts anytime from the dashboard.
+                </p>
+            </div>
+
+            <!-- Vendor Selection Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 animate-slide-up">
+                {% for vendor in available_vendors %}
+                <div class="vendor-card rounded-xl p-6 cursor-pointer"
+                     data-vendor-id="{{ vendor.id }}"
+                     onclick="selectVendor({{ vendor.id }})">
+
+                    <!-- Vendor Avatar -->
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-vendor-accent to-vendor-primary flex items-center justify-center text-lg font-bold text-portal-bg-primary mr-4">
+                            {{ vendor.company_name[:2].upper() }}
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-text-bright">{{ vendor.company_name }}</h3>
+                            <p class="text-sm text-text-secondary">{{ vendor.industry }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Details -->
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-vendor-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h6m-6 4h6m-6 4h6"/>
+                            </svg>
+                            <span class="text-text-secondary">{{ vendor.vendor_category.replace('_', ' ').title() }}</span>
+                        </div>
+
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-vendor-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-text-secondary capitalize">{{ vendor.status }}</span>
+                        </div>
+
+                        <div class="flex items-center text-sm">
+                            <svg class="w-4 h-4 text-text-secondary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6m-6 0l-2 2m8-2l2 2m-2-2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V9"/>
+                            </svg>
+                            <span class="text-text-secondary">Created {{ vendor.created_at[:10] }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Select Button -->
+                    <button class="w-full py-3 px-4 bg-gradient-to-r from-vendor-primary to-vendor-secondary text-portal-bg-primary font-semibold rounded-lg hover:from-vendor-accent hover:to-vendor-primary transition-all duration-300 transform hover:scale-105">
+                        Select Account
+                    </button>
+                </div>
+                {% endfor %}
+
+                <!-- Add New Vendor Card -->
+                <div class="vendor-card rounded-xl p-6 cursor-pointer border-dashed"
+                     onclick="window.location.href='/vendor/onboarding'">
+
+                    <div class="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-vendor-secondary to-vendor-warning flex items-center justify-center text-2xl font-bold text-text-bright mb-4">
+                            +
+                        </div>
+
+                        <h3 class="text-lg font-semibold text-text-bright mb-2">Add New Vendor</h3>
+                        <p class="text-sm text-text-secondary mb-4">Register another company or business entity</p>
+
+                        <button class="py-2 px-6 bg-gradient-to-r from-vendor-secondary to-vendor-warning text-text-bright font-medium rounded-lg hover:from-vendor-warning hover:to-vendor-secondary transition-all duration-300">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center text-text-secondary text-sm animate-fade-in">
+                <p>Need help? <a href="/contact" class="text-vendor-primary hover:text-vendor-accent transition-colors">Contact Support</a></p>
+                <p class="mt-2">© 2024 FinBot - OWASP ASI. Secure AI for Financial Services.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+
+    <script>
+        /**
+         * Select vendor and switch context
+         */
+        async function selectVendor(vendorId) {
+            try {
+                showLoadingState();
+
+                console.log(`Selecting vendor: ${vendorId}`);
+
+                // Call the vendor switch API
+                const response = await api.post(`/vendor/api/v1/vendors/switch/${vendorId}`);
+
+                if (response.data.success) {
+                    showNotification(`Switched to ${response.data.current_vendor.company_name}`, 'success');
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = '/vendor/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error('Failed to switch vendor');
+                }
+
+            } catch (error) {
+                console.error('Error selecting vendor:', error);
+                showNotification('Failed to select vendor. Please try again.', 'error');
+                hideLoadingState();
+            }
+        }
+
+        /**
+         * Show loading state
+         */
+        function showLoadingState() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Hide loading state
+         */
+        function hideLoadingState() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Initialize page
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏢 Vendor selection page loaded');
+
+            // Add hover effects to vendor cards
+            const vendorCards = document.querySelectorAll('.vendor-card[data-vendor-id]');
+            vendorCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.classList.add('selected');
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.classList.remove('selected');
+                });
+            });
+
+            // Check if we have vendors to display
+            const hasVendors = {{ available_vendors|length > 0 }};
+            if (!hasVendors) {
+                console.log('No vendors available, redirecting to onboarding...');
+                setTimeout(() => {
+                    window.location.href = '/vendor/onboarding';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>

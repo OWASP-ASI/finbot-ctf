@@ -106,6 +106,7 @@ class VendorRepository(NamespacedRepository):
                 "vendor_category": vendor_category,
                 "industry": industry,
             },
+            commit=True,
         )
 
         return vendor
@@ -140,12 +141,13 @@ class VendorRepository(NamespacedRepository):
 
         self.log_activity(
             "vendor_updated",
-            f"Updated vendor: {vendor.name}",
+            f"Updated vendor: {vendor.company_name}",
             metadata={
                 "vendor_id": vendor.id,
-                "vendor_name": vendor.name,
+                "vendor_name": vendor.company_name,
                 "updates": list(updates.keys()),
             },
+            commit=True,
         )
 
         return vendor
@@ -156,7 +158,7 @@ class VendorRepository(NamespacedRepository):
         if not vendor:
             return False
 
-        vendor_name = vendor.name
+        vendor_name = vendor.company_name
         vendor_id = vendor.id
         self.db.delete(vendor)
         self.db.commit()
@@ -165,6 +167,7 @@ class VendorRepository(NamespacedRepository):
             "vendor_deleted",
             f"Deleted vendor: {vendor_name}",
             metadata={"vendor_id": vendor_id, "vendor_name": vendor_name},
+            commit=True,
         )
 
         return True
@@ -173,119 +176,240 @@ class VendorRepository(NamespacedRepository):
         """Get count of vendors"""
         return self._add_namespace_filter(self.db.query(Vendor), Vendor).count()
 
+    def set_current_vendor(self, vendor_id: int) -> bool:
+        """Set current vendor for user (all sessions)"""
+        # Validate vendor belongs to user
+        vendor = self.get_vendor(vendor_id)
+        if not vendor:
+            return False
+
+        # Update vendor context globally
+        # avoid circular import; pylint: disable=import-outside-toplevel
+        from finbot.core.auth.session import session_manager
+
+        success = session_manager.update_vendor_context(
+            self.session_context.session_id, vendor_id
+        )
+
+        if success:
+            self.log_activity(
+                "vendor_switched",
+                f"Switched to vendor: {vendor.company_name}",
+                metadata={
+                    "vendor_id": vendor_id,
+                    "company_name": vendor.company_name,
+                },
+                commit=True,
+            )
+
+        return success
+
 
 class InvoiceRepository(NamespacedRepository):
-    """Repository for Invoice model"""
+    """Invoice repository - Namespaced to user"""
 
-    def create_invoice(
-        self,
-        vendor_id: int,
-        amount: float,
-        invoice_number: str | None = None,
-        description: str | None = None,
-        pdf_path: str | None = None,
-    ) -> Invoice:
-        """Create invoice"""
+    def __init__(self, db: Session, session_context: SessionContext):
+        super().__init__(db, session_context)
+        self.current_vendor_id = session_context.current_vendor_id
 
-        # Verify vendor exists in same namespace
-        vendor_repo = VendorRepository(self.db, self.session_context)
-        vendor = vendor_repo.get_vendor(vendor_id)
-        if not vendor:
-            raise ValueError(f"Vendor {vendor_id} not found in user's namespace")
+    # Vendor Scoped Methods for Vendor Portal
+    def list_invoices_for_current_vendor(
+        self, status: str | None = None
+    ) -> list[Invoice]:
+        """Vendor portal: List invoices for current vendor only"""
+        if not self.current_vendor_id:
+            raise ValueError("Vendor context required for this operation")
 
-        invoice = Invoice(
-            namespace=self.namespace,
-            vendor_id=vendor_id,
-            invoice_number=invoice_number,
-            amount=amount,
-            description=description,
-            pdf_path=pdf_path,
-            status="processing",
-        )
-
-        self.db.add(invoice)
-        self.db.commit()
-        self.db.refresh(invoice)
-
-        self.log_activity(
-            "invoice_created",
-            f"Created invoice for ${amount}",
-            metadata={
-                "invoice_id": invoice.id,
-                "vendor_id": vendor_id,
-                "amount": amount,
-                "invoice_number": invoice_number,
-            },
-        )
-
-        return invoice
-
-    def get_invoice(self, invoice_id: int) -> Invoice | None:
-        """Get invoice"""
-        return self._add_namespace_filter(
-            self.db.query(Invoice).filter(Invoice.id == invoice_id), Invoice
-        ).first()
-
-    def list_invoices(
-        self, vendor_id: int | None = None, status: str | None = None
-    ) -> list[Invoice] | None:
-        """List invoices"""
         query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
-
-        if vendor_id:
-            query = query.filter(Invoice.vendor_id == vendor_id)
+        query = query.filter(Invoice.vendor_id == self.current_vendor_id)
 
         if status:
             query = query.filter(Invoice.status == status)
 
         return query.order_by(Invoice.created_at.desc()).all()
 
-    def update_invoice_data(
-        self, invoice_id: int, extracted_data: str, status: str = "processed"
-    ) -> Invoice | None:
-        """Update invoice with extracted data"""
-        invoice = self.get_invoice(invoice_id)
-        if not invoice:
-            return None
+    def create_invoice_for_current_vendor(self, **invoice_data) -> Invoice:
+        """Vendor portal: Create invoice for current vendor"""
+        if not self.current_vendor_id:
+            raise ValueError("Vendor context required for this operation")
 
-        invoice.extracted_data = extracted_data
-        invoice.status = status
-        invoice.updated_at = datetime.now(UTC)
+        invoice_data["vendor_id"] = self.current_vendor_id
+        invoice_data["namespace"] = self.namespace
 
+        invoice = Invoice(**invoice_data)
+        self.db.add(invoice)
         self.db.commit()
+        self.db.refresh(invoice)
 
         self.log_activity(
-            "invoice_processed",
-            f"Processed invoice #{invoice.id}",
+            "invoice_created",
+            f"Created invoice: {invoice.invoice_number}",
             metadata={
                 "invoice_id": invoice.id,
-                "status": status,
-                "has_extracted_data": bool(extracted_data),
+                "vendor_id": self.current_vendor_id,
+                "amount": float(invoice.amount),
             },
+            commit=True,
         )
 
         return invoice
 
-    def get_invoice_stats(self) -> dict:
-        """Get invoice statistics"""
+    def get_current_vendor_invoice_stats(self) -> dict:
+        """Vendor portal: Get invoice stats for current vendor"""
+        if not self.current_vendor_id:
+            raise ValueError("Vendor context required for this operation")
+
+        query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
+        query = query.filter(Invoice.vendor_id == self.current_vendor_id)
+
+        total_count = query.count()
+        total_amount = query.with_entities(func.sum(Invoice.amount)).scalar() or 0
+        paid_count = query.filter(Invoice.status == "paid").count()
+        paid_amount = (
+            query.filter(Invoice.status == "paid")
+            .with_entities(func.sum(Invoice.amount))
+            .scalar()
+            or 0
+        )
+
+        return {
+            "total_count": total_count,
+            "total_amount": float(total_amount),
+            "paid_count": paid_count,
+            "paid_amount": float(paid_amount),
+            "pending_count": total_count - paid_count,
+            "pending_amount": float(total_amount) - float(paid_amount),
+        }
+
+    # Admin Portal Methods (cross-vendor within namespace)
+    def list_all_invoices_for_user(self, status: str | None = None) -> list[Invoice]:
+        """Admin portal: List ALL invoices across all user's vendors"""
+        query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
+
+        if status:
+            query = query.filter(Invoice.status == status)
+
+        return query.order_by(Invoice.created_at.desc()).all()
+
+    def list_invoices_by_vendor(
+        self, status: str | None = None
+    ) -> dict[int, list[Invoice]]:
+        """Admin portal: Group invoices by vendor"""
+        invoices = self.list_all_invoices_for_user(status)
+
+        grouped = {}
+        for invoice in invoices:
+            vendor_id = invoice.vendor_id
+            if vendor_id not in grouped:
+                grouped[vendor_id] = []
+            grouped[vendor_id].append(invoice)
+
+        return grouped
+
+    def get_invoice_stats_by_vendor(self) -> dict[int, dict]:
+        """Admin portal: Get invoice statistics grouped by vendor"""
+        stats = (
+            self.db.query(
+                Invoice.vendor_id,
+                func.count(Invoice.id).label("total_count"),
+                func.sum(Invoice.amount).label("total_amount"),
+                func.count(func.nullif(Invoice.status != "paid", True)).label(
+                    "paid_count"
+                ),
+                func.sum(
+                    func.case([(Invoice.status == "paid", Invoice.amount)], else_=0)
+                ).label("paid_amount"),
+            )
+            .filter(Invoice.namespace == self.namespace)
+            .group_by(Invoice.vendor_id)
+            .all()
+        )
+
+        return {
+            stat.vendor_id: {
+                "total_count": stat.total_count,
+                "total_amount": float(stat.total_amount or 0),
+                "paid_count": stat.paid_count,
+                "paid_amount": float(stat.paid_amount or 0),
+                "pending_count": stat.total_count - stat.paid_count,
+                "pending_amount": float(stat.total_amount or 0)
+                - float(stat.paid_amount or 0),
+            }
+            for stat in stats
+        }
+
+    def get_user_invoice_totals(self) -> dict:
+        """Admin portal: Get aggregate invoice totals for user"""
         query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
 
         total_count = query.count()
         total_amount = query.with_entities(func.sum(Invoice.amount)).scalar() or 0
-
-        status_counts = {}
-        for status, count in (
-            query.with_entities(Invoice.status, func.count(Invoice.id))
-            .group_by(Invoice.status)
-            .all()
-        ):
-            status_counts[status] = count
+        paid_count = query.filter(Invoice.status == "paid").count()
+        paid_amount = (
+            query.filter(Invoice.status == "paid")
+            .with_entities(func.sum(Invoice.amount))
+            .scalar()
+            or 0
+        )
 
         return {
-            "total_invoices": total_count,
+            "total_count": total_count,
             "total_amount": float(total_amount),
-            "status_breakdown": status_counts,
+            "paid_count": paid_count,
+            "paid_amount": float(paid_amount),
+            "pending_count": total_count - paid_count,
+            "pending_amount": float(total_amount) - float(paid_amount),
         }
+
+    # Flexible Methods (can be used by both portals)
+    def list_invoices_for_specific_vendor(
+        self, vendor_id: int, status: str | None = None
+    ) -> list[Invoice]:
+        """List invoices for specific vendor"""
+        # Validate vendor belongs to user's namespace
+        vendor_repo = VendorRepository(self.db, self.session_context)
+        if not vendor_repo.get_vendor(vendor_id):
+            raise ValueError("Vendor not found or access denied")
+
+        query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
+        query = query.filter(Invoice.vendor_id == vendor_id)
+
+        if status:
+            query = query.filter(Invoice.status == status)
+
+        return query.order_by(Invoice.created_at.desc()).all()
+
+    def get_invoice(self, invoice_id: int) -> Invoice | None:
+        """Flexible: Get single invoice (validates namespace, not vendor)"""
+        return self._add_namespace_filter(
+            self.db.query(Invoice).filter(Invoice.id == invoice_id), Invoice
+        ).first()
+
+    def update_invoice(self, invoice_id: int, **updates) -> Invoice | None:
+        """Flexible: Update invoice (validates namespace)"""
+        invoice = self.get_invoice(invoice_id)
+        if not invoice:
+            return None
+
+        for key, value in updates.items():
+            if hasattr(invoice, key):
+                setattr(invoice, key, value)
+
+        invoice.updated_at = datetime.now(UTC)
+        self.db.commit()
+
+        self.log_activity(
+            "invoice_updated",
+            f"Updated invoice: {invoice.invoice_number}",
+            metadata={
+                "invoice_id": invoice.id,
+                "vendor_id": invoice.vendor_id,
+                "updates": list(updates.keys()),
+            },
+            commit=True,
+        )
+
+        return invoice
 
 
 class UserActivityRepository(NamespacedRepository):

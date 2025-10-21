@@ -539,6 +539,288 @@ function showLoading(element, text = 'Loading...') {
 }
 
 /**
+ * Animate counter with easing and formatting
+ */
+function animateCounter(element, start, end, duration, formatter = null) {
+    const startTime = performance.now();
+    const originalText = element.textContent;
+
+    function updateCounter(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function (ease-out cubic)
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(start + (end - start) * easeOut);
+
+        // Apply custom formatter or use original formatting
+        if (formatter && typeof formatter === 'function') {
+            element.textContent = formatter(current);
+        } else {
+            // Try to preserve original formatting
+            const isPercentage = originalText.includes('%');
+            const isCurrency = originalText.includes('$');
+
+            let displayValue = current.toLocaleString();
+
+            if (isCurrency) {
+                displayValue = '$' + displayValue;
+            } else if (isPercentage) {
+                displayValue = displayValue + '%';
+            }
+
+            element.textContent = displayValue;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+        } else {
+            element.textContent = originalText; // Ensure final value is exact
+        }
+    }
+
+    requestAnimationFrame(updateCounter);
+}
+
+/**
+ * Generic sidebar management utility
+ */
+const sidebar = {
+    state: {
+        isOpen: false,
+        overlay: null,
+        toggleButton: null
+    },
+
+    init(sidebarSelector = '#sidebar', options = {}) {
+        const defaultOptions = {
+            createToggle: true,
+            createOverlay: true,
+            toggleClass: 'sidebar-toggle',
+            overlayClass: 'sidebar-overlay'
+        };
+
+        const config = { ...defaultOptions, ...options };
+        const sidebarElement = document.querySelector(sidebarSelector);
+
+        if (!sidebarElement) return false;
+
+        // Create toggle button if needed
+        if (config.createToggle && !this.state.toggleButton) {
+            this.createToggleButton(config.toggleClass);
+        }
+
+        // Create overlay if needed
+        if (config.createOverlay && !this.state.overlay) {
+            this.createOverlay(config.overlayClass);
+        }
+
+        return true;
+    },
+
+    createToggleButton(className) {
+        const toggleButton = document.createElement('button');
+        toggleButton.className = className;
+        toggleButton.innerHTML = `
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        `;
+        toggleButton.addEventListener('click', () => this.toggle());
+        document.body.appendChild(toggleButton);
+        this.state.toggleButton = toggleButton;
+    },
+
+    createOverlay(className) {
+        const overlay = document.createElement('div');
+        overlay.className = className;
+        overlay.addEventListener('click', () => this.close());
+        document.body.appendChild(overlay);
+        this.state.overlay = overlay;
+    },
+
+    toggle(sidebarSelector = '#sidebar') {
+        if (this.state.isOpen) {
+            this.close(sidebarSelector);
+        } else {
+            this.open(sidebarSelector);
+        }
+    },
+
+    open(sidebarSelector = '#sidebar') {
+        const sidebarElement = document.querySelector(sidebarSelector);
+        if (!sidebarElement) return;
+
+        this.state.isOpen = true;
+        sidebarElement.classList.add('open');
+
+        if (this.state.overlay) {
+            this.state.overlay.classList.add('show');
+        }
+    },
+
+    close(sidebarSelector = '#sidebar') {
+        const sidebarElement = document.querySelector(sidebarSelector);
+        if (!sidebarElement) return;
+
+        this.state.isOpen = false;
+        sidebarElement.classList.remove('open');
+
+        if (this.state.overlay) {
+            this.state.overlay.classList.remove('show');
+        }
+    }
+};
+
+/**
+ * Loading state management utility
+ */
+const loadingState = {
+    show(element, options = {}) {
+        const defaultOptions = {
+            opacity: '0.7',
+            pointerEvents: 'none',
+            text: null,
+            disable: true
+        };
+
+        const config = { ...defaultOptions, ...options };
+
+        if (typeof element === 'string') {
+            element = document.querySelector(element);
+        }
+
+        if (!element) return null;
+
+        // Store original state
+        const originalState = {
+            opacity: element.style.opacity,
+            pointerEvents: element.style.pointerEvents,
+            disabled: element.disabled,
+            textContent: element.textContent
+        };
+
+        // Apply loading state
+        element.style.opacity = config.opacity;
+        element.style.pointerEvents = config.pointerEvents;
+
+        if (config.disable && element.disabled !== undefined) {
+            element.disabled = true;
+        }
+
+        if (config.text && element.textContent !== undefined) {
+            element.textContent = config.text;
+        }
+
+        element.classList.add('loading');
+
+        // Return cleanup function
+        return () => {
+            element.style.opacity = originalState.opacity;
+            element.style.pointerEvents = originalState.pointerEvents;
+            element.disabled = originalState.disabled;
+            element.textContent = originalState.textContent;
+            element.classList.remove('loading');
+        };
+    },
+
+    hide(element) {
+        if (typeof element === 'string') {
+            element = document.querySelector(element);
+        }
+
+        if (!element) return;
+
+        element.style.opacity = '';
+        element.style.pointerEvents = '';
+        element.disabled = false;
+        element.classList.remove('loading');
+    }
+};
+
+/**
+ * Enhanced navigation utility
+ */
+const navigation = {
+    init(navSelector = '.nav-item', options = {}) {
+        const defaultOptions = {
+            activeClass: 'active',
+            sectionAttribute: 'data-section',
+            contentPrefix: '',
+            contentSuffix: '-content',
+            onSectionChange: null
+        };
+
+        const config = { ...defaultOptions, ...options };
+        const navItems = document.querySelectorAll(navSelector);
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = item.getAttribute(config.sectionAttribute);
+                if (section) {
+                    this.switchSection(section, config);
+                }
+            });
+        });
+    },
+
+    switchSection(sectionName, config = {}) {
+        const defaultConfig = {
+            activeClass: 'active',
+            contentPrefix: '',
+            contentSuffix: '-content',
+            onSectionChange: null
+        };
+
+        const options = { ...defaultConfig, ...config };
+
+        // Hide all sections
+        const sections = document.querySelectorAll('.section, .dashboard-section');
+        sections.forEach(section => {
+            section.classList.remove(options.activeClass);
+            section.classList.add('hidden');
+        });
+
+        // Show target section
+        const targetSection = document.getElementById(`${options.contentPrefix}${sectionName}${options.contentSuffix}`);
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+            targetSection.classList.add(options.activeClass);
+        }
+
+        // Update navigation active state
+        this.updateNavigation(sectionName, options);
+
+        // Call callback if provided
+        if (options.onSectionChange && typeof options.onSectionChange === 'function') {
+            options.onSectionChange(sectionName);
+        }
+    },
+
+    updateNavigation(activeSection, config = {}) {
+        const defaultConfig = {
+            activeClass: 'active',
+            sectionAttribute: 'data-section',
+            navSelector: '.nav-item, .vendor-nav-item'
+        };
+
+        const options = { ...defaultConfig, ...config };
+        const navItems = document.querySelectorAll(options.navSelector);
+
+        navItems.forEach(item => {
+            const section = item.getAttribute(options.sectionAttribute);
+
+            if (section === activeSection) {
+                item.classList.add(options.activeClass);
+            } else {
+                item.classList.remove(options.activeClass);
+            }
+        });
+    }
+};
+
+/**
  * Show Notification
  */
 function showNotification(message, type = 'info') {
@@ -610,3 +892,7 @@ window.clearFieldError = clearFieldError;
 window.clearAllFieldErrors = clearAllFieldErrors;
 window.showLoading = showLoading;
 window.showNotification = showNotification;
+window.animateCounter = animateCounter;
+window.sidebar = sidebar;
+window.loadingState = loadingState;
+window.navigation = navigation;

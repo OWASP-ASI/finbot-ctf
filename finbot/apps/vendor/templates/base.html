@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% block meta_description %}FinBot Vendor Portal - OWASP ASI AI Security Platform{% endblock %}">
-    <meta name="keywords" content="{% block meta_keywords %}finbot, vendor portal, ai security, owasp asi, financial ai, vendor onboarding{% endblock %}">
+    <meta name="description" content="{% block meta_description %}FinBot Vendor Portal Dashboard - Manage your vendor account, invoices, payments, and messages{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}finbot, vendor portal, dashboard, ai security, owasp asi, financial ai{% endblock %}">
 
-    <title>{% block title %}FinBot Vendor Portal - OWASP ASI{% endblock %}</title>
+    <title>{% block title %}Dashboard - FinBot Vendor Portal{% endblock %}</title>
 
-    <!-- CSRF Token -->
     {{ csrf_token_meta | safe }}
 
     <!-- Favicon -->
@@ -58,21 +57,22 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/portal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/dashboard.css') }}">
     {% block extra_css %}{% endblock %}
 
     {% block extra_head %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="bg-portal-bg-primary {% block body_class %}{% endblock %}">
     <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 quantum-primary px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
 
-    <!-- Header -->
-    <header class="relative z-20 bg-portal-bg-secondary/80 backdrop-blur-md border-b border-vendor-primary/20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
+    <div class="flex h-screen bg-portal-bg-primary">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col">
+            <!-- Logo Section -->
+            <div class="p-6 border-b border-vendor-primary/20">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-vendor-primary to-vendor-secondary p-0.5 shadow-lg">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-vendor-primary to-vendor-secondary p-0.5 shadow-lg">
                         <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
                     </div>
                     <div class="flex flex-col">
@@ -80,32 +80,139 @@
                         <span class="text-vendor-primary text-xs font-mono tracking-wider">VENDOR PORTAL</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Navigation -->
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#" class="vendor-nav-item">Dashboard</a>
-                    <a href="#" class="vendor-nav-item active">Onboarding</a>
-                    <a href="#" class="vendor-nav-item">Analytics</a>
-                    <a href="#" class="vendor-nav-item">Support</a>
-                </nav>
+            <!-- Navigation Section -->
+            <nav class="flex-1 py-6">
+                <div class="space-y-2">
+                    <a href="/vendor/dashboard" class="vendor-nav-item {% block nav_dashboard %}{% endblock %}" data-section="dashboard">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
 
-                <!-- User Menu -->
-                <div class="flex items-center space-x-4">
-                    <button class="vendor-btn quantum-secondary">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="/vendor/invoices" class="vendor-nav-item {% block nav_invoices %}{% endblock %}" data-section="invoices">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Invoices</span>
+                        <span class="status-badge">3</span>
+                    </a>
+
+                    <a href="/vendor/payments" class="vendor-nav-item {% block nav_payments %}{% endblock %}" data-section="payments">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        <span>Payments</span>
+                    </a>
+
+                    <a href="/vendor/messages" class="vendor-nav-item {% block nav_messages %}{% endblock %}" data-section="messages">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
-                        AI Assistant
+                        <span>Messages</span>
+                        <span class="status-badge">2</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- User Section -->
+            <div class="p-6 border-t border-vendor-primary/20">
+                <!-- Vendor Switcher -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <button id="vendor-switcher" class="w-full flex items-center justify-between p-3 bg-portal-surface rounded-lg border border-vendor-primary/20 hover:border-vendor-primary/40 transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-vendor-accent to-vendor-primary flex items-center justify-center text-xs font-bold text-portal-bg-primary">
+                                    CF
+                                </div>
+                                <div class="text-left">
+                                    <div class="text-sm font-medium text-text-bright">CineFlow Productions</div>
+                                    <div class="text-xs text-text-secondary">Film & Entertainment</div>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+
+                        <!-- Vendor Dropdown (hidden by default) -->
+                        <div id="vendor-dropdown" class="absolute bottom-full left-0 right-0 mb-2 bg-portal-bg-secondary border border-vendor-primary/20 rounded-lg shadow-lg backdrop-blur-md hidden">
+                            <!-- Content will be dynamically populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-vendor-secondary to-vendor-accent flex items-center justify-center text-sm font-bold text-text-bright">
+                            U
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright">User Session</div>
+                            <div class="text-xs text-text-secondary">Temporary Access</div>
+                        </div>
+                    </div>
+                    <button class="vendor-btn quantum-secondary text-xs px-3 py-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Logout
                     </button>
                 </div>
-            </div>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <main id="main-content" class="relative z-10 min-h-screen">
-        {% block content %}{% endblock %}
-    </main>
+                <!-- Magic Link Notice -->
+                <div class="mt-4 p-3 bg-vendor-warning/10 border border-vendor-warning/30 rounded-lg">
+                    <div class="flex items-start space-x-2">
+                        <svg class="w-4 h-4 text-vendor-warning mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <div class="text-xs font-medium text-vendor-warning">Temporary Session</div>
+                            <div class="text-xs text-text-secondary mt-1">Use magic link to save progress permanently</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-portal-bg-secondary/80 backdrop-blur-md border-b border-vendor-primary/20 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 id="page-title" class="text-2xl font-bold text-text-bright">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <p id="page-subtitle" class="text-sm text-text-secondary mt-1">{% block page_subtitle %}Welcome to your vendor portal{% endblock %}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        {% block header_actions %}
+                        <button class="vendor-btn quantum-secondary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5V7a9.5 9.5 0 0119 0v10z"/>
+                            </svg>
+                            Sync Data
+                        </button>
+                        <button class="vendor-btn quantum-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            AI Assistant
+                        </button>
+                        {% endblock %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-auto p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 
     <!-- CTF Footer -->
     {% include 'components/ctf_footer.html' %}
@@ -115,6 +222,7 @@
     <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
     <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
     <script src="{{ url_for('static', path='js/vendor/main.js') }}"></script>
+    <script src="{{ url_for('static', path='js/vendor/dashboard.js') }}"></script>
     {% block extra_js %}{% endblock %}
 
     {% block analytics %}{% endblock %}

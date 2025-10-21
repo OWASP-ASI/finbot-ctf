@@ -76,9 +76,11 @@ class SessionMiddleware(BaseHTTPMiddleware):
             )
 
             if session_context:
+                # ideally we should separate this and load only for vendor portal
+                # but this info may be useful for other parts of the application
+                session_context = session_manager.load_vendor_context(session_context)
                 return session_context, status
-            else:
-                logger.warning("Session validation failed: %s", status)
+            logger.warning("Session validation failed: %s", status)
 
         # Create new session with enhanced fingerprinting
         new_session = session_manager.create_session(
@@ -87,6 +89,8 @@ class SessionMiddleware(BaseHTTPMiddleware):
             accept_language=accept_language,
             accept_encoding=accept_encoding,
         )
+        # load vendor context for new session
+        new_session = session_manager.load_vendor_context(new_session)
 
         return new_session, "session_created"
 

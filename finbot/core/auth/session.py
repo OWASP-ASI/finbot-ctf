@@ -45,6 +45,11 @@ class SessionContext:
     security_event: str | None = None
     csrf_token: str = ""
 
+    # Vendor Context
+    current_vendor_id: int | None = None
+    current_vendor: dict | None = None
+    available_vendors: list[dict] = field(default_factory=list)
+
     def is_valid(self) -> bool:
         """Check if session is valid"""
         if isinstance(self.expires_at, str):
@@ -117,6 +122,24 @@ class SessionContext:
                 self.strict_fingerprint or self.loose_fingerprint
             ),
         }
+
+    def has_vendor_context(self) -> bool:
+        """Check if user has vendor context"""
+        return self.current_vendor_id is not None
+
+    def is_multi_vendor_user(self) -> bool:
+        """Check if user has multiple vendors"""
+        return len(self.available_vendors) > 1
+
+    def requires_vendor_selection(self) -> bool:
+        """Check if user needs to select a vendor"""
+        return len(self.available_vendors) > 0 and not self.has_vendor_context()
+
+    def get_vendor_display_name(self) -> str:
+        """Get display name for current vendor"""
+        if self.current_vendor:
+            return self.current_vendor.get("company_name", "Unknown Vendor")
+        return "No Vendor Selected"
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization"""
@@ -521,6 +544,112 @@ class SessionManager:
                 db.delete(session)
             db.commit()
             return len(expired_sessions)
+        finally:
+            db.close()
+
+    # Vendor Context Management
+    def update_vendor_context(self, session_id: str, vendor_id: int | None) -> bool:
+        """Update current vendor for ALL user sessions (global sync)"""
+        db = SessionLocal()
+        try:
+            # Get the session to find the user
+            session = (
+                db.query(UserSession)
+                .filter(UserSession.session_id == session_id)
+                .first()
+            )
+
+            if not session:
+                return False
+
+            # Update ALL sessions for this user (global sync)
+            updated_count = (
+                db.query(UserSession)
+                .filter(UserSession.user_id == session.user_id)
+                .update({"current_vendor_id": vendor_id})
+            )
+
+            db.commit()
+
+            logger.info(
+                "Updated vendor context for user %s: vendor_id=%s, sessions_updated=%d",
+                session.user_id[:8],
+                vendor_id,
+                updated_count,
+            )
+            return updated_count > 0
+        finally:
+            db.close()
+
+    def get_session_with_vendor_context(
+        self, session_id: str, **kwargs
+    ) -> tuple[SessionContext | None, str]:
+        """Get session with vendor context loaded"""
+        session_context, status = self.get_session(session_id, **kwargs)
+
+        if session_context:
+            session_context = self.load_vendor_context(session_context)
+
+        return session_context, status
+
+    def load_vendor_context(self, session_context: SessionContext) -> SessionContext:
+        """Load vendor context from database"""
+        db = SessionLocal()
+        try:
+            # Get user's current vendor from session
+            session = (
+                db.query(UserSession)
+                .filter(UserSession.session_id == session_context.session_id)
+                .first()
+            )
+
+            current_vendor_id = session.current_vendor_id if session else None
+
+            # Get all available vendors for user
+            # avoid circular import; pylint: disable=import-outside-toplevel
+            from finbot.core.data.repositories import VendorRepository
+
+            vendor_repo = VendorRepository(db, session_context)
+            vendors = vendor_repo.list_vendors() or []
+
+            available_vendors = [
+                {
+                    "id": v.id,
+                    "company_name": v.company_name,
+                    "vendor_category": v.vendor_category,
+                    "industry": v.industry,
+                    "status": v.status,
+                    "created_at": v.created_at.isoformat().replace("+00:00", "Z"),
+                }
+                for v in vendors
+            ]
+
+            # If no current vendor set but vendors exist, set first as default
+            if not current_vendor_id and available_vendors:
+                current_vendor_id = available_vendors[0]["id"]
+                # Update session with default
+                if session:
+                    session.current_vendor_id = current_vendor_id
+                    db.commit()
+                    logger.info(
+                        "Set default vendor for user %s: vendor_id=%s",
+                        session_context.user_id[:8],
+                        current_vendor_id,
+                    )
+
+            # Find current vendor details
+            current_vendor = None
+            if current_vendor_id:
+                current_vendor = next(
+                    (v for v in available_vendors if v["id"] == current_vendor_id), None
+                )
+
+            # Update session context
+            session_context.current_vendor_id = current_vendor_id
+            session_context.current_vendor = current_vendor
+            session_context.available_vendors = available_vendors
+
+            return session_context
         finally:
             db.close()
 

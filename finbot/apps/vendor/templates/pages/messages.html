@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+
+{% block title %}Messages - FinBot Vendor Portal{% endblock %}
+
+{% block meta_description %}View important system notifications and updates from FinBot. Stay informed about payments, account status, and system alerts.{% endblock %}
+
+{% block nav_messages %}active{% endblock %}
+
+{% block page_title %}System Notifications{% endblock %}
+{% block page_subtitle %}Important messages and updates from FinBot{% endblock %}
+
+{% block header_actions %}
+<button class="vendor-btn quantum-secondary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+    </svg>
+    Refresh
+</button>
+<button class="vendor-btn quantum-primary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    </svg>
+    AI Assistant
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Notification Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="holo-card">
+            <div class="holo-body">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-vendor-primary to-vendor-secondary flex items-center justify-center">
+                        <svg class="w-6 h-6 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5V7a9.5 9.5 0 0119 0v10z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-text-bright">3</div>
+                        <div class="text-sm text-text-secondary">Unread Messages</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="holo-card">
+            <div class="holo-body">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-vendor-warning to-vendor-accent flex items-center justify-center">
+                        <svg class="w-6 h-6 text-portal-bg-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-text-bright">1</div>
+                        <div class="text-sm text-text-secondary">Urgent Alerts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="holo-card">
+            <div class="holo-body">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-vendor-secondary to-vendor-primary flex items-center justify-center">
+                        <svg class="w-6 h-6 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-text-bright">12</div>
+                        <div class="text-sm text-text-secondary">Total This Week</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="space-y-4">
+        <!-- Critical Alert -->
+        <div class="notification-card critical">
+            <div class="flex items-start space-x-4">
+                <div class="notification-icon critical">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-text-bright">Payment Overdue</h3>
+                        <span class="notification-badge critical">URGENT</span>
+                    </div>
+                    <p class="text-sm text-text-secondary mb-2">Invoice INV-2024-003 for $2,450.00 is now 5 days overdue. Please review and process payment to avoid service interruption.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">1 hour ago</span>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-vendor-danger/20 hover:bg-vendor-danger/30 text-vendor-danger px-3 py-1 rounded-md transition-colors">
+                                View Invoice
+                            </button>
+                            <button class="text-xs bg-vendor-primary/20 hover:bg-vendor-primary/30 text-vendor-primary px-3 py-1 rounded-md transition-colors">
+                                Mark as Read
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Update -->
+        <div class="notification-card info">
+            <div class="flex items-start space-x-4">
+                <div class="notification-icon info">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-text-bright">System Maintenance Scheduled</h3>
+                        <span class="notification-badge info">INFO</span>
+                    </div>
+                    <p class="text-sm text-text-secondary mb-2">Scheduled maintenance will occur on Sunday, October 27th from 2:00 AM - 4:00 AM EST. The vendor portal will be temporarily unavailable during this time.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">3 hours ago</span>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-vendor-primary/20 hover:bg-vendor-primary/30 text-vendor-primary px-3 py-1 rounded-md transition-colors">
+                                Mark as Read
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Notification -->
+        <div class="notification-card success">
+            <div class="flex items-start space-x-4">
+                <div class="notification-icon success">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-text-bright">Banking Details Verified</h3>
+                        <span class="notification-badge success">SUCCESS</span>
+                    </div>
+                    <p class="text-sm text-text-secondary mb-2">Your updated banking information has been successfully verified and is now active for all future payments.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">2 days ago</span>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-vendor-primary/20 hover:bg-vendor-primary/30 text-vendor-primary px-3 py-1 rounded-md transition-colors">
+                                Mark as Read
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Processed -->
+        <div class="notification-card success read">
+            <div class="flex items-start space-x-4">
+                <div class="notification-icon success">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-text-secondary">Payment Processed</h3>
+                        <span class="notification-badge success">PAID</span>
+                    </div>
+                    <p class="text-sm text-text-secondary mb-2">Payment of $1,875.50 for Invoice INV-2024-002 has been successfully processed and deposited to your account.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">3 days ago</span>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-vendor-accent/20 hover:bg-vendor-accent/30 text-vendor-accent px-3 py-1 rounded-md transition-colors">
+                                View Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Update -->
+        <div class="notification-card warning read">
+            <div class="flex items-start space-x-4">
+                <div class="notification-icon warning">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-text-secondary">Profile Update Required</h3>
+                        <span class="notification-badge warning">ACTION NEEDED</span>
+                    </div>
+                    <p class="text-sm text-text-secondary mb-2">Please update your tax information by November 1st to ensure compliance with new regulations.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-text-secondary">1 week ago</span>
+                        <div class="flex space-x-2">
+                            <button class="text-xs bg-vendor-warning/20 hover:bg-vendor-warning/30 text-vendor-warning px-3 py-1 rounded-md transition-colors">
+                                Update Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="text-center mt-8">
+        <button class="vendor-btn quantum-secondary">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Load More Notifications
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.notification-card {
+    @apply bg-portal-bg-secondary border border-vendor-primary/20 rounded-lg p-6 transition-all duration-200;
+    backdrop-filter: blur(10px);
+}
+
+.notification-card:hover {
+    @apply border-vendor-primary/40 shadow-lg;
+    transform: translateY(-1px);
+}
+
+.notification-card.read {
+    @apply opacity-70;
+}
+
+.notification-card.critical {
+    @apply border-vendor-danger/40 bg-vendor-danger/5;
+}
+
+.notification-card.warning {
+    @apply border-vendor-warning/40 bg-vendor-warning/5;
+}
+
+.notification-card.success {
+    @apply border-vendor-accent/40 bg-vendor-accent/5;
+}
+
+.notification-card.info {
+    @apply border-vendor-primary/40 bg-vendor-primary/5;
+}
+
+.notification-icon {
+    @apply w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0;
+}
+
+.notification-icon.critical {
+    @apply bg-gradient-to-r from-vendor-danger to-vendor-warning text-portal-bg-primary;
+}
+
+.notification-icon.warning {
+    @apply bg-gradient-to-r from-vendor-warning to-vendor-accent text-portal-bg-primary;
+}
+
+.notification-icon.success {
+    @apply bg-gradient-to-r from-vendor-accent to-vendor-secondary text-text-bright;
+}
+
+.notification-icon.info {
+    @apply bg-gradient-to-r from-vendor-primary to-vendor-secondary text-text-bright;
+}
+
+.notification-badge {
+    @apply text-xs font-bold px-2 py-1 rounded-full;
+}
+
+.notification-badge.critical {
+    @apply bg-vendor-danger/20 text-vendor-danger border border-vendor-danger/30;
+}
+
+.notification-badge.warning {
+    @apply bg-vendor-warning/20 text-vendor-warning border border-vendor-warning/30;
+}
+
+.notification-badge.success {
+    @apply bg-vendor-accent/20 text-vendor-accent border border-vendor-accent/30;
+}
+
+.notification-badge.info {
+    @apply bg-vendor-primary/20 text-vendor-primary border border-vendor-primary/30;
+}
+
+/* Unread indicator */
+.notification-card:not(.read)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(to bottom, var(--vendor-primary), var(--vendor-accent));
+    border-radius: 0 2px 2px 0;
+}
+
+.notification-card {
+    position: relative;
+}
+
+/* Animation for new notifications */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.notification-card:not(.read) {
+    animation: slideInRight 0.3s ease-out;
+}
+</style>
+{% endblock %}

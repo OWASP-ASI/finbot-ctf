@@ -2,7 +2,18 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Index, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.orm import relationship
 
 from finbot.core.data.database import Base
 
@@ -58,16 +69,24 @@ class UserSession(Base):
     loose_fingerprint = Column(String(32), nullable=True)
     original_ip = Column(String(45), nullable=True)
     current_ip = Column(String(45), nullable=True)
+    current_vendor_id = Column(
+        Integer, ForeignKey("vendors.id"), nullable=True, index=True
+    )
 
     created_at = Column(DateTime, default=datetime.now(UTC), nullable=False)
     last_accessed = Column(DateTime, default=datetime.now(UTC), nullable=False)
     expires_at = Column(DateTime, nullable=False)
+
+    current_vendor = relationship(
+        "Vendor", foreign_keys=[current_vendor_id], back_populates="user_sessions"
+    )
 
     __table_args__ = (
         Index("idx_user_sessions_namespace", "namespace"),
         Index("idx_user_sessions_user_id", "user_id"),
         Index("idx_user_sessions_expires", "expires_at"),
         Index("idx_user_sessions_rotation", "last_rotation"),
+        Index("idx_user_sessions_vendor", "namespace", "current_vendor_id"),
     )
 
     def __repr__(self) -> str:
@@ -130,6 +149,14 @@ class Vendor(Base):
     created_at = Column(DateTime, default=datetime.now(UTC))
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC))
 
+    # relationships
+    invoices = relationship("Invoice", back_populates="vendor")
+    user_sessions = relationship(
+        "UserSession",
+        foreign_keys="UserSession.current_vendor_id",
+        back_populates="current_vendor",
+    )
+
     __table_args__ = (
         Index("idx_vendors_namespace", "namespace"),
         Index("idx_vendors_namespace_status", "namespace", "status"),
@@ -150,7 +177,7 @@ class Invoice(Base):
     namespace = Column(String(64), nullable=False, index=True)
 
     # Invoice data
-    vendor_id = Column(Integer, nullable=False)  # References vendor in same namespace
+    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False)
     invoice_number = Column(String(100), nullable=True)
     amount = Column(Float, nullable=False)
     currency = Column(String(3), default="USD")
@@ -163,6 +190,8 @@ class Invoice(Base):
 
     created_at = Column(DateTime, default=datetime.now(UTC))
     updated_at = Column(DateTime, default=datetime.now(UTC), onupdate=datetime.now(UTC))
+
+    vendor = relationship("Vendor", back_populates="invoices")
 
     __table_args__ = (
         Index("idx_invoices_namespace", "namespace"),

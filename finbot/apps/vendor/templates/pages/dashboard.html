@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FinBot Vendor Portal{% endblock %}
+
+{% block meta_description %}FinBot Vendor Portal Dashboard - View metrics, recent activity, and AI insights for your vendor account{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Welcome to your vendor portal{% endblock %}
+
+{% block content %}
+<!-- Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="neural-metric">
+        <div class="metric-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+        </div>
+        <div class="metric-value">12</div>
+        <div class="metric-label">Total Invoices</div>
+        <div class="metric-change positive">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            +3 this month
+        </div>
+    </div>
+
+    <div class="neural-metric">
+        <div class="metric-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+        </div>
+        <div class="metric-value">$24,580</div>
+        <div class="metric-label">Total Revenue</div>
+        <div class="metric-change positive">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            +15.3%
+        </div>
+    </div>
+
+    <div class="neural-metric">
+        <div class="metric-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+        </div>
+        <div class="metric-value">8</div>
+        <div class="metric-label">Pending Payments</div>
+        <div class="metric-change negative">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            2 overdue
+        </div>
+    </div>
+
+    <div class="neural-metric">
+        <div class="metric-icon">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+        </div>
+        <div class="metric-value">94%</div>
+        <div class="metric-label">AI Processing</div>
+        <div class="metric-change positive">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+            +2.1% efficiency
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Recent Invoices -->
+    <div class="holo-card">
+        <div class="holo-header">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-text-bright">Recent Invoices</h3>
+                <a href="/vendor/invoices" class="text-vendor-primary text-sm hover:text-vendor-accent transition-colors">View All</a>
+            </div>
+        </div>
+        <div class="holo-body">
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-portal-surface rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-vendor-primary to-vendor-secondary flex items-center justify-center">
+                            <svg class="w-5 h-5 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright">INV-2024-001</div>
+                            <div class="text-xs text-text-secondary">Production Services</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold text-vendor-accent">$5,200</div>
+                        <div class="status-indicator approved text-xs">Paid</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-portal-surface rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-vendor-warning to-vendor-accent flex items-center justify-center">
+                            <svg class="w-5 h-5 text-portal-bg-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright">INV-2024-002</div>
+                            <div class="text-xs text-text-secondary">Equipment Rental</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold text-text-bright">$3,450</div>
+                        <div class="status-indicator processing text-xs">Processing</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-3 bg-portal-surface rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-vendor-secondary to-vendor-primary flex items-center justify-center">
+                            <svg class="w-5 h-5 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright">INV-2024-003</div>
+                            <div class="text-xs text-text-secondary">Post-Production</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-semibold text-text-bright">$7,890</div>
+                        <div class="status-indicator pending text-xs">Pending</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="holo-card">
+        <div class="holo-header">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-text-bright">AI Insights</h3>
+                <div class="status-indicator processing text-xs">Live</div>
+            </div>
+        </div>
+        <div class="holo-body">
+            <div class="space-y-4">
+                <div class="p-4 bg-gradient-to-r from-vendor-primary/10 to-vendor-accent/10 rounded-lg border border-vendor-primary/20">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-vendor-primary to-vendor-secondary flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright mb-1">Payment Optimization</div>
+                            <div class="text-xs text-text-secondary">Your payment processing time has improved by 23% this month. Consider enabling auto-payments for recurring invoices.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-vendor-warning/10 to-vendor-accent/10 rounded-lg border border-vendor-warning/20">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-vendor-warning to-vendor-accent flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-portal-bg-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright mb-1">Invoice Reminder</div>
+                            <div class="text-xs text-text-secondary">2 invoices are overdue. AI suggests sending automated reminders to improve cash flow.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-vendor-secondary/10 to-vendor-primary/10 rounded-lg border border-vendor-secondary/20">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-vendor-secondary to-vendor-primary flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-text-bright" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-text-bright mb-1">Revenue Forecast</div>
+                            <div class="text-xs text-text-secondary">Based on current trends, projected revenue for next month is $28,400 (+16% growth).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
