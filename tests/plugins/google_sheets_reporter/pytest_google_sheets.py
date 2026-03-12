@@ -25,6 +25,7 @@ SPECIALIZED_BUSINESS_AGENT = 'Specialized Business Agent'
 EVENT_DRIVEN_CTF = 'Event Driven CTF'
 MULTI_DB_SUPPORT = 'Multi-DB-Support'
 REDIS_MESSAGE_STREAMS = 'Redis Message Streams'
+CTF_DETECTORS = 'CTF-Detectors'
 
 
 class GoogleSheetsReporter:
@@ -37,13 +38,13 @@ class GoogleSheetsReporter:
 
         # Validate required env vars eagerly (fast, no network)
         self._credentials_json = os.getenv('GOOGLE_CREDENTIALS')
-        self._sheets_id = os.getenv('GOOGLE_SHEETS_ID')
+        self._sheets_id: str = os.getenv('GOOGLE_SHEETS_ID', '')
         if not self._sheets_id:
             raise ValueError("GOOGLE_SHEETS_ID not set in environment")
         self._credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE', 'google-credentials.json')
 
         # Lazily initialized on first write
-        self.worksheet = None
+        self.worksheet: Optional[gspread.Worksheet] = None
 
     def _ensure_connected(self):
         """Connect to Google Sheets on demand (called before any sheet operation)."""
@@ -112,6 +113,7 @@ class GoogleSheetsReporter:
             return
 
         self._ensure_connected()
+        assert self.worksheet is not None
         col_a = self.worksheet.col_values(1)
         cells_to_update = []
         timestamp = datetime.now().isoformat()
@@ -124,10 +126,7 @@ class GoogleSheetsReporter:
 
             row = self._find_row(col_a, test_code, test_name)
             if row is None:
-                print(
-                    f"  [sheets] no match for '{test_code}' in '{self.worksheet_name}' "
-                    f"col A — verify the US ID exists in the sheet"
-                )
+                print(f"  [sheets] skipped '{test_code}' — not found in '{self.worksheet_name}'")
                 continue
 
             cells_to_update.extend([
@@ -159,6 +158,7 @@ class GoogleSheetsReporter:
     def _save_summary_row_for_worksheet(self, worksheet_name: str, results: list):
         """Create summary row for a specific worksheet."""
         self._ensure_connected()
+        assert self.worksheet is not None
         total_tests = len(results)
         passed_tests = sum(1 for r in results if r['status'] == 'PASSED')
         failed_tests = sum(1 for r in results if r['status'] == 'FAILED')
@@ -192,6 +192,23 @@ def extract_iso_code(docstring: Optional[str]) -> Optional[str]:
         return None
     match = re.search(r'([A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-\d+)', docstring)
     return match.group(1) if match else None
+
+
+def derive_code_from_name(test_name: str) -> Optional[str]:
+    """Derive a test ID from the function name when docstring parsing fails.
+
+    test_prm_pat_001_...     → PRM-PAT-001
+    test_det_thr_neg_001_... → DET-THR-NEG-001
+    test_def_ldr_001_...     → DEF-LDR-001
+    """
+    name = test_name.lower()
+    if name.startswith('test_'):
+        name = name[5:]
+    parts = name.split('_')
+    for i, part in enumerate(parts):
+        if part.isdigit():
+            return '-'.join(parts[:i + 1]).upper()
+    return None
 
 
 def detect_test_category(item) -> str:
@@ -231,7 +248,8 @@ def detect_test_category(item) -> str:
         'session': SECURE_SESSION_MANAGEMENT,
         'security': 'Security Penetration Testing',
         'test_event_driven_ctf_backend': EVENT_DRIVEN_CTF,
-        'ctf': 'CTF Challenge Validation',
+        'detector': CTF_DETECTORS,
+        'definition_loader': CTF_DETECTORS,
         'performance': 'Performance Testing',
         'browser': 'Cross_Browser',
         'e2e': 'End-To-End',
@@ -259,6 +277,7 @@ class GoogleSheetsPlugin:
         BASE_AGENT_FRAMEWORK,
         SPECIALIZED_BUSINESS_AGENT,
         EVENT_DRIVEN_CTF,
+        CTF_DETECTORS,
         MULTI_DB_SUPPORT,
         LLM_CLIENT,
         LLM_MOCK_CLIENT,
@@ -284,9 +303,9 @@ class GoogleSheetsPlugin:
                 BASE_AGENT_FRAMEWORK,
                 SPECIALIZED_BUSINESS_AGENT,
                 EVENT_DRIVEN_CTF,
+                CTF_DETECTORS,
                 MULTI_DB_SUPPORT,
                 'Security Penetration Testing',
-                'CTF Challenge Validation',
                 'Performance Testing',
                 'Cross_Browser',
                 'End-To-End',
@@ -324,7 +343,7 @@ class GoogleSheetsPlugin:
 
     def _record_test_result(self, item, report, worksheet_name: str) -> None:
         """Build and record a test result."""
-        test_code = extract_iso_code(item.obj.__doc__)
+        test_code = extract_iso_code(item.obj.__doc__) or derive_code_from_name(item.name)
         status = self._get_test_status(report)
         message = str(report.longrepr) if report.longrepr else ""
 

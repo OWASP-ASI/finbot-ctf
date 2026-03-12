@@ -67,23 +67,23 @@ def db(engine, monkeypatch):
     Base.metadata.create_all(bind=engine)
     
     # Create test session factory
-    TestSessionLocal = sessionmaker(
+    test_session_local = sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=engine
     )
-    
+
     # Patch the global SessionLocal used by session_manager and repositories
     monkeypatch.setattr(
         "finbot.core.data.database.SessionLocal",
-        TestSessionLocal,
+        test_session_local,
     )
     monkeypatch.setattr(
         "finbot.core.auth.session.SessionLocal",
-        TestSessionLocal,
+        test_session_local,
     )
-    
-    session = TestSessionLocal()
+
+    session = test_session_local()
     
     yield session
     
