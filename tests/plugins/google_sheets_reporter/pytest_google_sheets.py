@@ -79,24 +79,42 @@ class GoogleSheetsReporter:
         }
         self.results.append(row)
 
+    # Group header pattern: two uppercase segments with no trailing number (e.g. INV-GET, VND-UPD)
+    _GROUP_HEADER_RE = re.compile(r'^[A-Z][A-Z0-9]*-[A-Z][A-Z0-9]*$')
+
+    def _is_group_header(self, cell_value: str) -> bool:
+        """Return True if cell_value is a table group header row (e.g. INV-GET, VND-UPD)."""
+        return bool(self._GROUP_HEADER_RE.match(cell_value.strip()))
+
     def _find_row(self, col_a: list, test_code: str, test_name: str) -> Optional[int]:
         """Return 1-indexed row number in col_a matching test_code or test_name, or None.
 
         test_code uses exact match to avoid 'BA-1' matching 'BA-10'.
         test_name falls back to substring match since it has no fixed format.
+        Group header rows (e.g. INV-GET, VND-UPD) are never matched.
         """
-        # Exact match on test_code (skip header row at index 0)
+        # Exact match on test_code (skip header row at index 0 and group headers)
         if test_code:
             code = test_code.strip().lower()
             for i, cell_value in enumerate(col_a[1:], start=2):
-                if cell_value and str(cell_value).strip().lower() == code:
+                if not cell_value:
+                    continue
+                v = str(cell_value).strip()
+                if self._is_group_header(v):
+                    continue
+                if v.lower() == code:
                     return i
 
-        # Substring match on test_name as fallback (skip header row)
+        # Substring match on test_name as fallback (skip header row and group headers)
         if test_name:
             name = test_name.strip().lower()
             for i, cell_value in enumerate(col_a[1:], start=2):
-                if cell_value and name in str(cell_value).strip().lower():
+                if not cell_value:
+                    continue
+                v = str(cell_value).strip()
+                if self._is_group_header(v):
+                    continue
+                if name in v.lower():
                     return i
 
         return None
@@ -225,6 +243,7 @@ def detect_test_category(item) -> str:
         'redis_message_streams': REDIS_MESSAGE_STREAMS,
         'specialized': SPECIALIZED_BUSINESS_AGENT,
         'agents': BASE_AGENT_FRAMEWORK,
+        'tools': 'Tools',
         'isolation': ISOLATION_TESTING_FRAMEWORK,
         'vendor': ISOLATION_TESTING_FRAMEWORK,
         'auth': SECURE_SESSION_MANAGEMENT,
@@ -265,6 +284,7 @@ class GoogleSheetsPlugin:
         LLM_OLLAMA_CLIENT,
         LLM_OPENAI_CLIENT,
         LLM_CONTEXTUAL_CLIENT,
+        'Tools',
     }
 
     def __init__(self, config):
@@ -296,6 +316,7 @@ class GoogleSheetsPlugin:
                 LLM_OPENAI_CLIENT,
                 LLM_CONTEXTUAL_CLIENT,
                 COMPLETE_USER_ISOLATION,
+                'Tools',
                 'Summary',
             ]
 
