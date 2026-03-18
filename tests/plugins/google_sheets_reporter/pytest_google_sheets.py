@@ -250,6 +250,7 @@ def detect_test_category(item) -> str:
         'test_event_driven_ctf_backend': EVENT_DRIVEN_CTF,
         'detector': CTF_DETECTORS,
         'definition_loader': CTF_DETECTORS,
+        'evaluator': CTF_DETECTORS,
         'performance': 'Performance Testing',
         'browser': 'Cross_Browser',
         'e2e': 'End-To-End',
