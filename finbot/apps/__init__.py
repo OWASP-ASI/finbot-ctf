@@ -1,6 +1,8 @@
-"""FinBot Applications
+"""OWASP FinBot Platform Applications
 
-- Web: Frontend for fictitious company - CineFlow Productions
+- FinBot: Landing pages and portals hub for the OWASP FinBot CTF platform
+- CC: Command Center — platform management for maintainers (/cc)
+- Web: CineFlow Productions demo tenant (hidden, under /demo/cineflow/)
 - Vendor: Vendor Portal
 - Admin: Admin Portal
 - CTF: CTF Portal

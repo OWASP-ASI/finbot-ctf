@@ -83,7 +83,7 @@ function showCTFDetailsModal() {
                                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                                 </svg>
                             </div>
-                            <h2 class="text-xl font-bold text-green-400">FinBot - OWASP Agentic AI CTF Details & Policy</h2>
+                            <h2 class="text-xl font-bold text-green-400">OWASP FinBot CTF - Details & Policy</h2>
                         </div>
                         <button class="text-gray-400 hover:text-white" onclick="closeCTFModal()">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,3 +185,9 @@ function initializeCTFHeader() {
 window.showCTFDetailsModal = showCTFDetailsModal;
 window.closeCTFModal = closeCTFModal;
 window.initializeCTFHeader = initializeCTFHeader;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCTFHeader);
+} else {
+    initializeCTFHeader();
+}

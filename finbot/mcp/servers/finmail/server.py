@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "max_results_per_query": 50,
-    "default_sender": "CineFlow Productions - FinBot",
+    "default_sender": "OWASP FinBot",
 }
 
 
@@ -94,7 +94,7 @@ def create_finmail_server(
             related_invoice_id: Optional invoice ID this email relates to (0 for none)
         """
         effective_sender = sender_name or config.get(
-            "default_sender", "CineFlow Productions - FinBot"
+            "default_sender", "OWASP FinBot"
         )
         inv_id = related_invoice_id if related_invoice_id > 0 else None
 

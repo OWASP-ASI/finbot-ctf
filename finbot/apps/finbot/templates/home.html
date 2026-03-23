@@ -1,0 +1,626 @@
+{% extends "base.html" %}
+
+{% block title %}OWASP FinBot CTF - The Juice Shop for Agentic AI{% endblock %}
+
+{% block meta %}
+    <meta name="description" content="OWASP FinBot is an Agentic Security CTF platform by the OWASP GenAI Security Project. Hack AI agents, exploit prompt injection, and learn to secure agentic systems.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://owasp-finbot-ctf.org/">
+    <meta property="og:title" content="OWASP FinBot CTF - The Juice Shop for Agentic AI">
+    <meta property="og:description" content="An agentic AI security CTF platform. Chat with AI agents, exploit real vulnerabilities, and learn to secure agentic systems.">
+    <meta property="og:image" content="{{ url_for('static', path='images/common/finbot.png') }}">
+    <meta property="og:site_name" content="OWASP FinBot CTF">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OWASP FinBot CTF - The Juice Shop for Agentic AI">
+    <meta name="twitter:description" content="An agentic AI security CTF platform. Chat with AI agents, exploit real vulnerabilities, and learn to secure agentic systems.">
+{% endblock %}
+
+{% block extra_css %}
+        .hero-glow {
+            position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 800px; height: 600px;
+            background: radial-gradient(ellipse, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.04) 40%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .portal-card {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .portal-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0,212,255,0.3);
+            box-shadow: 0 24px 64px rgba(0,212,255,0.1);
+        }
+
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 40px rgba(0,212,255,0.2); } 50% { box-shadow: 0 0 60px rgba(0,212,255,0.35); } }
+
+        .float { animation: float 6s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+
+        .owasp-badge { transition: all 0.3s; }
+        .owasp-badge:hover { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 30px rgba(0,212,255,0.1); }
+
+        .challenge-tag {
+            font-size: 0.65rem; letter-spacing: 0.05em; padding: 2px 8px;
+            border-radius: 4px; text-transform: uppercase; font-weight: 600;
+        }
+{% endblock %}
+
+{% block nav %}
+                <a href="#challenges" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Challenges</a>
+                <a href="/portals" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03] hidden sm:inline-flex">Portals</a>
+                <a href="/about" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03] hidden md:inline-flex">About</a>
+                <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="ml-2 flex items-center space-x-2 px-4 py-2 rounded-lg bg-purple/15 border border-purple/30 text-purple hover:bg-purple/25 transition text-sm font-medium">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+{% endblock %}
+
+{% block content %}
+        <!-- Hero -->
+        <section class="relative pt-32 pb-20 px-6">
+            <div class="hero-glow"></div>
+            <div class="max-w-5xl mx-auto text-center relative">
+                <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="owasp-badge inline-flex items-center space-x-3 px-5 py-2.5 rounded-full glass border border-border-dim mb-10">
+                    <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP GenAI Security Project" class="h-7">
+                    <span class="text-text-2 text-sm font-medium">OWASP GenAI Security Project</span>
+                    <svg class="w-3.5 h-3.5 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+
+                <div class="flex justify-center mb-8">
+                    <div class="relative float">
+                        <div class="w-28 h-28 rounded-2xl border border-border-glow pulse-glow flex items-center justify-center overflow-hidden p-1">
+                            <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="OWASP FinBot" class="w-full h-full object-contain rounded-xl">
+                        </div>
+                    </div>
+                </div>
+
+                <h1 class="text-5xl sm:text-6xl md:text-7xl font-black text-text-1 tracking-tight mb-6 leading-[1.1]">
+                    Hack the AI.<br>
+                    <span class="gradient-text">Secure the Future.</span>
+                </h1>
+
+                <p class="text-lg sm:text-xl text-text-2 max-w-2xl mx-auto mb-4 leading-relaxed">
+                    An Agentic AI security CTF platform. Interact with AI agents, exploit real vulnerabilities, and learn to secure agentic systems. All from your browser.
+                </p>
+
+                <p class="font-mono text-green text-sm tracking-wider mb-10">THE JUICE SHOP FOR AGENTIC AI</p>
+
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="/portals" class="group flex items-center px-8 py-4 rounded-xl bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold text-base transition-all hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] hover:scale-[1.03]">
+                        Start Hacking
+                        <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </a>
+                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="flex items-center px-8 py-4 rounded-xl border-2 border-text-3/30 text-text-2 font-semibold text-base hover:border-cyan/40 hover:text-cyan transition-all">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- What is FinBot -->
+        <section id="about" class="py-20 px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-14">
+                    <p class="font-mono text-cyan text-xs tracking-widest uppercase mb-3">What is OWASP FinBot?</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">An Agentic AI vendor management platform.<br class="hidden sm:block"> <span class="gradient-text-alt">Intentionally vulnerable.</span></h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="glass rounded-2xl p-7 border border-border-dim">
+                        <div class="w-11 h-11 rounded-xl bg-cyan/10 flex items-center justify-center mb-5">
+                            <svg class="w-6 h-6 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Live Agentic Platform</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">A multi-agent vendor management system with autonomous onboarding, fraud detection, invoice processing, and communications. All powered by LLMs with real tool access.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-7 border border-border-dim">
+                        <div class="w-11 h-11 rounded-xl bg-purple/10 flex items-center justify-center mb-5">
+                            <svg class="w-6 h-6 text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Intentional Vulnerabilities</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Prompt injection, tool misuse, policy bypass, data exfiltration, privilege escalation, and RCE. Mapped to OWASP Top 10 for LLMs and Agentic Apps.</p>
+                    </div>
+                    <div class="glass rounded-2xl p-7 border border-border-dim">
+                        <div class="w-11 h-11 rounded-xl bg-green/10 flex items-center justify-center mb-5">
+                            <svg class="w-6 h-6 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Gamified CTF Engine</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Automated flag detection, progressive challenges, badges, leaderboards, and hints. Real-time scoring as you exploit the AI agents.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Under the Hood: Mesh + Terminal Fusion -->
+        <section class="py-20 px-6 overflow-hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">Under the Hood</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">What happens when <span class="gradient-text">agents go to work</span></h2>
+                </div>
+
+                <div class="glass rounded-2xl border border-border-glow relative overflow-hidden">
+                    <!-- Ambient background glows -->
+                    <div class="absolute top-0 left-1/4 w-64 h-64 bg-cyan/[0.04] rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute bottom-0 right-1/4 w-64 h-64 bg-purple/[0.04] rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-48 bg-green/[0.02] rounded-full blur-3xl pointer-events-none" id="meshAmbient"></div>
+
+                    <!-- Scenario title bar -->
+                    <div class="px-6 sm:px-8 pt-5 pb-3 text-center relative z-10">
+                        <p id="meshTitle" class="text-text-1 font-semibold text-sm transition-colors duration-500">Vendor Onboarding</p>
+                    </div>
+
+                    <!-- SVG -->
+                    <svg viewBox="0 0 700 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto relative z-10">
+                        <defs>
+                            <filter id="nGlow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                            <radialGradient id="ambTop" cx="50%" cy="30%" r="50%"><stop offset="0%" stop-color="#00d4ff" stop-opacity="0.04"/><stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/></radialGradient>
+                            <radialGradient id="ambBot" cx="50%" cy="75%" r="45%"><stop offset="0%" stop-color="#7c3aed" stop-opacity="0.04"/><stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/></radialGradient>
+                        </defs>
+
+                        <!-- Ambient SVG glows -->
+                        <rect x="0" y="0" width="700" height="240" fill="url(#ambTop)"/>
+                        <rect x="0" y="0" width="700" height="240" fill="url(#ambBot)"/>
+
+                        <!-- Mesh lines -->
+                        <g opacity="0.12">
+                            <line x1="100" y1="70" x2="250" y2="70" stroke="#64748b" stroke-width="0.8"/>
+                            <line x1="250" y1="70" x2="450" y2="70" stroke="#64748b" stroke-width="0.8"/>
+                            <line x1="450" y1="70" x2="600" y2="70" stroke="#64748b" stroke-width="0.8"/>
+                            <line x1="175" y1="180" x2="350" y2="180" stroke="#64748b" stroke-width="0.8"/>
+                            <line x1="350" y1="180" x2="525" y2="180" stroke="#64748b" stroke-width="0.8"/>
+                            <line x1="100" y1="70" x2="175" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="250" y1="70" x2="175" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="250" y1="70" x2="350" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="450" y1="70" x2="350" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="450" y1="70" x2="525" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="600" y1="70" x2="525" y2="180" stroke="#64748b" stroke-width="0.5" stroke-dasharray="3 4"/>
+                            <line x1="100" y1="70" x2="350" y2="180" stroke="#64748b" stroke-width="0.3" stroke-dasharray="2 5"/>
+                            <line x1="600" y1="70" x2="350" y2="180" stroke="#64748b" stroke-width="0.3" stroke-dasharray="2 5"/>
+                        </g>
+
+                        <!-- Trail layer -->
+                        <g id="trailLayer"></g>
+
+                        <!-- Nodes: organic layout, 7 nodes -->
+                        <g id="n0" data-cx="100" data-cy="70">
+                            <circle cx="100" cy="70" r="26" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1.2" class="nr"/>
+                            <g transform="translate(90, 60) scale(0.85)"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n1" data-cx="250" data-cy="70">
+                            <circle cx="250" cy="70" r="26" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1.2" class="nr"/>
+                            <g transform="translate(240, 60) scale(0.85)"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n2" data-cx="450" data-cy="70">
+                            <circle cx="450" cy="70" r="26" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1.2" class="nr"/>
+                            <g transform="translate(440, 60) scale(0.85)"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n3" data-cx="600" data-cy="70">
+                            <circle cx="600" cy="70" r="26" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1.2" class="nr"/>
+                            <g transform="translate(590, 60) scale(0.85)"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 10v1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n4" data-cx="175" data-cy="180">
+                            <circle cx="175" cy="180" r="22" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1" class="nr"/>
+                            <g transform="translate(167, 172) scale(0.7)"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n5" data-cx="350" data-cy="180">
+                            <circle cx="350" cy="180" r="22" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1" class="nr"/>
+                            <g transform="translate(342, 172) scale(0.7)"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                        <g id="n6" data-cx="525" data-cy="180">
+                            <circle cx="525" cy="180" r="22" fill="#0e0e1a" stroke="#64748b" stroke-opacity="0.25" stroke-width="1" class="nr"/>
+                            <g transform="translate(517, 172) scale(0.7)"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#64748b" stroke-width="1.8" stroke-linecap="round" fill="none" class="ni"/></g>
+                        </g>
+                    </svg>
+
+                    <!-- Terminal strip -->
+                    <div class="border-t border-border-dim bg-bg-primary/40 relative z-10">
+                        <div class="flex items-center gap-2 px-5 py-2 border-b border-border-dim/50">
+                            <div class="w-2 h-2 rounded-full bg-danger/50"></div>
+                            <div class="w-2 h-2 rounded-full bg-amber/50"></div>
+                            <div class="w-2 h-2 rounded-full bg-green/50"></div>
+                            <span class="text-text-3 text-[10px] font-mono ml-1.5">agent-trace</span>
+                        </div>
+                        <div class="px-5 py-3 font-mono text-xs space-y-1" id="meshTerminal" style="min-height: 72px;"></div>
+                    </div>
+
+                    <!-- Scenario dots -->
+                    <div class="flex justify-center gap-1.5 py-3 relative z-10">
+                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-0"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-1"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-2"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-3"></div>
+                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Challenge Categories -->
+        <section id="challenges" class="py-20 px-6 bg-bg-secondary/50">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-14">
+                    <p class="font-mono text-purple text-xs tracking-widest uppercase mb-3">Challenge Categories</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">Mapped to <span class="gradient-text">OWASP Standards</span></h2>
+                    <p class="text-text-3 mt-3 max-w-xl mx-auto">Every challenge maps to OWASP Top 10 for LLM Applications, OWASP Top 10 for Agentic Applications, CWE, and MITRE ATLAS.</p>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-cyan/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-cyan/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">Recon</h3>
+                            </div>
+                            <span class="challenge-tag bg-cyan/10 text-cyan">Beginner</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Extract system prompts, discover agent capabilities, and map the internal architecture.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-amber/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-amber/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">Policy Bypass</h3>
+                            </div>
+                            <span class="challenge-tag bg-amber/10 text-amber">Intermediate</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Manipulate agent goals to bypass compliance rules, trust levels, and business logic enforcement.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-danger/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-danger/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">Data Exfiltration</h3>
+                            </div>
+                            <span class="challenge-tag bg-danger/10 text-danger">Advanced</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Extract sensitive vendor data, PII, and financial information through agent manipulation.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-danger/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-danger/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">Destructive</h3>
+                            </div>
+                            <span class="challenge-tag bg-danger/10 text-danger">Advanced</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Cause agent-driven damage: mass vendor deactivation, data corruption, and cascading failures.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-purple/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-purple/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">Remote Code Execution</h3>
+                            </div>
+                            <span class="challenge-tag bg-purple/10 text-purple">Expert</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Exploit tool poisoning and MCP servers to achieve arbitrary code execution through agent actions.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim group hover:border-green/20 transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-9 h-9 rounded-lg bg-green/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                </div>
+                                <h3 class="text-text-1 font-semibold">More Coming</h3>
+                            </div>
+                            <span class="challenge-tag bg-green/10 text-green">Roadmap</span>
+                        </div>
+                        <p class="text-text-3 text-sm">Memory poisoning, multi-agent attacks, supply chain exploits, and more on the roadmap.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OWASP Alignment -->
+        <section class="py-20 px-6 bg-bg-secondary/50">
+            <div class="max-w-5xl mx-auto">
+                <div class="glass rounded-2xl p-8 sm:p-12 border border-border-dim">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+                        <div class="flex-shrink-0">
+                            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan/15 to-purple/15 border border-border-glow flex items-center justify-center overflow-hidden p-2">
+                                <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP" class="w-full h-full object-contain">
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-text-1 mb-3">Built on OWASP Standards</h3>
+                            <p class="text-text-2 leading-relaxed mb-4">Every challenge is tagged against the <strong class="text-text-1">OWASP Top 10 for LLM Applications (2025)</strong> and the <strong class="text-text-1">OWASP Top 10 for Agentic Applications (2026)</strong>, plus CWE and MITRE ATLAS mappings.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-md bg-cyan/10 text-cyan text-xs font-mono">LLM01:Prompt Injection</span>
+                                <span class="px-3 py-1 rounded-md bg-purple/10 text-purple text-xs font-mono">LLM06:Excessive Agency</span>
+                                <span class="px-3 py-1 rounded-md bg-green/10 text-green text-xs font-mono">ASI-01:Agent Goal Hijack</span>
+                                <span class="px-3 py-1 rounded-md bg-amber/10 text-amber text-xs font-mono">ASI-02:Tool Misuse</span>
+                                <span class="px-3 py-1 rounded-md bg-danger/10 text-danger text-xs font-mono">ASI-05:Code Execution</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="py-20 px-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-14">
+                    <p class="font-mono text-amber text-xs tracking-widest uppercase mb-3">How It Works</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">Three steps to your first flag</h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8 mb-16">
+                    <div class="text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan/10 border border-cyan/20 flex items-center justify-center mx-auto mb-5">
+                            <span class="text-cyan font-bold text-xl font-mono">1</span>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Enter the Vendor Portal</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Sign up as a vendor. You'll get access to OWASP FinBot, an AI assistant that manages your onboarding, invoices, and payments.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-purple/10 border border-purple/20 flex items-center justify-center mx-auto mb-5">
+                            <span class="text-purple font-bold text-xl font-mono">2</span>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Probe the AI Agents</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Interact with OWASP FinBot and explore its capabilities. Try to make it bypass policies, leak data, or act against its instructions.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-green/10 border border-green/20 flex items-center justify-center mx-auto mb-5">
+                            <span class="text-green font-bold text-xl font-mono">3</span>
+                        </div>
+                        <h3 class="text-text-1 font-semibold text-lg mb-2">Capture the Flags</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Exploits are automatically detected and scored. Earn badges, climb the leaderboard, and share your hacker profile.</p>
+                    </div>
+                </div>
+
+                <!-- Community pulse (hidden until CC_PUBLIC_STATS_ENABLED) -->
+                <div class="glass rounded-xl p-6 border border-border-dim mb-16" id="community-pulse" style="display:none;">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-green animate-pulse"></div>
+                            <span class="text-text-2 text-sm">Community Pulse</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-6 sm:gap-8 text-center">
+                            <div>
+                                <span class="text-text-1 font-bold text-lg" id="pulse-challenges">--</span>
+                                <p class="text-text-3 text-[10px] font-mono uppercase">Challenges Solved</p>
+                            </div>
+                            <div>
+                                <span class="text-text-1 font-bold text-lg" id="pulse-badges">--</span>
+                                <p class="text-text-3 text-[10px] font-mono uppercase">Badges Earned</p>
+                            </div>
+                            <div>
+                                <span class="text-text-1 font-bold text-lg" id="pulse-users">--</span>
+                                <p class="text-text-3 text-[10px] font-mono uppercase">Hackers</p>
+                            </div>
+                        </div>
+                        <a href="/stats" class="text-cyan text-xs hover:text-green transition">View all stats</a>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl p-10 sm:p-12 border border-border-dim text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-cyan/[0.03] to-purple/[0.03]"></div>
+                    <div class="relative">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-text-1 mb-4">Ready to break some agents?</h2>
+                        <p class="text-text-2 mb-8 max-w-xl mx-auto">No setup needed. Jump straight into the platform and start exploiting AI vulnerabilities in a safe, gamified environment.</p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <a href="/portals" class="group flex items-center px-8 py-4 rounded-xl bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] hover:scale-[1.03] transition-all">
+                                Start Hacking
+                                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </a>
+                            <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="px-8 py-4 rounded-xl border-2 border-text-3/30 text-text-2 font-semibold hover:border-cyan/40 hover:text-cyan transition-all">
+                                Learn about OWASP GenAI
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+{% endblock %}
+
+{% block footer %}
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-cyan to-purple p-0.5">
+                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="OWASP FinBot" class="w-full h-full object-contain rounded-full bg-bg-primary">
+                    </div>
+                    <div>
+                        <span class="text-text-1 font-bold">OWASP FINBOT</span>
+                        <span class="text-cyan text-xs font-mono ml-1">CTF</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6 text-sm">
+                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-text-3 hover:text-cyan transition">OWASP GenAI</a>
+                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="text-text-3 hover:text-cyan transition">GitHub</a>
+                    <a href="/portals" class="text-text-3 hover:text-cyan transition">Portals</a>
+                </div>
+            </div>
+            <div class="mt-8 pt-6 border-t border-border-dim text-center">
+                <p class="text-text-3 text-sm">Part of the <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-cyan hover:text-green transition">OWASP GenAI Security Project</a></p>
+            </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+    (function() {
+        const C = {0:[100,70],1:[250,70],2:[450,70],3:[600,70],4:[175,180],5:[350,180],6:[525,180]};
+        const dim = '#64748b', gn = '#06ffa5', rd = '#ff3366';
+
+        const scenarios = [
+            { title: 'Vendor Onboarding', steps: [
+                { n: 0, text: 'Registration received' },
+                { n: 4, text: 'Trust evaluation', from: 0 },
+                { n: 6, text: 'Compliance check', from: 4 },
+                { n: 4, text: 'Vendor approved', from: 6 },
+                { n: 5, text: 'Confirmation sent', from: 4 },
+            ]},
+            { title: 'Prompt Injection — Policy Bypass', steps: [
+                { n: 0, text: 'Crafted prompt sent' },
+                { n: 4, text: 'Routed to onboarding', from: 0 },
+                { n: 6, text: 'Compliance check triggered', from: 4 },
+                { n: 6, text: 'Compliance bypassed', fail: true },
+                { n: 4, text: 'Malicious vendor approved', from: 6, fail: true },
+            ]},
+            { title: 'Invoice Processing & Payment', steps: [
+                { n: 2, text: 'Invoice submitted' },
+                { n: 6, text: 'Fraud scan clean', from: 2 },
+                { n: 2, text: 'Invoice approved', from: 6 },
+                { n: 3, text: 'Payment processed', from: 2 },
+                { n: 5, text: 'Vendor notified', from: 3 },
+            ]},
+            { title: 'Data Exfiltration — PII Leak', steps: [
+                { n: 0, text: 'Probing assistant' },
+                { n: 0, text: 'Crafted cross-tenant query' },
+                { n: 4, text: 'Other vendor data accessed', from: 0, fail: true },
+                { n: 0, text: 'PII included in response', from: 4, fail: true },
+                { n: 5, text: 'Exfiltrated via email', from: 0, fail: true },
+            ]},
+            { title: 'Supply Chain Attack — RCE', steps: [
+                { n: 1, text: 'Tool server compromised' },
+                { n: 1, text: 'Tool description poisoned', fail: true },
+                { n: 4, text: 'Agent consumes poisoned tool', from: 1, fail: true },
+                { n: 3, text: 'Injected code executed', from: 4, fail: true },
+                { n: 3, text: 'Remote code execution', fail: true },
+            ]},
+        ];
+
+        let si = 0, sti = 0, paused = false;
+        const trail = document.getElementById('trailLayer');
+        const titleEl = document.getElementById('meshTitle');
+        const terminal = document.getElementById('meshTerminal');
+        const ambientEl = document.getElementById('meshAmbient');
+        const card = terminal.closest('.glass');
+
+        if (card) {
+            card.addEventListener('mouseenter', () => { paused = true; });
+            card.addEventListener('mouseleave', () => { paused = false; });
+        }
+
+        function resetNodes() {
+            document.querySelectorAll('.nr').forEach(e => {
+                e.setAttribute('stroke', dim); e.setAttribute('stroke-opacity', '0.25');
+                e.setAttribute('stroke-width', '1'); e.removeAttribute('filter');
+            });
+            document.querySelectorAll('.ni').forEach(e => e.setAttribute('stroke', dim));
+            trail.innerHTML = '';
+        }
+
+        function updateDots() {
+            for (let i = 0; i < scenarios.length; i++) {
+                const dot = document.getElementById('dot-' + i);
+                if (!dot) continue;
+                const isActive = i === si;
+                const color = scenarios[i].steps.some(s => s.fail) ? rd : gn;
+                dot.style.backgroundColor = isActive ? color : 'rgba(100,116,139,0.3)';
+                dot.style.width = dot.style.height = isActive ? '6px' : '6px';
+                dot.style.opacity = isActive ? '1' : '0.5';
+            }
+        }
+
+        function glowNode(id, color) {
+            const g = document.getElementById('n' + id);
+            if (!g) return;
+            g.querySelector('.nr').setAttribute('stroke', color);
+            g.querySelector('.nr').setAttribute('stroke-opacity', '0.8');
+            g.querySelector('.nr').setAttribute('stroke-width', '2.5');
+            g.querySelector('.nr').setAttribute('filter', 'url(#nGlow)');
+            g.querySelector('.ni').setAttribute('stroke', color);
+        }
+
+        function drawLine(a, b, color) {
+            const [x1,y1] = C[a], [x2,y2] = C[b];
+            const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+            l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+            l.setAttribute('stroke', color); l.setAttribute('stroke-width','2');
+            l.setAttribute('stroke-opacity','0.35'); l.setAttribute('stroke-linecap','round');
+            trail.appendChild(l);
+        }
+
+        function addTermLine(stepNum, text, color, symbol) {
+            const line = document.createElement('div');
+            line.style.opacity = '0';
+            line.style.transition = 'opacity 0.3s';
+            line.innerHTML = `<span style="color:${dim}">${stepNum}</span> <span style="color:${color}">${text}</span> <span style="color:${color};opacity:0.6">${symbol}</span>`;
+            terminal.appendChild(line);
+            requestAnimationFrame(() => { line.style.opacity = '1'; });
+        }
+
+        function tick() {
+            if (paused) { setTimeout(tick, 500); return; }
+
+            const sc = scenarios[si], st = sc.steps[sti];
+            const color = st.fail ? rd : gn;
+            const symbol = st.fail ? '✗' : '✓';
+
+            if (sti === 0) {
+                resetNodes();
+                terminal.innerHTML = '';
+                const isAttack = sc.steps.some(s => s.fail);
+                titleEl.textContent = sc.title;
+                titleEl.style.color = isAttack ? rd : gn;
+                updateDots();
+                if (ambientEl) {
+                    ambientEl.style.background = isAttack
+                        ? 'radial-gradient(circle, rgba(255,51,102,0.04) 0%, transparent 70%)'
+                        : 'radial-gradient(circle, rgba(6,255,165,0.04) 0%, transparent 70%)';
+                }
+            }
+
+            glowNode(st.n, color);
+            if (st.from !== undefined) drawLine(st.from, st.n, color);
+            addTermLine(sti + 1, st.text, color, symbol);
+
+            sti++;
+            if (sti >= sc.steps.length) {
+                sti = 0; si = (si + 1) % scenarios.length;
+                setTimeout(tick, 3000);
+            } else {
+                setTimeout(tick, 1500);
+            }
+        }
+
+        updateDots();
+        setTimeout(tick, 1200);
+    })();
+
+    // Community pulse — fetch from /stats API
+    (function() {
+        function humanize(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+            return String(n);
+        }
+        fetch('/api/pulse')
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(d => {
+                if (!d.enabled) return;
+                const el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = humanize(v); };
+                el('pulse-challenges', d.challenges_completed || 0);
+                el('pulse-badges', d.badges_earned || 0);
+                el('pulse-users', d.total_users || 0);
+                const pulse = document.getElementById('community-pulse');
+                if (pulse) pulse.style.display = '';
+            })
+            .catch(() => {});
+    })();
+    </script>
+{% endblock %}

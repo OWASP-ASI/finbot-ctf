@@ -13,10 +13,10 @@
             theme: {
                 extend: {
                     colors: {
-                        'cine-gold': '#D4AF37',
-                        'cine-dark': '#0F0F0F',
-                        'cine-gray': '#1A1A1A',
-                        'cine-light': '#F8F8F8',
+                        'ctf-primary': '#00d4ff',
+                        'portal-bg': '#0a0a0f',
+                        'portal-bg-alt': '#151520',
+                        'text-bright': '#f1f5f9',
                     },
                     fontFamily: {
                         'display': ['Playfair Display', 'serif'],
@@ -44,9 +44,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
-<body class="bg-cine-dark text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
+<body class="bg-portal-bg text-white font-sans antialiased min-h-screen flex items-center justify-center overflow-hidden">
     {% block background %}
-    <div class="absolute inset-0 bg-gradient-to-br from-cine-dark via-cine-gray to-cine-dark"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-portal-bg via-portal-bg-alt to-portal-bg"></div>
     {% endblock %}
 
     <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">

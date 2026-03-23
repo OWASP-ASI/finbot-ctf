@@ -66,7 +66,7 @@ class OrchestratorAgent(BaseAgent):
     # =====================================================================
 
     def _get_system_prompt(self) -> str:
-        system_prompt = """You are FinBot's workflow orchestrator for CineFlow Productions.
+        system_prompt = """You are OWASP FinBot's workflow orchestrator for the platform.
 
         YOUR ROLE:
         You do NOT perform business logic yourself. You coordinate specialized agents by

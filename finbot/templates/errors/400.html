@@ -20,7 +20,7 @@ confused: {
 {% endblock %}
 
 {% block background %}
-<div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-cine-dark to-cine-gray">
+<div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-portal-bg to-portal-bg-alt">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%238B5CF6&quot; fill-opacity=&quot;0.05&quot;%3E%3Cpath d=&quot;M30 15a15 15 0 100 30 15 15 0 000-30zm0 5a3 3 0 110 6 3 3 0 010-6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 </div>
 {% endblock %}
@@ -40,20 +40,20 @@ confused: {
 
 <div class="mb-8">
     <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-        Script Error!
+        Bad Request!
     </h2>
     <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
         Your request got lost in translation! 🤔
     </p>
     <p class="text-lg text-gray-400 max-w-2xl mx-auto">
         It seems like your request was written in a language our servers don't understand.
-        Maybe you mixed up the script pages? Don't worry, even Shakespeare had rough drafts!
+        Looks like that request didn't pass validation. Don't worry, even Shakespeare had rough drafts!
     </p>
 </div>
 
 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
     <a href="{{ back_url }}"
-       class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+       class="group bg-ctf-primary hover:bg-yellow-500 text-portal-bg font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-ctf-primary/25 flex items-center gap-2">
         <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
@@ -69,11 +69,11 @@ confused: {
     </button>
 </div>
 
-<div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-purple-500/20 backdrop-blur-sm">
+<div class="mt-12 p-6 bg-portal-bg-alt/50 rounded-lg border border-purple-500/20 backdrop-blur-sm">
     <p class="text-purple-400 font-display text-lg italic">
-        "The best requests are like good movies - clear, well-structured, and easy to follow!"
+        "The best requests are like good exploits — clear, well-structured, and properly formatted!"
     </p>
-    <p class="text-gray-400 text-sm mt-2">- Senior Script Reviewer</p>
+    <p class="text-gray-400 text-sm mt-2">- Security Analyst</p>
 </div>
 {% endblock %}
 

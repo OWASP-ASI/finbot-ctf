@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Tab bar -->
+    {% include "partials/analytics_tabs.html" %}
+
+    <!-- Overview stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ pageviews_7d }}</p>
+            <p class="text-text-3 text-xs mt-1">Views (7d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ visitors_7d }}</p>
+            <p class="text-text-3 text-xs mt-1">Visitors (7d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ pageviews_30d }}</p>
+            <p class="text-text-3 text-xs mt-1">Views (30d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ visitors_30d }}</p>
+            <p class="text-text-3 text-xs mt-1">Visitors (30d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ latency.p50 }}<span class="text-sm">ms</span></p>
+            <p class="text-text-3 text-xs mt-1">P50 Latency</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ latency.p95 }}<span class="text-sm">ms</span></p>
+            <p class="text-text-3 text-xs mt-1">P95 Latency</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ latency.p99 }}<span class="text-sm">ms</span></p>
+            <p class="text-text-3 text-xs mt-1">P99 Latency</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Top Pages (clickable) -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Pages (7d)</h3>
+            {% if top_pages %}
+            <div class="space-y-1">
+                {% for page in top_pages %}
+                <a href="/cc/analytics/pages?path={{ page.path | urlencode }}" class="flex items-center justify-between text-xs py-1 px-2 -mx-2 rounded hover:bg-white/[0.03] transition-colors group">
+                    <span class="text-text-2 truncate mr-4 group-hover:text-cyan transition-colors">{{ page.path }}</span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-text-1 font-semibold tabular-nums">{{ page.views }}</span>
+                        <svg class="w-3 h-3 text-text-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No data yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Referrers -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Referrers (7d)</h3>
+            {% if referers %}
+            <div class="space-y-2">
+                {% for ref in referers %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-4">{{ ref.domain }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ ref.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No referrer data yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Session types -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Sessions (7d)</h3>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Authenticated</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ sessions.perm }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Temporary</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ sessions.temp }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs border-t border-cc-border pt-2 mt-2">
+                    <span class="text-text-3">Total</span>
+                    <span class="text-text-2 font-semibold tabular-nums">{{ sessions.total }}</span>
+                </div>
+                {% if sessions.total > 0 %}
+                <div class="flex gap-1 mt-3" style="height: 4px;">
+                    <div class="bg-cyan rounded-l" style="width: {{ (sessions.perm / sessions.total * 100) | round }}%;"></div>
+                    <div class="bg-amber rounded-r" style="width: {{ (sessions.temp / sessions.total * 100) | round }}%;"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-text-3 mt-1">
+                    <span>{{ (sessions.perm / sessions.total * 100) | round }}% auth</span>
+                    <span>{{ (sessions.temp / sessions.total * 100) | round }}% temp</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Browser breakdown -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Browsers (7d)</h3>
+            {% if browsers %}
+            <div class="space-y-2">
+                {% for b in browsers %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">{{ b.browser }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ b.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No data yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Device breakdown -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Devices (7d)</h3>
+            {% if devices %}
+            <div class="space-y-2">
+                {% for d in devices %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">{{ d.device }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ d.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No data yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Auth Funnel -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Auth Funnel (7d)</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Portals visited</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ funnel.portals_visits }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Magic links sent</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ funnel.magic_link_requests }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Verifications</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ funnel.verifications }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Traffic chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Daily Traffic</h3>
+            <div class="flex gap-1" id="traffic-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="traffic-chart-wrap" style="height: 220px; position: relative;">
+            <canvas id="traffic-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Daily Latency chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Latency Over Time</h3>
+            <div class="flex gap-1" id="latency-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="latency-chart-wrap" style="height: 220px; position: relative;">
+            <canvas id="latency-canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <p class="text-text-3 text-xs">Total pageviews recorded: {{ total_pageviews }}</p>
+    </div>
+</div>
+
+<script>
+    var _initialDaily = {{ daily | tojson }};
+    var _initialLatency = {{ daily_latency | tojson }};
+</script>
+{% endblock %}
+
+{% block extra_css %}
+.range-btn {
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06);
+    background: transparent;
+    cursor: pointer;
+}
+.range-btn:hover {
+    color: #94a3b8;
+    border-color: #64748b;
+}
+.range-btn.active {
+    color: #e2e8f0;
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    const GRID = 'rgba(255,255,255,0.06)';
+    const TICK = '#64748b';
+    const FONT = { family: "'JetBrains Mono', monospace" };
+    const TOOLTIP_OPTS = {
+        backgroundColor: '#1e1e2e', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
+        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleFont: { ...FONT, size: 11 }, bodyFont: { ...FONT, size: 11 },
+        padding: 10, cornerRadius: 6,
+    };
+
+    function fmtDate(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return d.toLocaleString('en', { month: 'short', day: 'numeric' });
+    }
+
+    function scaleOpts(unit) {
+        return {
+            x: {
+                grid: { color: GRID, drawTicks: false },
+                ticks: { color: TICK, font: { ...FONT, size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, padding: 4 },
+                border: { display: false },
+            },
+            y: {
+                beginAtZero: true,
+                grid: { color: GRID, drawTicks: false },
+                ticks: {
+                    color: TICK, font: { ...FONT, size: 9 }, padding: 8,
+                    callback: function(v) { return v + (unit || ''); },
+                },
+                border: { display: false },
+            },
+        };
+    }
+
+    function legendOpts() {
+        return {
+            display: true, position: 'top', align: 'end',
+            labels: { color: TICK, font: { ...FONT, size: 10 }, boxWidth: 12, boxHeight: 3, padding: 12 },
+        };
+    }
+
+    // --- Traffic chart ---
+    let trafficChart = null;
+    const trafficWrap = document.getElementById('traffic-chart-wrap');
+
+    function buildTrafficChart(data) {
+        if (!data || !data.length) {
+            if (trafficChart) { trafficChart.destroy(); trafficChart = null; }
+            trafficWrap.innerHTML = '<p class="text-text-3 text-xs">No data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const views = data.map(d => d.views);
+        const visitors = data.map(d => d.visitors);
+
+        if (trafficChart) {
+            trafficChart.data.labels = labels;
+            trafficChart.data.datasets[0].data = views;
+            trafficChart.data.datasets[1].data = visitors;
+            trafficChart.update('none');
+            return;
+        }
+        trafficWrap.innerHTML = '<canvas id="traffic-canvas"></canvas>';
+        trafficChart = new Chart(document.getElementById('traffic-canvas'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Views', data: views, backgroundColor: 'rgba(0,212,255,0.35)', hoverBackgroundColor: 'rgba(0,212,255,0.6)', borderRadius: 2, order: 2 },
+                    { label: 'Visitors', data: visitors, type: 'line', borderColor: '#06ffa5', backgroundColor: 'rgba(6,255,165,0.08)', pointBackgroundColor: '#06ffa5', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.3, fill: true, order: 1 },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: legendOpts(), tooltip: TOOLTIP_OPTS },
+                scales: scaleOpts(''),
+            },
+        });
+    }
+
+    // --- Latency chart ---
+    let latencyChart = null;
+    const latencyWrap = document.getElementById('latency-chart-wrap');
+
+    function buildLatencyChart(data) {
+        if (!data || !data.length) {
+            if (latencyChart) { latencyChart.destroy(); latencyChart = null; }
+            latencyWrap.innerHTML = '<p class="text-text-3 text-xs">No data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const avg = data.map(d => d.avg_ms);
+        const p95 = data.map(d => d.p95_ms);
+
+        if (latencyChart) {
+            latencyChart.data.labels = labels;
+            latencyChart.data.datasets[0].data = avg;
+            latencyChart.data.datasets[1].data = p95;
+            latencyChart.update('none');
+            return;
+        }
+        latencyWrap.innerHTML = '<canvas id="latency-canvas"></canvas>';
+        latencyChart = new Chart(document.getElementById('latency-canvas'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Avg', data: avg, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.08)', pointBackgroundColor: '#00d4ff', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.3, fill: true },
+                    { label: 'P95', data: p95, borderColor: '#ffb800', backgroundColor: 'rgba(255,184,0,0.06)', pointBackgroundColor: '#ffb800', pointRadius: 2, pointHoverRadius: 4, borderWidth: 2, tension: 0.3, fill: true },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: legendOpts(),
+                    tooltip: {
+                        ...TOOLTIP_OPTS,
+                        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}ms` },
+                    },
+                },
+                scales: scaleOpts('ms'),
+            },
+        });
+    }
+
+    // --- Range button wiring ---
+    function wireButtons(containerSelector, fetchUrl, buildFn) {
+        const container = document.getElementById(containerSelector);
+        const btns = container.querySelectorAll('.range-btn');
+        let active = 30;
+        btns.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const days = parseInt(btn.dataset.days, 10);
+                if (days === active) return;
+                active = days;
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                try {
+                    const res = await fetch(`${fetchUrl}?days=${days}`);
+                    if (!res.ok) throw new Error(res.statusText);
+                    buildFn(await res.json());
+                } catch { buildFn([]); }
+            });
+        });
+    }
+
+    wireButtons('traffic-range-btns', '/cc/analytics/api/daily', buildTrafficChart);
+    wireButtons('latency-range-btns', '/cc/analytics/api/daily-latency', buildLatencyChart);
+
+    buildTrafficChart(_initialDaily);
+    buildLatencyChart(_initialLatency);
+})();
+</script>
+{% endblock %}

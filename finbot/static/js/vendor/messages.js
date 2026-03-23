@@ -173,7 +173,7 @@ async function selectMessage(msg) {
     content?.classList.remove('hidden');
 
     setText('detail-subject', msg.subject);
-    setText('detail-sender', msg.sender_name || 'CineFlow Productions - FinBot');
+    setText('detail-sender', msg.sender_name || 'OWASP FinBot');
     setText('detail-date', formatMessageDate(msg.created_at));
 
     const typeBadge = document.getElementById('detail-type-badge');

@@ -14,28 +14,27 @@ ready(function() {
     // ==========================================
     const formFillerData = {
         companyPrefixes: ['Golden', 'Summit', 'Apex', 'Pacific', 'Atlantic', 'Paramount', 'Vista', 'Sterling', 'Prime', 'Eagle', 'Phoenix', 'Nova', 'Horizon', 'Zenith', 'Stellar'],
-        companySuffixes: ['Productions', 'Studios', 'Entertainment', 'Media Group', 'Pictures', 'Films', 'Creative', 'Visuals', 'Motion Pictures', 'Cinematics'],
+        companySuffixes: ['Solutions', 'Group', 'Technologies', 'Partners', 'Consulting', 'Systems', 'Services', 'Global', 'Dynamics', 'Industries'],
         firstNames: ['James', 'Sarah', 'Michael', 'Emily', 'David', 'Jessica', 'Robert', 'Ashley', 'William', 'Amanda', 'Richard', 'Stephanie', 'Thomas', 'Nicole', 'Christopher', 'Jennifer', 'Daniel', 'Elizabeth', 'Matthew', 'Lauren'],
         lastNames: ['Anderson', 'Mitchell', 'Thompson', 'Rodriguez', 'Martinez', 'Garcia', 'Wilson', 'Taylor', 'Moore', 'Jackson', 'White', 'Harris', 'Martin', 'Clark', 'Lewis', 'Robinson', 'Walker', 'Hall', 'Young', 'King'],
-        domains: ['productions.com', 'studios.io', 'entertainment.co', 'media.net', 'films.com', 'creative.io', 'pictures.co'],
+        domains: ['solutions.com', 'group.io', 'tech.co', 'services.net', 'consulting.com', 'systems.io', 'global.co'],
         bankNames: ['Chase Bank', 'Bank of America', 'Wells Fargo', 'Citibank', 'US Bank', 'PNC Bank', 'Capital One', 'TD Bank', 'Fifth Third Bank', 'Truist Bank'],
-        categories: ['talent', 'crew', 'equipment_rental', 'location_scouting', 'catering', 'vfx_animation', 'post_production', 'legal_consulting', 'transportation', 'set_design', 'costume_wardrobe', 'security', 'software_saas', 'it_services'],
-        industries: ['film', 'fintech', 'banking', 'insurance', 'payments', 'lending', 'wealth', 'software_saas', 'information_technology'],
+        categories: ['professional_services', 'technology_software', 'marketing_creative', 'facilities_operations', 'hr_staffing', 'logistics_supply_chain', 'financial_services', 'healthcare_life_sciences', 'manufacturing_engineering', 'construction_real_estate', 'security_compliance', 'catering_hospitality', 'other_specialized'],
+        industries: ['fintech', 'banking', 'insurance', 'payments', 'lending', 'wealth', 'software_saas', 'information_technology', 'healthcare', 'manufacturing', 'retail', 'construction', 'energy', 'education', 'media_entertainment', 'consulting', 'government', 'other'],
         services: {
-            talent: 'Professional talent management and casting services for film and television productions. We represent actors, directors, writers, and musicians with over 15 years of industry experience.',
-            crew: 'Full-service production crew staffing including camera operators, sound engineers, lighting technicians, grip teams, and production assistants for projects of all sizes.',
-            equipment_rental: 'Premium camera equipment rentals including RED, ARRI, and Blackmagic cameras, Zeiss and Cooke lenses, professional lighting kits, and sound recording gear.',
-            location_scouting: 'Comprehensive location scouting and management services across multiple states. We handle permits, logistics, and on-site coordination for seamless productions.',
-            catering: 'Award-winning craft services and catering for film sets. We offer customized menus, dietary accommodations, and efficient on-set meal service for crews of any size.',
-            vfx_animation: 'Cutting-edge visual effects and animation services including CGI, motion graphics, compositing, and 3D modeling for feature films and commercial projects.',
-            post_production: 'Complete post-production suite offering editing, color grading, sound mixing, ADR, and final mastering with state-of-the-art facilities.',
-            legal_consulting: 'Entertainment law and business consulting services including contract negotiation, IP protection, rights clearance, and production legal support.',
-            transportation: 'Reliable production transportation and logistics including equipment trucks, talent vehicles, crew shuttles, and specialized transport solutions.',
-            set_design: 'Creative set design and construction services from concept to completion. Our team builds everything from small props to large-scale production sets.',
-            costume_wardrobe: 'Full costume and wardrobe department services including design, sourcing, fitting, and on-set management for period and contemporary productions.',
-            security: 'Professional on-set security services including asset protection, crowd control, talent security, and confidential production protection.',
-            software_saas: 'Enterprise software and SaaS solutions including cloud platforms, workflow automation, data analytics, API integrations, and developer tools for production and business operations.',
-            it_services: 'Comprehensive IT services including infrastructure management, technical support, network administration, cybersecurity, cloud migration, and managed services for enterprise environments.'
+            professional_services: 'Expert consulting, advisory, and professional services including strategic planning, management consulting, accounting, auditing, and legal counsel for organizations across all sectors.',
+            technology_software: 'Enterprise software and SaaS solutions including cloud platforms, workflow automation, data analytics, API integrations, developer tools, and custom application development.',
+            marketing_creative: 'Full-service marketing and creative agency services including brand strategy, digital marketing, content creation, graphic design, advertising campaigns, and media buying.',
+            facilities_operations: 'Comprehensive facilities management including building maintenance, cleaning services, office management, space planning, and operational support services.',
+            hr_staffing: 'Human resources and staffing solutions including talent acquisition, temporary staffing, workforce planning, employee training, benefits administration, and HR consulting.',
+            logistics_supply_chain: 'End-to-end logistics and supply chain management including freight forwarding, warehousing, inventory management, fleet operations, and last-mile delivery solutions.',
+            financial_services: 'Financial services including payment processing, lending solutions, insurance products, wealth management, risk assessment, and financial technology integration.',
+            healthcare_life_sciences: 'Healthcare and life sciences services including medical equipment supply, pharmaceutical distribution, clinical research support, health IT solutions, and biotech consulting.',
+            manufacturing_engineering: 'Manufacturing and engineering services including precision machining, industrial design, quality assurance, raw material supply, and production line optimization.',
+            construction_real_estate: 'Construction and real estate services including general contracting, architectural design, project management, property development, and building inspection.',
+            security_compliance: 'Security and compliance services including physical security, cybersecurity assessments, governance risk and compliance, penetration testing, and regulatory consulting.',
+            catering_hospitality: 'Catering and hospitality services including corporate event catering, food service management, event planning, travel coordination, and venue management.',
+            other_specialized: 'Specialized services tailored to unique business requirements. Please describe your specific services and capabilities in detail.'
         }
     };
 

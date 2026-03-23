@@ -8,7 +8,7 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://owasp-finbot-ctf.org/finbot">
+    <meta property="og:url" content="https://owasp-finbot-ctf.org/about">
     <meta property="og:title" content="About FinBot - OWASP GenAI Security Project">
     <meta property="og:description" content="FinBot is an Agentic Security CTF platform - the Juice Shop for Agentic AI.">
     <meta property="og:image" content="{{ url_for('static', path='images/common/finbot.png') }}">
@@ -21,33 +21,31 @@
 
     <title>About FinBot - OWASP GenAI Security Project</title>
 
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'owasp-blue': '#0066cc',
-                        'ctf-primary': '#00d4ff',
-                        'ctf-secondary': '#7c3aed',
-                        'ctf-accent': '#06ffa5',
-                        'ctf-warning': '#ffb800',
-                        'ctf-danger': '#ff3366',
-                        'portal-bg-primary': '#0a0a0f',
-                        'portal-bg-secondary': '#151520',
-                        'portal-bg-tertiary': '#1a1a2e',
-                        'text-primary': '#e2e8f0',
-                        'text-secondary': '#94a3b8',
-                        'text-bright': '#ffffff',
+                        'bg-primary': '#07070d',
+                        'bg-secondary': '#0e0e1a',
+                        'bg-card': '#121220',
+                        'cyan': '#00d4ff',
+                        'purple': '#7c3aed',
+                        'green': '#06ffa5',
+                        'amber': '#ffb800',
+                        'danger': '#ff3366',
+                        'text-1': '#f1f5f9',
+                        'text-2': '#94a3b8',
+                        'text-3': '#64748b',
+                        'border-dim': 'rgba(255,255,255,0.06)',
+                        'border-glow': 'rgba(0,212,255,0.25)',
                     },
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
@@ -59,51 +57,57 @@
     </script>
 
     <style>
-        body {
-            background: linear-gradient(135deg, #0a0a0f 0%, #151520 50%, #0a0a0f 100%);
-            min-height: 100vh;
-        }
+        body { background: #07070d; }
 
         .grid-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background-image:
-                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
+                linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .hero-glow {
+            position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 800px; height: 600px;
+            background: radial-gradient(ellipse, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.04) 40%, transparent 70%);
             pointer-events: none;
-            z-index: 0;
         }
 
-        .glow-cyan {
-            box-shadow: 0 0 60px rgba(0, 212, 255, 0.3);
+        .glass {
+            background: linear-gradient(135deg, rgba(18,18,32,0.85), rgba(14,14,26,0.95));
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(12px);
         }
 
-        .glow-purple {
-            box-shadow: 0 0 60px rgba(124, 58, 237, 0.3);
+        .gradient-text {
+            background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #06ffa5 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .glass-card {
-            background: linear-gradient(135deg, rgba(21, 21, 32, 0.9), rgba(26, 26, 46, 0.9));
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+        .gradient-text-alt {
+            background: linear-gradient(90deg, #00d4ff, #06ffa5);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
+
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 40px rgba(0,212,255,0.2); } 50% { box-shadow: 0 0 60px rgba(0,212,255,0.35); } }
+
+        .float { animation: float 6s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+
+        .owasp-badge { transition: all 0.3s; }
+        .owasp-badge:hover { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 30px rgba(0,212,255,0.1); }
 
         .team-card {
-            background: linear-gradient(135deg, rgba(21, 21, 32, 0.95), rgba(26, 26, 46, 0.95));
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            transition: all 0.3s ease;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         .team-card:hover {
             transform: translateY(-6px);
-            border-color: rgba(0, 212, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.15);
+            border-color: rgba(0,212,255,0.3);
+            box-shadow: 0 24px 64px rgba(0,212,255,0.1);
         }
 
         .avatar-ring {
@@ -112,198 +116,134 @@
             border-radius: 50%;
         }
 
-        .social-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s;
-        }
-
         .avatar-ring-sm {
             background: conic-gradient(from 0deg, #00d4ff, #7c3aed, #06ffa5, #00d4ff);
             padding: 2px;
             border-radius: 50%;
             display: inline-block;
         }
-
-        .social-link-sm {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s;
-        }
-
-        .social-link-sm:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: #00d4ff;
-            transform: scale(1.1);
-        }
-
-        .social-link:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: #00d4ff;
-            transform: scale(1.1);
-        }
-
-        .owasp-logo {
-            filter: brightness(1.2);
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .highlight-text {
-            background: linear-gradient(135deg, #00d4ff, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
     </style>
 </head>
 
-<body class="text-text-primary font-sans">
-    <!-- Grid Background -->
+<body class="text-text-2 font-sans antialiased overflow-x-hidden">
     <div class="grid-bg"></div>
 
     <!-- Header -->
-    <header class="relative z-20 bg-portal-bg-secondary/80 backdrop-blur-md border-b border-ctf-primary/20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <a href="/" class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-r from-ctf-primary to-ctf-secondary p-0.5 shadow-lg">
-                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-text-bright font-bold text-xl tracking-wide">FINBOT</span>
-                        <span class="text-ctf-primary text-xs font-mono tracking-wider">OWASP AGENTIC SECURITY CTF</span>
-                    </div>
+    <header class="fixed top-0 w-full z-50 bg-bg-primary/80 backdrop-blur-xl border-b border-border-dim">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
+            <a href="/" class="flex items-center space-x-3 group">
+                <div class="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-r from-cyan to-purple p-0.5">
+                    <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="OWASP FinBot" class="w-full h-full object-contain rounded-full bg-bg-primary">
+                </div>
+                <div>
+                    <span class="text-text-1 font-bold text-lg tracking-tight">OWASP FINBOT</span>
+                    <span class="text-cyan text-[10px] font-mono tracking-widest ml-1.5 hidden sm:inline">CTF</span>
+                </div>
+            </a>
+            <nav class="flex items-center space-x-1 sm:space-x-2">
+                <a href="/" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Home</a>
+                <a href="/portals" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Portals</a>
+                <a href="/about" class="text-cyan text-sm px-3 py-2 rounded-lg bg-white/[0.03]">About</a>
+                <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="ml-2 flex items-center space-x-2 px-4 py-2 rounded-lg bg-purple/15 border border-purple/30 text-purple hover:bg-purple/25 transition text-sm font-medium">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="hidden sm:inline">GitHub</span>
                 </a>
-
-                <!-- Navigation -->
-                <nav class="flex items-center space-x-6">
-                    <a href="/portals" class="text-text-secondary hover:text-ctf-primary transition-colors text-sm font-medium">Portals</a>
-                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-text-secondary hover:text-ctf-primary transition-colors text-sm font-medium">OWASP GenAI</a>
-                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="flex items-center space-x-2 px-4 py-2 bg-ctf-secondary/20 border border-ctf-secondary/50 rounded-lg hover:bg-ctf-secondary/30 transition-all">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        <span class="text-sm font-medium">GitHub</span>
-                    </a>
-                </nav>
-            </div>
+            </nav>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="relative z-10">
         <!-- Hero Section -->
-        <section class="py-16 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-5xl mx-auto text-center">
+        <section class="relative pt-32 pb-20 px-6">
+            <div class="hero-glow"></div>
+            <div class="max-w-5xl mx-auto text-center relative">
                 <!-- OWASP Badge -->
-                <div class="flex justify-center mb-8">
-                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="inline-flex items-center space-x-3 px-6 py-3 glass-card hover:border-ctf-primary/30 transition-all">
-                        <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP GenAI Security Project" class="h-10 owasp-logo">
-                        <div class="text-left">
-                            <div class="text-text-bright font-semibold text-sm">OWASP GenAI Security Project</div>
-                            <div class="text-text-secondary text-xs">Agentic Security Initiative</div>
-                        </div>
-                    </a>
-                </div>
+                <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="owasp-badge inline-flex items-center space-x-3 px-5 py-2.5 rounded-full glass border border-border-dim mb-10">
+                    <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP GenAI Security Project" class="h-7">
+                    <span class="text-text-2 text-sm font-medium">OWASP GenAI Security Project</span>
+                    <svg class="w-3.5 h-3.5 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
 
                 <!-- Main Logo -->
                 <div class="flex justify-center mb-8">
-                    <div class="relative float-animation">
-                        <div class="w-32 h-32 rounded-full glow-cyan">
-                            <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot" class="w-full h-full object-contain rounded-full">
+                    <div class="relative float">
+                        <div class="w-28 h-28 rounded-2xl border border-border-glow pulse-glow flex items-center justify-center overflow-hidden p-1">
+                            <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="OWASP FinBot" class="w-full h-full object-contain rounded-xl">
                         </div>
                     </div>
                 </div>
 
                 <!-- Title -->
-                <h1 class="text-5xl md:text-6xl font-bold text-text-bright mb-4">
-                    About <span class="highlight-text">FinBot</span>
+                <h1 class="text-5xl sm:text-6xl md:text-7xl font-black text-text-1 tracking-tight mb-6 leading-[1.1]">
+                    About <span class="gradient-text">FinBot</span>
                 </h1>
-                <p class="text-xl text-ctf-accent font-mono tracking-wider mb-8">
+                <p class="font-mono text-green text-sm tracking-wider mb-10">
                     THE JUICE SHOP FOR AGENTIC AI
                 </p>
             </div>
         </section>
 
         <!-- Mission Section -->
-        <section class="py-12 px-4 sm:px-6 lg:px-8">
+        <section class="py-16 px-6">
             <div class="max-w-4xl mx-auto">
-                <div class="glass-card p-8 md:p-12">
-                    <h2 class="text-2xl font-bold text-text-bright mb-6 flex items-center">
-                        <span class="w-10 h-10 rounded-full bg-ctf-primary/20 flex items-center justify-center mr-4">
-                            <svg class="w-5 h-5 text-ctf-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="glass rounded-2xl p-8 md:p-12 border border-border-dim">
+                    <h2 class="text-2xl font-bold text-text-1 mb-6 flex items-center">
+                        <span class="w-10 h-10 rounded-full bg-cyan/20 flex items-center justify-center mr-4">
+                            <svg class="w-5 h-5 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
                         </span>
                         Our Mission
                     </h2>
-                    <p class="text-lg text-text-primary leading-relaxed mb-6">
-                        FinBot is part of the <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-ctf-primary hover:text-ctf-accent transition-colors">OWASP GenAI Security Project's</a> Agentic Security Initiative, created to equip builders and defenders with hands-on tools for understanding and mitigating agentic AI risks.
+                    <p class="text-lg text-text-2 leading-relaxed mb-6">
+                        FinBot is part of the <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-cyan hover:text-green transition-colors">OWASP GenAI Security Project's</a> Agentic Security Initiative, created to equip builders and defenders with hands-on tools for understanding and mitigating agentic AI risks.
                     </p>
-                    <p class="text-lg text-text-primary leading-relaxed mb-6">
-                        FinBot is an <strong class="text-text-bright">Agentic Security Capture The Flag (CTF)</strong> interactive platform that simulates real-world vulnerabilities in agentic AI systems using a simulated Financial Services-focused application.
+                    <p class="text-lg text-text-2 leading-relaxed mb-6">
+                        FinBot is an <strong class="text-text-1">Agentic Security Capture The Flag (CTF)</strong> interactive platform that simulates real-world vulnerabilities in agentic AI systems using a simulated Financial Services-focused application.
                     </p>
-                    <p class="text-lg text-text-primary leading-relaxed mb-6">
+                    <p class="text-lg text-text-2 leading-relaxed mb-6">
                         The CTF provides challenges and flags to help developers identify, exploit, and secure against these threats.
                     </p>
-                    <p class="text-lg text-text-primary leading-relaxed">
-                        Designed as the <em class="text-ctf-accent">"Juice Shop for Agentic AI"</em>, FinBot aims to be a practical companion to the OWASP GenAI Security Project.
+                    <p class="text-lg text-text-2 leading-relaxed">
+                        Designed as the <em class="text-green">"Juice Shop for Agentic AI"</em>, FinBot aims to be a practical companion to the OWASP GenAI Security Project.
                     </p>
                 </div>
             </div>
         </section>
 
         <!-- Links Section -->
-        <section class="py-12 px-4 sm:px-6 lg:px-8">
+        <section class="py-12 px-6">
             <div class="max-w-4xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- OWASP GenAI Link -->
-                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="glass-card p-6 group hover:border-owasp-blue/50 transition-all">
+                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="glass rounded-2xl p-6 border border-border-dim group hover:border-cyan/30 transition-all">
                         <div class="flex items-center mb-4">
-                            <div class="w-14 h-14 rounded-xl bg-owasp-blue/20 flex items-center justify-center mr-4">
-                                <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP" class="h-8 owasp-logo">
+                            <div class="w-14 h-14 rounded-xl bg-cyan/10 flex items-center justify-center mr-4">
+                                <img src="{{ url_for('static', path='images/common/GenAI_OWASP_Logo.png') }}" alt="OWASP" class="h-8">
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-text-bright group-hover:text-owasp-blue transition-colors">OWASP GenAI Security</h3>
-                                <p class="text-sm text-text-secondary">genai.owasp.org</p>
+                                <h3 class="text-lg font-bold text-text-1 group-hover:text-cyan transition-colors">OWASP GenAI Security</h3>
+                                <p class="text-sm text-text-3">genai.owasp.org</p>
                             </div>
                         </div>
-                        <p class="text-text-secondary text-sm">
+                        <p class="text-text-3 text-sm">
                             A global community-driven initiative to create freely available open source guidance for understanding and mitigating GenAI security risks.
                         </p>
                     </a>
 
                     <!-- GitHub Link -->
-                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="glass-card p-6 group hover:border-ctf-secondary/50 transition-all">
+                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="glass rounded-2xl p-6 border border-border-dim group hover:border-purple/30 transition-all">
                         <div class="flex items-center mb-4">
-                            <div class="w-14 h-14 rounded-xl bg-ctf-secondary/20 flex items-center justify-center mr-4">
-                                <svg class="w-8 h-8 text-ctf-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            <div class="w-14 h-14 rounded-xl bg-purple/10 flex items-center justify-center mr-4">
+                                <svg class="w-8 h-8 text-purple" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold text-text-bright group-hover:text-ctf-secondary transition-colors">GitHub Repository</h3>
-                                <p class="text-sm text-text-secondary">GenAI-Security-Project/finbot-ctf</p>
+                                <h3 class="text-lg font-bold text-text-1 group-hover:text-purple transition-colors">GitHub Repository</h3>
+                                <p class="text-sm text-text-3">GenAI-Security-Project/finbot-ctf</p>
                             </div>
                         </div>
-                        <p class="text-text-secondary text-sm">
+                        <p class="text-text-3 text-sm">
                             Contribute to the project, report issues, and help us build the premier agentic AI security CTF platform.
                         </p>
                     </a>
@@ -312,42 +252,45 @@
         </section>
 
         <!-- Team Section -->
-        <section class="py-12 px-4 sm:px-6 lg:px-8">
+        <section class="py-16 px-6">
             <div class="max-w-6xl mx-auto">
-                <h2 class="text-3xl font-bold text-text-bright text-center mb-4">Creators & Leads</h2>
-                <p class="text-text-secondary text-center mb-12 max-w-2xl mx-auto">
-                    Meet the team behind FinBot CTF, driving the vision and development of this agentic AI security platform.
-                </p>
+                <div class="text-center mb-14">
+                    <p class="font-mono text-cyan text-xs tracking-widest uppercase mb-3">The Team</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">Creators & Leads</h2>
+                    <p class="text-text-3 mt-3 max-w-2xl mx-auto">
+                        Meet the team behind FinBot CTF, driving the vision and development of this agentic AI security platform.
+                    </p>
+                </div>
 
                 <!-- Co-Captains -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
                     <!-- Helen Oakley -->
-                    <div class="team-card p-8">
+                    <div class="glass rounded-2xl p-8 border border-border-dim team-card">
                         <div class="flex items-start space-x-5">
                             <div class="avatar-ring flex-shrink-0">
                                 <img src="{{ url_for('static', path='images/team/helen-oakley.jpg') }}"
                                      alt="Helen Oakley"
                                      class="w-20 h-20 rounded-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-ctf-primary to-ctf-secondary items-center justify-center text-3xl font-bold text-portal-bg-primary" style="display: none;">
+                                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan to-purple items-center justify-center text-3xl font-bold text-bg-primary" style="display: none;">
                                     HO
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-text-bright">Helen Oakley</h3>
-                                <p class="text-ctf-accent font-medium text-sm mb-2">Creator · Impact Co-Captain</p>
-                                <p class="text-text-secondary text-sm leading-relaxed mb-4">
+                                <h3 class="text-xl font-bold text-text-1">Helen Oakley</h3>
+                                <p class="text-green font-medium text-sm mb-2">Creator · Impact Co-Captain</p>
+                                <p class="text-text-3 text-sm leading-relaxed mb-4">
                                     Initiator of the workstream, community connector, and mission & vision driver.
                                 </p>
                                 <div class="flex space-x-2">
-                                    <a href="https://www.linkedin.com/in/helen-oakley/" target="_blank" rel="noopener" class="social-link" title="LinkedIn">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                    <a href="https://www.linkedin.com/in/helen-oakley/" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="LinkedIn">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                                     </a>
-                                    <a href="https://github.com/e2hln" target="_blank" rel="noopener" class="social-link" title="GitHub">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    <a href="https://github.com/e2hln" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="GitHub">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                                     </a>
-                                    <a href="https://linktr.ee/helen.oakley" target="_blank" rel="noopener" class="social-link" title="Website">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                    <a href="https://linktr.ee/helen.oakley" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="Website">
+                                        <svg class="w-4 h-4 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                                     </a>
                                 </div>
                             </div>
@@ -355,34 +298,33 @@
                     </div>
 
                     <!-- Sai Modalavalasa -->
-                    <div class="team-card p-8">
+                    <div class="glass rounded-2xl p-8 border border-border-dim team-card">
                         <div class="flex items-start space-x-5">
                             <div class="avatar-ring flex-shrink-0">
                                 <img src="{{ url_for('static', path='images/team/sai-modalavalasa.jpg') }}"
                                      alt="Sai Modalavalasa"
                                      class="w-20 h-20 rounded-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-ctf-secondary to-ctf-accent items-center justify-center text-3xl font-bold text-portal-bg-primary" style="display: none;">
+                                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple to-green items-center justify-center text-3xl font-bold text-bg-primary" style="display: none;">
                                     SM
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-text-bright">Venkata Sai Kishore Modalavalasa</h3>
-                                <p class="text-ctf-primary font-medium text-sm mb-2">Creator · North Star Co-Captain</p>
-                                <p class="text-text-secondary text-sm leading-relaxed mb-4">
+                                <h3 class="text-xl font-bold text-text-1">Venkata Sai Kishore Modalavalasa</h3>
+                                <p class="text-cyan font-medium text-sm mb-2">Creator · North Star Co-Captain</p>
+                                <p class="text-text-3 text-sm leading-relaxed mb-4">
                                     Shaping the north star architecture while guiding technical vision.
                                 </p>
                                 <div class="flex space-x-2">
-                                    <a href="https://www.linkedin.com/in/saikishu" target="_blank" rel="noopener" class="social-link" title="LinkedIn">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                    <a href="https://www.linkedin.com/in/saikishu" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="LinkedIn">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                                     </a>
-                                    <a href="https://github.com/saikishu" target="_blank" rel="noopener" class="social-link" title="GitHub">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    <a href="https://github.com/saikishu" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="GitHub">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                                     </a>
-                                    <a href="https://linktr.ee/saikishu" target="_blank" rel="noopener" class="social-link" title="Website">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                    <a href="https://linktr.ee/saikishu" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="Website">
+                                        <svg class="w-4 h-4 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                                     </a>
-
                                 </div>
                             </div>
                         </div>
@@ -390,35 +332,38 @@
                 </div>
 
                 <!-- Leads Section -->
-                <h3 class="text-xl font-bold text-text-bright text-center mb-8">Project Leads</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <div class="text-center mb-8">
+                    <p class="font-mono text-purple text-xs tracking-widest uppercase mb-3">Leadership</p>
+                    <h3 class="text-xl font-bold text-text-1">Project Leads</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
                     <!-- Carolina Steadham -->
-                    <div class="team-card p-6">
+                    <div class="glass rounded-2xl p-6 border border-border-dim team-card">
                         <div class="flex items-start space-x-4">
                             <div class="avatar-ring flex-shrink-0">
                                 <img src="{{ url_for('static', path='images/team/carolina-steadham.jpg') }}"
                                      alt="Carolina Steadham"
                                      class="w-16 h-16 rounded-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-ctf-warning to-ctf-danger items-center justify-center text-2xl font-bold text-portal-bg-primary" style="display: none;">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-amber to-danger items-center justify-center text-2xl font-bold text-bg-primary" style="display: none;">
                                     CS
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-lg font-bold text-text-bright">Carolina Steadham</h3>
-                                <p class="text-ctf-warning font-medium text-sm mb-2">Guardian of Quality Realms</p>
-                                <p class="text-text-secondary text-sm leading-relaxed mb-3">
+                                <h3 class="text-lg font-bold text-text-1">Carolina Steadham</h3>
+                                <p class="text-amber font-medium text-sm mb-2">Guardian of Quality Realms</p>
+                                <p class="text-text-3 text-sm leading-relaxed mb-3">
                                     Ensuring every feature meets its highest destiny, uncovering hidden glitches, and safeguarding the integrity of the workstream.
                                 </p>
                                 <div class="flex space-x-2">
-                                    <a href="https://www.linkedin.com/in/carolinacsteadham" target="_blank" rel="noopener" class="social-link" title="LinkedIn">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                    <a href="https://www.linkedin.com/in/carolinacsteadham" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="LinkedIn">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                                     </a>
-                                    <a href="https://github.com/steadhac" target="_blank" rel="noopener" class="social-link" title="GitHub">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    <a href="https://github.com/steadhac" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="GitHub">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                                     </a>
-                                    <a href="https://carolinasteadham.wixsite.com/my-site" target="_blank" rel="noopener" class="social-link" title="Website">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                    <a href="https://carolinasteadham.wixsite.com/my-site" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="Website">
+                                        <svg class="w-4 h-4 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                                     </a>
                                 </div>
                             </div>
@@ -426,32 +371,32 @@
                     </div>
 
                     <!-- Abigail Dede Okley -->
-                    <div class="team-card p-6">
+                    <div class="glass rounded-2xl p-6 border border-border-dim team-card">
                         <div class="flex items-start space-x-4">
                             <div class="avatar-ring flex-shrink-0">
                                 <img src="{{ url_for('static', path='images/team/abigail-okley.jpg') }}"
                                      alt="Abigail Dede Okley"
                                      class="w-16 h-16 rounded-full object-cover"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-ctf-accent to-ctf-primary items-center justify-center text-2xl font-bold text-portal-bg-primary" style="display: none;">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green to-cyan items-center justify-center text-2xl font-bold text-bg-primary" style="display: none;">
                                     AO
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-lg font-bold text-text-bright">Abigail Dede Okley</h3>
-                                <p class="text-ctf-warning font-medium text-sm mb-2">Chief Cat Herder</p>
-                                <p class="text-text-secondary text-sm leading-relaxed mb-3">
+                                <h3 class="text-lg font-bold text-text-1">Abigail Dede Okley</h3>
+                                <p class="text-amber font-medium text-sm mb-2">Chief Cat Herder</p>
+                                <p class="text-text-3 text-sm leading-relaxed mb-3">
                                     Project manager, keeping all the cats aligned and on track.
                                 </p>
                                 <div class="flex space-x-2">
-                                    <a href="https://www.linkedin.com/in/abigailokley" target="_blank" rel="noopener" class="social-link" title="LinkedIn">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                    <a href="https://www.linkedin.com/in/abigailokley" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="LinkedIn">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                                     </a>
-                                    <a href="https://github.com/abigailokley" target="_blank" rel="noopener" class="social-link" title="GitHub">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    <a href="https://github.com/abigailokley" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="GitHub">
+                                        <svg class="w-4 h-4 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                                     </a>
-                                    <a href="#" target="_blank" rel="noopener" class="social-link" title="Website">
-                                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                    <a href="#" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 hover:bg-cyan/20 hover:border-cyan transition-all hover:scale-110" title="Website">
+                                        <svg class="w-4 h-4 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                                     </a>
                                 </div>
                             </div>
@@ -460,166 +405,15 @@
                 </div>
 
                 <!-- Contributors Section -->
-                <h3 class="text-xl font-bold text-text-bright text-center mb-8">Contributors</h3>
-                <div class="glass-card p-8">
+                <div class="text-center mb-8">
+                    <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">Community</p>
+                    <h3 class="text-xl font-bold text-text-1">Contributors</h3>
+                </div>
+                <div class="glass rounded-2xl p-8 border border-border-dim">
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6" id="contributors-grid">
-
-                        <!-- Joshua Lochner -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='images/team/joshua-lochner.jpg') }}"
-                                     alt="Joshua Lochner"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-primary to-ctf-secondary items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    JL
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Joshua Lochner</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Nirupam Ghosh -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='images/team/nirupam-ghosh.jpg') }}"
-                                     alt="Nirupam Ghosh"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-secondary to-ctf-accent items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    NG
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Nirupam Ghosh</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="http://www.linkedin.com/in/nirupamghosh" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="https://github.com/mekaizen" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Nitin Awari -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='#') }}"
-                                     alt="Nitin Awari"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-secondary to-ctf-accent items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    NA
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Nitin Awari</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="https://www.linkedin.com/in/nitinawari" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="https://github.com/nitinawari" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Priya Aruchami -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='images/team/priya-aruchami.jpg') }}"
-                                     alt="Priya Aruchami"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-accent to-ctf-primary items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    PA
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Priya Aruchami</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Sanjeev Agarwal -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='images/team/sanjeev.jpg') }}"
-                                     alt="Sanjeev Agarwal"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-warning to-ctf-danger items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    SA
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Sanjeev Agarwal</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="https://www.linkedin.com/in/sanjeevlinkedin" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="https://github.com/408sanjeev" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Vera Krasnobaeva -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="{{ url_for('static', path='images/team/vera-krasnobaeva.jpg') }}"
-                                     alt="Vera Krasnobaeva"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-warning to-ctf-danger items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    VK
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Vera Krasnobaeva</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="#" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Amogh Sunil -->
-                        <div class="contributor-card text-center group">
-                            <div class="avatar-ring-sm mx-auto mb-3">
-                                <img src="https://github.com/stealthwhizz.png"
-                                     alt="Amogh Sunil"
-                                     class="w-14 h-14 rounded-full object-cover"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-ctf-primary to-ctf-secondary items-center justify-center text-lg font-bold text-portal-bg-primary" style="display: none;">
-                                    AS
-                                </div>
-                            </div>
-                            <p class="text-sm font-medium text-text-bright group-hover:text-ctf-primary transition-colors">Amogh Sunil</p>
-                            <div class="flex justify-center space-x-2 mt-2">
-                                <a href="https://linkedin.com/in/stealthwhiz" target="_blank" rel="noopener" class="social-link-sm" title="LinkedIn">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                                <a href="https://github.com/stealthwhizz" target="_blank" rel="noopener" class="social-link-sm" title="GitHub">
-                                    <svg class="w-3 h-3 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                                </a>
-                            </div>
-                        </div>
                     </div>
                     <div class="text-center mt-8">
-                        <a href="https://github.com/GenAI-Security-Project/finbot-ctf/graphs/contributors" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 text-ctf-primary hover:text-ctf-accent transition-colors">
+                        <a href="https://github.com/GenAI-Security-Project/finbot-ctf/graphs/contributors" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 text-cyan hover:text-green transition-colors">
                             <span>View all contributors on GitHub</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -627,28 +421,93 @@
                         </a>
                     </div>
                 </div>
+                <script>
+                (function() {
+                    const GRADIENTS = [
+                        'from-cyan to-purple', 'from-purple to-green',
+                        'from-green to-cyan', 'from-amber to-danger',
+                    ];
+                    const LI_SVG = '<svg class="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>';
+                    const GH_SVG = '<svg class="w-3 h-3 text-text-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>';
+                    const LINK_CLS = 'inline-flex items-center justify-center w-7 h-7 rounded-full border transition-all';
+                    const LINK_ACTIVE = 'bg-white/[0.05] border-white/10 hover:bg-cyan/20 hover:border-cyan hover:scale-110';
+                    const LINK_DISABLED = 'bg-white/[0.02] border-white/[0.04] opacity-30 cursor-default';
+
+                    function initials(name) {
+                        return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                    }
+
+                    function imgSrc(image) {
+                        if (!image) return '';
+                        if (image.startsWith('http')) return image;
+                        return '/static/' + image;
+                    }
+
+                    function socialLink(url, svg, title) {
+                        if (url) {
+                            return `<a href="${url}" target="_blank" rel="noopener" class="${LINK_CLS} ${LINK_ACTIVE}" title="${title}">${svg}</a>`;
+                        }
+                        return `<span class="${LINK_CLS} ${LINK_DISABLED}" title="${title}">${svg}</span>`;
+                    }
+
+                    function renderCard(c, idx) {
+                        const grad = GRADIENTS[idx % GRADIENTS.length];
+                        const src = imgSrc(c.image);
+                        const ini = initials(c.name);
+                        const imgTag = src
+                            ? `<img src="${src}" alt="${c.name}" class="w-14 h-14 rounded-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">`
+                            : '';
+                        const fallbackDisplay = src ? 'display:none;' : 'display:flex;';
+                        return `
+                            <div class="text-center group">
+                                <div class="avatar-ring-sm mx-auto mb-3">
+                                    ${imgTag}
+                                    <div class="w-14 h-14 rounded-full bg-gradient-to-br ${grad} items-center justify-center text-lg font-bold text-bg-primary" style="${fallbackDisplay}">
+                                        ${ini}
+                                    </div>
+                                </div>
+                                <p class="text-sm font-medium text-text-1 group-hover:text-cyan transition-colors">${c.name}</p>
+                                <div class="flex justify-center space-x-2 mt-2">
+                                    ${socialLink(c.linkedin, LI_SVG, 'LinkedIn')}
+                                    ${socialLink(c.github, GH_SVG, 'GitHub')}
+                                </div>
+                            </div>`;
+                    }
+
+                    fetch('/static/data/contributors.json')
+                        .then(r => r.json())
+                        .then(data => {
+                            data.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+                            const grid = document.getElementById('contributors-grid');
+                            grid.innerHTML = data.map(renderCard).join('');
+                        });
+                })();
+                </script>
             </div>
         </section>
 
         <!-- CTA Section -->
-        <section class="py-16 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-4xl mx-auto text-center">
-                <div class="glass-card p-12 glow-purple">
-                    <h2 class="text-3xl font-bold text-text-bright mb-4">Ready to Test Your Skills?</h2>
-                    <p class="text-text-secondary mb-8 max-w-2xl mx-auto">
-                        Join the OWASP FinBot CTF and learn to identify, exploit, and defend against agentic AI vulnerabilities in a safe, gamified environment.
-                    </p>
-                    <div class="flex flex-col sm:flex-row justify-center gap-4">
-                        <a href="/portals" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-ctf-primary to-ctf-secondary text-portal-bg-primary font-bold rounded-xl hover:from-ctf-accent hover:to-ctf-primary transition-all transform hover:scale-105">
-                            <span>Launch CTF</span>
-                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                            </svg>
-                        </a>
-                        <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="inline-flex items-center justify-center px-8 py-4 bg-transparent border-2 border-ctf-secondary text-ctf-secondary font-bold rounded-xl hover:bg-ctf-secondary/20 transition-all">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                            <span>Contribute on GitHub</span>
-                        </a>
+        <section class="py-20 px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="glass rounded-2xl p-10 sm:p-12 border border-border-dim text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-cyan/[0.03] to-purple/[0.03]"></div>
+                    <div class="relative">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-text-1 mb-4">Ready to Test Your Skills?</h2>
+                        <p class="text-text-2 mb-8 max-w-2xl mx-auto">
+                            Join the OWASP FinBot CTF and learn to identify, exploit, and defend against agentic AI vulnerabilities in a safe, gamified environment.
+                        </p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <a href="/portals" class="group flex items-center px-8 py-4 rounded-xl bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold text-base transition-all hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] hover:scale-[1.03]">
+                                Launch CTF
+                                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                </svg>
+                            </a>
+                            <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="flex items-center px-8 py-4 rounded-xl border-2 border-text-3/30 text-text-2 font-semibold text-base hover:border-cyan/40 hover:text-cyan transition-all">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                Contribute on GitHub
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -656,36 +515,26 @@
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 border-t border-white/5 py-12 px-4 sm:px-6 lg:px-8">
+    <footer class="border-t border-border-dim py-10 px-6 relative z-10">
         <div class="max-w-6xl mx-auto">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <!-- Logo & Info -->
-                <div class="flex items-center space-x-4 mb-6 md:mb-0">
-                    <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot" class="h-10 w-10 rounded-full">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-r from-cyan to-purple p-0.5">
+                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="OWASP FinBot" class="w-full h-full object-contain rounded-full bg-bg-primary">
+                    </div>
                     <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-text-bright font-bold">FINBOT</span>
-                            <span class="text-ctf-primary text-sm">CTF</span>
-                        </div>
-                        <p class="text-text-secondary text-xs">Powered by OWASP ASI</p>
+                        <span class="text-text-1 font-bold">OWASP FINBOT</span>
+                        <span class="text-cyan text-xs font-mono ml-1">CTF</span>
                     </div>
                 </div>
-
-                <!-- Links -->
                 <div class="flex items-center space-x-6 text-sm">
-                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-text-secondary hover:text-ctf-primary transition-colors">OWASP GenAI</a>
-                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="text-text-secondary hover:text-ctf-primary transition-colors">GitHub</a>
-                    <a href="/portals" class="text-text-secondary hover:text-ctf-primary transition-colors">Portals</a>
+                    <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-text-3 hover:text-cyan transition">OWASP GenAI</a>
+                    <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="text-text-3 hover:text-cyan transition">GitHub</a>
+                    <a href="/portals" class="text-text-3 hover:text-cyan transition">Portals</a>
                 </div>
             </div>
-
-            <div class="mt-8 pt-8 border-t border-white/5 text-center">
-                <p class="text-text-secondary text-sm">
-                    Part of the <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-ctf-primary hover:text-ctf-accent">OWASP GenAI Security Project</a>
-                </p>
-                <p class="text-text-secondary/60 text-xs mt-2">
-                    #OWASPGenAISecurityProject #OWASPFinBotCTF
-                </p>
+            <div class="mt-8 pt-6 border-t border-border-dim text-center">
+                <p class="text-text-3 text-sm">Part of the <a href="https://genai.owasp.org/" target="_blank" rel="noopener" class="text-cyan hover:text-green transition">OWASP GenAI Security Project</a></p>
             </div>
         </div>
     </footer>

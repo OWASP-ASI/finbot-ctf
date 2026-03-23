@@ -1,5 +1,5 @@
 /**
- * CineFlow Productions Web App Main JavaScript
+ * OWASP FinBot Platform Web App Main JavaScript
  * Handles web-specific functionality for the public website
  */
 
@@ -327,7 +327,7 @@ function openChat() {
         window.zE('webWidget', 'open');
     } else {
         // Fallback method
-        window.location.href = '/contact';
+        window.location.href = '/portals';
     }
 }
 

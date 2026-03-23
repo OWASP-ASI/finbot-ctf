@@ -1,5 +1,13 @@
 """
-Check prerequisites for running FinBot CTF
+Check Prerequisites
+
+Detects which tools and services are available on this machine,
+then summarizes which deployment paths are feasible.
+
+Audience: Core setup — run before first install.
+
+Usage:
+    python scripts/check_prerequisites.py
 """
 
 import shutil
@@ -7,19 +15,46 @@ import subprocess
 import sys
 
 
-def check_command(command: str, name: str, install_hint: str) -> bool:
-    """Check if a command is available"""
-    if shutil.which(command):
-        print(f"✅ {name} is installed")
-        return True
-    else:
-        print(f"❌ {name} is not installed")
-        print(f"   Install: {install_hint}")
+def check_python() -> tuple[bool, str]:
+    """Check Python >= 3.13."""
+    v = sys.version_info
+    version_str = f"{v.major}.{v.minor}.{v.micro}"
+    if (v.major, v.minor) >= (3, 13):
+        return True, version_str
+    return False, version_str
+
+
+def check_command(name: str) -> bool:
+    """Check if a command is on PATH."""
+    return shutil.which(name) is not None
+
+
+def check_redis() -> bool:
+    """Check if Redis is reachable via redis-cli ping."""
+    if not check_command("redis-cli"):
+        return False
+    try:
+        result = subprocess.run(
+            ["redis-cli", "ping"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=3,
+        )
+        return result.returncode == 0 and "PONG" in result.stdout
+    except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
 
 
-def check_docker_running() -> bool:
-    """Check if Docker daemon is running"""
+def check_postgres() -> bool:
+    """Check if psql is available."""
+    return check_command("psql")
+
+
+def check_docker() -> bool:
+    """Check if Docker daemon is running."""
+    if not check_command("docker"):
+        return False
     try:
         result = subprocess.run(
             ["docker", "info"],
@@ -27,54 +62,64 @@ def check_docker_running() -> bool:
             check=False,
             timeout=5,
         )
-        if result.returncode == 0:
-            print("✅ Docker daemon is running")
-            return True
-        else:
-            print("❌ Docker daemon is not running")
-            print("   Start Docker Desktop or run: sudo systemctl start docker")
-            return False
-    except subprocess.TimeoutExpired:
-        print("❌ Docker command timed out")
-        return False
-    except FileNotFoundError:
-        print("❌ Docker is not installed")
+        return result.returncode == 0
+    except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
 
 
 def main():
-    """Check all prerequisites"""
-    print("🔍 Checking FinBot CTF Prerequisites\n")
+    print("Checking prerequisites...\n")
 
-    checks = []
+    py_ok, py_ver = check_python()
+    uv_ok = check_command("uv")
+    redis_ok = check_redis()
+    pg_ok = check_postgres()
+    docker_ok = check_docker()
 
-    # Check Python
-    checks.append(check_command("python3", "Python 3", "https://www.python.org/downloads/"))
+    status = lambda ok: "✅" if ok else "❌"
 
-    # Check uv
-    checks.append(check_command("uv", "uv", "curl -LsSf https://astral.sh/uv/install.sh | sh"))
+    print(f"  Python 3.13+   {status(py_ok)}  {py_ver}")
+    print(f"  uv             {status(uv_ok)}  {'installed' if uv_ok else 'not found'}")
+    print(f"  Redis          {status(redis_ok)}  {'running' if redis_ok else 'not available'}")
+    print(f"  PostgreSQL     {status(pg_ok)}  {'available' if pg_ok else 'not found'}")
+    print(f"  Docker         {status(docker_ok)}  {'running' if docker_ok else 'not available'}")
 
-    # Check Docker
-    has_docker = check_command("docker", "Docker", "https://docs.docker.com/get-docker/")
-    checks.append(has_docker)
+    # Feasibility
+    docker_ready = docker_ok
+    local_base = py_ok and uv_ok
+    sqlite_ready = local_base and redis_ok
+    pg_ready = local_base and redis_ok and pg_ok
 
-    # Check if Docker daemon is running (only if Docker is installed)
-    if has_docker:
-        checks.append(check_docker_running())
+    any_feasible = docker_ready or sqlite_ready
 
-    print("\n" + "=" * 50)
-    if all(checks):
-        print("✅ All prerequisites are met!")
-        print("\nYou can now run:")
-        print("  uv sync")
-        print("  docker compose up -d postgres  # If using PostgreSQL")
-        print("  uv run python scripts/setup_database.py")
-        sys.exit(0)
-    else:
-        print("❌ Some prerequisites are missing")
-        print("\nFor SQLite-only development, you only need Python and uv.")
-        print("For PostgreSQL, you also need Docker.")
-        sys.exit(1)
+    print("\n" + "=" * 55)
+    print("  What you can run")
+    print("=" * 55)
+    print(f"  Docker Compose (quickest)         {status(docker_ready)}  {'Ready' if docker_ready else 'Docker not available'}")
+    print(f"  Local + SQLite (minimal)          {status(sqlite_ready)}  {'Ready' if sqlite_ready else 'missing: ' + ', '.join(
+        name for ok, name in [(py_ok, 'Python 3.13+'), (uv_ok, 'uv'), (redis_ok, 'Redis')] if not ok
+    )}")
+    print(f"  Local + PostgreSQL (recommended)  {status(pg_ready)}  {'Ready' if pg_ready else 'missing: ' + ', '.join(
+        name for ok, name in [(py_ok, 'Python 3.13+'), (uv_ok, 'uv'), (redis_ok, 'Redis'), (pg_ok, 'PostgreSQL')] if not ok
+    )}")
+
+    if not redis_ok and local_base:
+        print("\n  ⚠️  Without Redis the platform starts but CTF challenge detection won't work.")
+
+    if any_feasible:
+        print("\nNext steps:")
+        if docker_ready:
+            print("  cp .env.example .env             # configure environment")
+            print("  docker compose up                # Docker path")
+        if sqlite_ready:
+            if docker_ready:
+                print("  -- or --")
+            print("  uv sync                          # Local path")
+            print("  uv run python scripts/db.py setup")
+            print("  uv run python run.py")
+        print()
+
+    sys.exit(0 if any_feasible else 1)
 
 
 if __name__ == "__main__":

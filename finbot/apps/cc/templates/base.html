@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Command Center{% endblock %} - OWASP FinBot</title>
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cc-bg': '#0c0c14',
+                        'cc-surface': '#12121e',
+                        'cc-border': 'rgba(255,255,255,0.06)',
+                        'cyan': '#00d4ff',
+                        'purple': '#7c3aed',
+                        'green': '#06ffa5',
+                        'amber': '#ffb800',
+                        'danger': '#ff3366',
+                        'text-1': '#e2e8f0',
+                        'text-2': '#94a3b8',
+                        'text-3': '#64748b',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background: #0c0c14; }
+
+        .dot-bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+
+<body class="text-text-2 font-mono antialiased">
+    <div class="dot-bg"></div>
+
+    <!-- Top bar -->
+    <header class="fixed top-0 w-full z-50 bg-cc-bg/90 backdrop-blur-md border-b border-cc-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
+            <div class="flex items-center gap-3">
+                <a href="/cc" class="flex items-center gap-2 text-text-2 hover:text-text-1 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <span class="text-xs uppercase tracking-widest">CC</span>
+                </a>
+                <span class="text-cc-border">|</span>
+                <span class="text-text-1 text-xs font-semibold uppercase tracking-wider">{% block page_title %}{% endblock %}</span>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if user and user.email %}
+                <span class="text-text-3 text-xs">{{ user.email }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 pt-12">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -24,7 +24,8 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
     PROTECTED_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
     # Paths that are exempt from CSRF protection
-    # Note: /auth/ is exempt because magic link tokens are single-use and emailed
+    # /auth/ — magic link tokens are single-use and emailed
+    # /cc/ — Command Center has its own auth guard (whitelisted email check on every request)
     EXEMPT_PATHS = {
         "/api/health",
         "/api/status",
@@ -33,6 +34,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         "/auth/",
         "/ws/test/",
         "/api/log-agreement",
+        "/cc/",
     }
 
     def __init__(self, app):

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Access Management{% endblock %}
+{% block page_title %}Access{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Add admin -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-3">Add Maintainer</h3>
+        <form action="/cc/access/add" method="POST" class="flex gap-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input
+                type="email"
+                name="email"
+                placeholder="email@example.com"
+                required
+                class="flex-1 bg-cc-bg border border-cc-border rounded px-3 py-2 text-text-1 text-xs placeholder-text-3 focus:outline-none focus:border-cyan/50 transition-colors"
+            >
+            <button type="submit" class="bg-cyan/20 border border-cyan/30 text-cyan text-xs font-semibold px-4 py-2 rounded hover:bg-cyan/30 transition-colors">
+                Add
+            </button>
+        </form>
+    </div>
+
+    <!-- Admin list -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Authorized Maintainers</h3>
+
+        {% if admins %}
+        <div class="space-y-2">
+            {% for admin in admins %}
+            <div class="flex items-center justify-between py-2 border-b border-cc-border last:border-0">
+                <div class="flex-1">
+                    <p class="text-text-1 text-xs font-medium {% if not admin.is_active %}line-through opacity-50{% endif %}">{{ admin.email }}</p>
+                    <p class="text-text-3 text-[10px]">Added by {{ admin.added_by }} on {{ admin.added_at }}</p>
+                </div>
+                <form action="/cc/access/toggle/{{ admin.id }}" method="POST" class="ml-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="text-[10px] px-2 py-1 rounded border transition-colors
+                        {% if admin.is_active %}
+                        text-danger border-danger/30 hover:bg-danger/10
+                        {% else %}
+                        text-green border-green/30 hover:bg-green/10
+                        {% endif %}
+                    ">
+                        {% if admin.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-text-3 text-xs">No admins configured. Add one above or set CC_ALLOWED_EMAILS in your environment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

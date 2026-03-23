@@ -10,12 +10,18 @@ from fastapi.testclient import TestClient
 
 @pytest.mark.unit
 @pytest.mark.web
-class TestWebRoutes:
-    """Test web page routes."""
+class TestFinBotRoutes:
+    """Test OWASP FinBot platform root routes."""
 
     def test_home_page(self, fast_client: TestClient):
         """Test home page loads."""
         response = fast_client.get("/")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+
+    def test_portals_page(self, fast_client: TestClient):
+        """Test portals page loads."""
+        response = fast_client.get("/portals")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
@@ -25,25 +31,28 @@ class TestWebRoutes:
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
 
-    def test_contact_page(self, fast_client: TestClient):
-        """Test contact page loads."""
-        response = fast_client.get("/contact")
-        assert response.status_code == 200
-        assert "text/html" in response.headers["content-type"]
+
+@pytest.mark.unit
+@pytest.mark.web
+class TestDemoTenantRoutes:
+    """Test CineFlow demo tenant routes under /demo/cineflow/."""
 
     @pytest.mark.parametrize(
-        "path", ["/", "/about", "/work", "/partners", "/careers", "/contact"]
+        "path",
+        [
+            "/demo/cineflow/",
+            "/demo/cineflow/about",
+            "/demo/cineflow/work",
+            "/demo/cineflow/partners",
+            "/demo/cineflow/careers",
+            "/demo/cineflow/contact",
+        ],
     )
-    def test_all_pages_load(self, fast_client: TestClient, path: str):
-        """Test all main pages load successfully."""
+    def test_demo_pages_load(self, fast_client: TestClient, path: str):
+        """Test all demo tenant pages load successfully."""
         response = fast_client.get(path)
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
-
-    def test_404_for_missing_page(self, fast_client: TestClient):
-        """Test 404 for non-existent pages."""
-        response = fast_client.get("/does-not-exist")
-        assert response.status_code == 404
 
 
 @pytest.mark.unit

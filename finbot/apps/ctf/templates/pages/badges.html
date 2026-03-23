@@ -599,7 +599,7 @@ function openShareModal(badgeId, badgeTitle, badgeRarity) {
     // Update social links - point to public profile
     const shareText = `I earned the "${badgeTitle}" badge on FinBot CTF! Check out my profile: #OWASPGenAISecurityProject #OWASPFinBotCTF`;
     shareBadgeTwitter.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`;
-    shareBadgeLinkedin.href = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(profileUrl)}&title=${encodeURIComponent('@' + username + ' earned ' + badgeTitle + ' - FinBot CTF')}&summary=${encodeURIComponent('Check out my hacker profile on FinBot CTF!')}`;
+    shareBadgeLinkedin.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}`;
     
     shareModal.classList.remove('hidden');
 }

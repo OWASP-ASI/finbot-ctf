@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Aamiruddin Syed",
+    "image": "https://github.com/aamiruddinsyed.png",
+    "linkedin": "",
+    "github": "https://github.com/aamiruddinsyed"
+  },
+  {
+    "name": "Amogh Sunil",
+    "image": "https://github.com/stealthwhizz.png",
+    "linkedin": "https://linkedin.com/in/stealthwhiz",
+    "github": "https://github.com/stealthwhizz"
+  },
+  {
+    "name": "Joshua Lochner",
+    "image": "images/team/joshua-lochner.jpg",
+    "linkedin": "",
+    "github": ""
+  },
+  {
+    "name": "Nirupam Ghosh",
+    "image": "images/team/nirupam-ghosh.jpg",
+    "linkedin": "http://www.linkedin.com/in/nirupamghosh",
+    "github": "https://github.com/mekaizen"
+  },
+  {
+    "name": "Nitin Awari",
+    "image": "",
+    "linkedin": "https://www.linkedin.com/in/nitinawari",
+    "github": "https://github.com/nitinawari"
+  },
+  {
+    "name": "Priya Aruchami",
+    "image": "images/team/priya-aruchami.jpg",
+    "linkedin": "",
+    "github": ""
+  },
+  {
+    "name": "Sanjeev Agarwal",
+    "image": "images/team/sanjeev.jpg",
+    "linkedin": "https://www.linkedin.com/in/sanjeevlinkedin",
+    "github": "https://github.com/408sanjeev"
+  },
+  {
+    "name": "Vera Krasnobaeva",
+    "image": "images/team/vera-krasnobaeva.jpg",
+    "linkedin": "",
+    "github": ""
+  }
+]

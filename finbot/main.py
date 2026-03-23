@@ -3,33 +3,33 @@ FinBot Platform Main Application
 - Serves all the applications for the FinBot platform.
 """
 
-import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from finbot.apps.admin.main import app as admin_app
+from finbot.apps.cc import models as _cc_models  # noqa: F401
 from finbot.apps.ctf import ctf_app
 from finbot.apps.ctf.rendering import get_renderer
+from finbot.apps.finbot.auth import router as auth_router
+from finbot.apps.finbot.routes import router as finbot_router
 from finbot.apps.vendor.main import app as vendor_app
-from finbot.apps.web.auth import router as auth_router
 from finbot.apps.web.routes import router as web_router
+from finbot.config import settings
+from finbot.core.analytics import models as _analytics_models  # noqa: F401
 from finbot.core.auth.csrf import CSRFProtectionMiddleware
 from finbot.core.auth.middleware import SessionMiddleware, get_session_context
-from finbot.core.auth.session import SessionContext, session_manager
+from finbot.core.auth.session import SessionContext
 from finbot.core.data import (
     models as _models,  # noqa: F401 — register all tables with Base
 )
-from finbot.core.data.database import create_tables
 from finbot.core.error_handlers import register_error_handlers
 from finbot.core.messaging import event_bus
 from finbot.core.websocket import websocket_router
 
 # CTF
-from finbot.ctf.definitions.loader import load_definitions_on_startup
 from finbot.ctf.processor import start_processor_task
 
 # Logging
@@ -43,30 +43,15 @@ setup_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifecycle management"""
+    """Application lifecycle management.
 
-    # 1. Ensure all database tables exist (safe no-op if they already do)
-    create_tables()
+    Only per-worker initialization belongs here. One-time bootstrap tasks
+    (migrations, seeding, cleanup, CTF definition loading) run in
+    ``scripts/bootstrap.py`` — called by ``run.py`` for local dev and
+    by ``docker/entrypoint.sh`` for Docker deployments.
+    """
 
-    # 2. Cleanup expired sessions
-    try:
-        cleaned_count = session_manager.cleanup_expired_sessions()
-        if cleaned_count > 0:
-            print(f"🧹 Cleaned up {cleaned_count} expired sessions on startup")
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        print(f"⚠️ Session cleanup skipped: {e}")
-
-    # 3. Load CTF definitions from YAML
-    try:
-        result = load_definitions_on_startup()
-        print(
-            f"🎯 CTF loaded: {len(result['challenges'])} challenges, "
-            f"{len(result['badges'])} badges"
-        )
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        print(f"⚠️ CTF definition loading failed: {e}")
-
-    # 4. Start CTF event processor as async task
+    # 1. Start CTF event processor (Redis consumer groups — multi-worker safe)
     processor_task = None
     try:
         processor_task = start_processor_task()
@@ -74,13 +59,21 @@ async def lifespan(app: FastAPI):
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ CTF processor start failed: {e}")
 
-    # 5. Pre-warm the Playwright renderer (headless Chromium for OG images)
+    # 2. Pre-warm the Playwright renderer (headless Chromium for OG images)
     renderer = get_renderer()
     try:
         await renderer.start()
         print("🖼️ Playwright renderer ready")
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ Playwright renderer start skipped: {e}")
+
+    # 3. Build analytics known-prefix list from registered routes
+    if settings.CC_ANALYTICS_ENABLED:
+        try:
+            from finbot.core.analytics.middleware import build_known_prefixes
+            build_known_prefixes(app)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"⚠️ Analytics prefix build skipped: {e}")
 
     yield  # App is running
 
@@ -117,9 +110,23 @@ app = FastAPI(
 )
 
 # Add middleware - last in, first out order
+# Analytics runs after session (needs session context), before CSRF
+if settings.CC_ANALYTICS_ENABLED:
+    from finbot.core.analytics.middleware import AnalyticsMiddleware
+
+    app.add_middleware(AnalyticsMiddleware)
+
 # Execute session first, then CSRF
 app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(SessionMiddleware)
+
+# Trust X-Forwarded-Proto/For from reverse proxies (Railway, etc.)
+# so url_for() generates https:// URLs and client IPs are correct.
+from uvicorn.middleware.proxy_headers import (
+    ProxyHeadersMiddleware,  # pylint: disable=ungrouped-imports
+)
+
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 # Register error handlers
 register_error_handlers(app)
@@ -131,11 +138,19 @@ app.mount("/static", StaticFiles(directory="finbot/static"), name="static")
 app.mount("/vendor", vendor_app)
 app.mount("/admin", admin_app)
 app.mount("/ctf", ctf_app)
+
+# Command Center — platform management for maintainers
+if settings.CC_ENABLED:
+    from finbot.apps.cc.main import app as cc_app  # pylint: disable=ungrouped-imports
+
+    app.mount("/cc", cc_app)
 app.include_router(websocket_router)
 # Auth routes for magic link sign-in
 app.include_router(auth_router)
-# Web application is mounted at the root of the platform
-app.include_router(web_router)
+# OWASP FinBot CTF landing pages at root
+app.include_router(finbot_router)
+# CineFlow demo tenant (hidden, preserved for future IPI scenarios)
+app.include_router(web_router, prefix="/demo/cineflow")
 
 
 # web agreement handler
@@ -170,6 +185,12 @@ async def log_agreement(
         summary=f"CTF agreement accepted by user {session_context.user_id[:8]}",
     )
     return {"success": True}
+
+
+@app.get("/healthz")
+async def healthz():
+    """Lightweight liveness probe for load balancers and container orchestrators."""
+    return {"status": "ok"}
 
 
 # Session health check endpoint

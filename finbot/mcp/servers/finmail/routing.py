@@ -56,7 +56,7 @@ def route_and_deliver(
     subject: str,
     body: str,
     message_type: str = "general",
-    sender_name: str = "CineFlow Productions - FinBot",
+    sender_name: str = "OWASP FinBot",
     sender_type: str = "agent",
     from_address: str | None = None,
     cc: list[str] | None = None,

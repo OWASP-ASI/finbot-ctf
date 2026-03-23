@@ -26,7 +26,7 @@ jobs:
         pip install pytest pytest-asyncio pytest-cov gspread google-auth google-auth-oauthlib
 
     - name: Setup database
-      run: python scripts/setup_database.py
+      run: python scripts/db.py migrate
 
     - name: Setup Google credentials
       env:

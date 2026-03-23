@@ -14,13 +14,13 @@ shake: {
     '20%, 40%, 60%, 80%': { transform: 'translateX(2px)' },
 },
 glow: {
-    '0%': { boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' },
-    '100%': { boxShadow: '0 0 30px rgba(212, 175, 55, 0.6)' },
+    '0%': { boxShadow: '0 0 20px rgba(0, 212, 255, 0.3)' },
+    '100%': { boxShadow: '0 0 30px rgba(0, 212, 255, 0.6)' },
 },
 {% endblock %}
 
 {% block background %}
-<div class="absolute inset-0 bg-gradient-to-br from-red-900/20 via-cine-dark to-cine-gray">
+<div class="absolute inset-0 bg-gradient-to-br from-red-900/20 via-portal-bg to-portal-bg-alt">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23EF4444&quot; fill-opacity=&quot;0.05&quot;%3E%3Cpath d=&quot;M30 30l15-15v30z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 </div>
 {% endblock %}
@@ -47,14 +47,14 @@ glow: {
 
 <div class="mb-8">
     <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-        VIP Area Only!
+        Restricted Zone!
     </h2>
     <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
-        Whoa there, hotshot! This is a restricted set. 🚫
+        Whoa there, hotshot! This area requires elevated clearance. 🚫
     </p>
     <p class="text-lg text-gray-400 max-w-2xl mx-auto">
         You need special clearance to access this area. Our security team is very thorough -
-        they once caught someone trying to sneak into craft services with a fake ID!
+        they once caught someone trying to escalate privileges with a forged token!
     </p>
 </div>
 
@@ -72,7 +72,7 @@ glow: {
 
 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
     <a href="{{ back_url }}"
-       class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+       class="group bg-ctf-primary hover:bg-yellow-500 text-portal-bg font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-ctf-primary/25 flex items-center gap-2">
         <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
@@ -88,7 +88,7 @@ glow: {
     </button>
 </div>
 
-<div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-red-500/20 backdrop-blur-sm">
+<div class="mt-12 p-6 bg-portal-bg-alt/50 rounded-lg border border-red-500/20 backdrop-blur-sm">
     <p class="text-red-400 font-display text-lg italic">
         "Access denied is just another way of saying 'You're not ready for this level of awesome yet!'"
     </p>

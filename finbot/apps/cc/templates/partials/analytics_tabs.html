@@ -1,0 +1,15 @@
+{% set current_path = request.url.path %}
+<div class="flex gap-1 mb-6">
+    <a href="/cc/analytics/"
+       class="px-4 py-1.5 text-xs rounded border transition-colors {% if current_path == '/cc/analytics/' or current_path == '/cc/analytics' %}text-text-1 border-cyan bg-cyan/10{% else %}text-text-3 border-cc-border hover:text-text-2 hover:border-text-3{% endif %}">
+        Traffic
+    </a>
+    <a href="/cc/analytics/ctf"
+       class="px-4 py-1.5 text-xs rounded border transition-colors {% if '/analytics/ctf' in current_path %}text-text-1 border-cyan bg-cyan/10{% else %}text-text-3 border-cc-border hover:text-text-2 hover:border-text-3{% endif %}">
+        CTF
+    </a>
+    <a href="/cc/analytics/threat-intel"
+       class="px-4 py-1.5 text-xs rounded border transition-colors {% if '/analytics/threat-intel' in current_path %}text-text-1 border-danger bg-danger/10{% else %}text-text-3 border-cc-border hover:text-text-2 hover:border-text-3{% endif %}">
+        Threat Intel
+    </a>
+</div>

@@ -572,18 +572,18 @@ function formatVendorCategory(category) {
     if (!category) return 'N/A';
 
     const categoryMap = {
-        'talent': 'Talent (Actors, Directors, Writers, Musicians)',
-        'crew': 'Crew (Camera, Sound, Lighting, Grip, Production Assistants)',
-        'equipment_rental': 'Equipment Rental (Cameras, Lenses, Lighting, Sound Gear)',
-        'location_scouting': 'Location Scouting & Management',
-        'catering': 'Catering & Craft Services',
-        'vfx_animation': 'Visual Effects (VFX) & Animation',
-        'post_production': 'Post-Production Services (Editing, Color Grading, Sound Mixing)',
-        'legal_consulting': 'Legal & Business Consulting',
-        'transportation': 'Transportation & Logistics',
-        'set_design': 'Set Design & Construction',
-        'costume_wardrobe': 'Costume & Wardrobe',
-        'security': 'Security Services',
+        'professional_services': 'Professional Services (Consulting, Advisory, Accounting, Legal)',
+        'technology_software': 'Technology & Software (SaaS, Cloud, Dev Tools, Platforms)',
+        'marketing_creative': 'Marketing & Creative (Agencies, Design, Content, Media)',
+        'facilities_operations': 'Facilities & Operations (Maintenance, Office Services)',
+        'hr_staffing': 'HR & Staffing (Recruitment, Training, Temp Staffing)',
+        'logistics_supply_chain': 'Logistics & Supply Chain (Shipping, Warehousing, Fleet)',
+        'financial_services': 'Financial Services (Payments, Lending, Insurance, Wealth)',
+        'healthcare_life_sciences': 'Healthcare & Life Sciences (Medical, Pharma, Biotech)',
+        'manufacturing_engineering': 'Manufacturing & Engineering (Industrial, Components)',
+        'construction_real_estate': 'Construction & Real Estate (Contractors, Architecture)',
+        'security_compliance': 'Security & Compliance (Physical Security, Cyber, GRC)',
+        'catering_hospitality': 'Catering & Hospitality (Food Services, Events, Travel)',
         'other_specialized': 'Other Specialized Services'
     };
 

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Challenges{% endblock %}
+{% block page_title %}Challenges{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Summary stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ summary.total }}</p>
+            <p class="text-text-3 text-xs mt-1">Total</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-green text-2xl font-semibold">{{ summary.active }}</p>
+            <p class="text-text-3 text-xs mt-1">Active</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-3 text-2xl font-semibold">{{ summary.inactive }}</p>
+            <p class="text-text-3 text-xs mt-1">Inactive</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-cyan text-2xl font-semibold">{{ summary.solved }}</p>
+            <p class="text-text-3 text-xs mt-1">Solved</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-amber text-2xl font-semibold">{{ summary.unsolved }}</p>
+            <p class="text-text-3 text-xs mt-1">Unsolved</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="{% if summary.invalid_detectors > 0 %}text-danger{% else %}text-green{% endif %} text-2xl font-semibold">{{ summary.invalid_detectors }}</p>
+            <p class="text-text-3 text-xs mt-1">Invalid Detectors</p>
+        </div>
+    </div>
+
+    <!-- Info banner -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-3 mb-6 flex items-start gap-3">
+        <span class="text-text-3 text-xs shrink-0 mt-0.5">ℹ</span>
+        <p class="text-text-3 text-xs leading-relaxed">
+            Definitions are loaded from YAML on startup. The <strong class="text-text-2">active toggle is preserved</strong> across restarts — deactivated challenges stay deactivated until re-enabled here or via a YAML change.
+        </p>
+    </div>
+
+    <!-- Challenge table -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 uppercase tracking-wider text-[10px]">
+                        <th class="text-left px-4 py-3 font-semibold">Challenge</th>
+                        <th class="text-left px-3 py-3 font-semibold">Category</th>
+                        <th class="text-left px-3 py-3 font-semibold">Difficulty</th>
+                        <th class="text-right px-3 py-3 font-semibold">Pts</th>
+                        <th class="text-right px-3 py-3 font-semibold">Solves</th>
+                        <th class="text-right px-3 py-3 font-semibold">Players</th>
+                        <th class="text-right px-3 py-3 font-semibold">Attempts</th>
+                        <th class="text-right px-3 py-3 font-semibold">Hints</th>
+                        <th class="text-right px-3 py-3 font-semibold">Avg Solve</th>
+                        <th class="text-center px-3 py-3 font-semibold">Detector</th>
+                        <th class="text-center px-3 py-3 font-semibold">Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in challenges %}
+                    <tr class="border-b border-cc-border hover:bg-white/[0.02] transition-colors {% if not c.is_active %}opacity-50{% endif %}">
+                        <td class="px-4 py-3">
+                            <div class="flex flex-col">
+                                <span class="text-text-1 font-medium">{{ c.title }}</span>
+                                {% if c.prerequisites %}
+                                <span class="text-text-3 text-[10px] mt-0.5">requires: {{ c.prerequisites | join(', ') }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-3 py-3">
+                            <span class="text-text-2">{{ c.category | replace('_', ' ') | title }}</span>
+                        </td>
+                        <td class="px-3 py-3">
+                            {% set diff_colors = {"beginner": "text-green", "intermediate": "text-cyan", "advanced": "text-amber", "expert": "text-danger"} %}
+                            <span class="{{ diff_colors.get(c.difficulty, 'text-text-2') }} capitalize">{{ c.difficulty }}</span>
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums text-text-2">{{ c.points }}</td>
+                        <td class="px-3 py-3 text-right tabular-nums">
+                            {% if c.completions > 0 %}
+                            <span class="text-green font-semibold">{{ c.completions }}</span>
+                            {% else %}
+                            <span class="text-text-3">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums text-text-2">{{ c.players }}</td>
+                        <td class="px-3 py-3 text-right tabular-nums text-text-2">{{ c.total_attempts }}</td>
+                        <td class="px-3 py-3 text-right tabular-nums">
+                            {% if c.hints_used > 0 %}
+                            <span class="text-amber">{{ c.hints_used }}</span>
+                            {% else %}
+                            <span class="text-text-3">0</span>
+                            {% endif %}
+                            {% if c.hints_count > 0 %}
+                            <span class="text-text-3 text-[10px]">({{ c.hints_count }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums text-text-2">
+                            {% if c.avg_solve_seconds %}
+                            {{ (c.avg_solve_seconds // 60) }}m
+                            {% else %}
+                            <span class="text-text-3">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            {% if c.detector_valid %}
+                            <span class="text-green text-[10px]" title="{{ c.detector_class }}">✓</span>
+                            {% else %}
+                            <span class="text-danger text-[10px]" title="{{ c.detector_class }} — not registered">✗</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <button
+                                class="toggle-btn w-8 h-4 rounded-full relative transition-colors cursor-pointer {% if c.is_active %}bg-green/30{% else %}bg-cc-border{% endif %}"
+                                data-challenge-id="{{ c.id }}"
+                                data-active="{{ 'true' if c.is_active else 'false' }}"
+                                title="Toggle active state (runtime only)"
+                            >
+                                <span class="absolute top-0.5 {% if c.is_active %}right-0.5{% else %}left-0.5{% endif %} w-3 h-3 rounded-full transition-all {% if c.is_active %}bg-green{% else %}bg-text-3{% endif %}"></span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Coverage Matrix -->
+    {% if coverage %}
+    <div class="mt-6 space-y-4">
+        {% for fw in coverage %}
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">{{ fw.name }}</h3>
+            <div class="space-y-2">
+                {% for label in fw.labels %}
+                <div class="flex items-start gap-3 text-xs">
+                    <span class="text-green shrink-0 mt-0.5">✓</span>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-text-2 font-mono text-[10px]">{{ label.id }}</span>
+                        <span class="text-text-3 ml-2">({{ label.challenges | length }}{% if label.challenges | length == 1 %} challenge{% else %} challenges{% endif %})</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const id = btn.dataset.challengeId;
+        try {
+            const res = await fetch(`/cc/challenges/api/toggle?challenge_id=${encodeURIComponent(id)}`, { method: 'POST' });
+            if (!res.ok) throw new Error(res.statusText);
+            const data = await res.json();
+            const dot = btn.querySelector('span');
+            if (data.is_active) {
+                btn.classList.replace('bg-cc-border', 'bg-green/30');
+                dot.classList.replace('bg-text-3', 'bg-green');
+                dot.classList.replace('left-0.5', 'right-0.5');
+                btn.closest('tr').classList.remove('opacity-50');
+            } else {
+                btn.classList.replace('bg-green/30', 'bg-cc-border');
+                dot.classList.replace('bg-green', 'bg-text-3');
+                dot.classList.replace('right-0.5', 'left-0.5');
+                btn.closest('tr').classList.add('opacity-50');
+            }
+            btn.dataset.active = data.is_active;
+        } catch (e) {
+            console.error('Toggle failed:', e);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -19,25 +19,25 @@ keyFloat: {
 {% endblock %}
 
 {% block background %}
-<div class="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-cine-dark to-cine-gray">
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23D4AF37&quot; fill-opacity=&quot;0.04&quot;%3E%3Cpath d=&quot;M30 15a15 15 0 100 30 15 15 0 000-30zm0 5a3 3 0 110 6 3 3 0 010-6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-portal-bg to-portal-bg-alt">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%2300d4ff&quot; fill-opacity=&quot;0.04&quot;%3E%3Cpath d=&quot;M30 15a15 15 0 100 30 15 15 0 000-30zm0 5a3 3 0 110 6 3 3 0 010-6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-9xl md:text-[12rem] font-display font-bold text-cine-gold animate-pulse-slow leading-none">
+    <h1 class="text-9xl md:text-[12rem] font-display font-bold text-ctf-primary animate-pulse-slow leading-none">
         4<span class="animate-lock-pulse inline-block">0</span>1
     </h1>
 </div>
 
 <div class="mb-8 animate-float">
     <div class="relative inline-block">
-        <svg class="w-32 h-32 mx-auto text-cine-gold opacity-80 animate-lock-pulse" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-32 h-32 mx-auto text-ctf-primary opacity-80 animate-lock-pulse" fill="currentColor" viewBox="0 0 24 24">
             <path d="M18,8A6,6 0 0,0 12,2A6,6 0 0,0 6,8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V10A2,2 0 0,0 20,8H18M12,4A4,4 0 0,1 16,8H8A4,4 0 0,1 12,4M12,14A2,2 0 0,1 14,16A2,2 0 0,1 12,18A2,2 0 0,1 10,16A2,2 0 0,1 12,14Z"/>
         </svg>
         <div class="absolute -top-2 -right-6 animate-key-float">
-            <svg class="w-10 h-10 text-cine-gold/60" fill="currentColor" viewBox="0 0 24 24">
+            <svg class="w-10 h-10 text-ctf-primary/60" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M7 14C5.9 14 5 13.1 5 12S5.9 10 7 10 9 10.9 9 12 8.1 14 7 14M12.65 10C11.83 7.67 9.61 6 7 6C3.69 6 1 8.69 1 12S3.69 18 7 18C9.61 18 11.83 16.33 12.65 14H17V18H21V14H23V10H12.65Z"/>
             </svg>
         </div>
@@ -46,10 +46,10 @@ keyFloat: {
 
 <div class="mb-8">
     <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-        Backstage Pass Required!
+        Authentication Required!
     </h2>
     <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
-        You need to sign in to access this area. 🎟️
+        You need to sign in to access this area. 🔐
     </p>
     <p class="text-lg text-gray-400 max-w-2xl mx-auto">
         This page requires a verified account. Sign in with your email using our
@@ -57,8 +57,8 @@ keyFloat: {
     </p>
 </div>
 
-<div class="mb-8 p-6 bg-cine-gray/50 rounded-xl border border-cine-gold/20">
-    <h3 class="text-cine-gold font-semibold text-lg mb-4">Sign in with Magic Link</h3>
+<div class="mb-8 p-6 bg-portal-bg-alt/50 rounded-xl border border-ctf-primary/20">
+    <h3 class="text-ctf-primary font-semibold text-lg mb-4">Sign in with Magic Link</h3>
     <form action="/auth/magic-link" method="POST" class="max-w-sm mx-auto space-y-3">
         <input type="hidden" name="csrf_token" value="{{ request.state.session_context.csrf_token if request.state.session_context else '' }}">
         <input
@@ -66,9 +66,9 @@ keyFloat: {
             name="email"
             placeholder="your@email.com"
             required
-            class="w-full bg-cine-dark border border-cine-gold/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cine-gold transition-colors text-center"
+            class="w-full bg-portal-bg border border-ctf-primary/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-ctf-primary transition-colors text-center"
         >
-        <button type="submit" class="w-full bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center justify-center gap-2">
+        <button type="submit" class="w-full bg-ctf-primary hover:bg-yellow-500 text-portal-bg font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-ctf-primary/25 flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
@@ -80,7 +80,7 @@ keyFloat: {
 
 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
     <a href="{{ back_url }}"
-       class="group bg-transparent border-2 border-cine-gold/50 hover:border-cine-gold hover:bg-cine-gold/10 text-cine-gold font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+       class="group bg-transparent border-2 border-ctf-primary/50 hover:border-ctf-primary hover:bg-ctf-primary/10 text-ctf-primary font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
         <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
@@ -96,28 +96,28 @@ keyFloat: {
     </a>
 </div>
 
-<div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-cine-gold/20 backdrop-blur-sm">
-    <p class="text-cine-gold font-display text-lg italic">
-        "Every great story starts with a ticket stub!"
+<div class="mt-12 p-6 bg-portal-bg-alt/50 rounded-lg border border-ctf-primary/20 backdrop-blur-sm">
+    <p class="text-ctf-primary font-display text-lg italic">
+        "Every great hack starts with proper credentials!"
     </p>
-    <p class="text-gray-400 text-sm mt-2">- Box Office Manager</p>
+    <p class="text-gray-400 text-sm mt-2">- Access Control</p>
 </div>
 {% endblock %}
 
 {% block floating_elements %}
-<div class="absolute top-10 left-10 text-cine-gold/20 animate-key-float">
+<div class="absolute top-10 left-10 text-ctf-primary/20 animate-key-float">
     <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
         <path d="M7 14C5.9 14 5 13.1 5 12S5.9 10 7 10 9 10.9 9 12 8.1 14 7 14M12.65 10C11.83 7.67 9.61 6 7 6C3.69 6 1 8.69 1 12S3.69 18 7 18C9.61 18 11.83 16.33 12.65 14H17V18H21V14H23V10H12.65Z"/>
     </svg>
 </div>
 
-<div class="absolute bottom-10 right-10 text-cine-gold/20 animate-pulse-slow">
+<div class="absolute bottom-10 right-10 text-ctf-primary/20 animate-pulse-slow">
     <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>
     </svg>
 </div>
 
-<div class="absolute top-1/4 right-20 text-cine-gold/10 animate-float">
+<div class="absolute top-1/4 right-20 text-ctf-primary/10 animate-float">
     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
         <path d="M18,8A6,6 0 0,0 12,2A6,6 0 0,0 6,8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V10A2,2 0 0,0 20,8H18M12,4A4,4 0 0,1 16,8H8A4,4 0 0,1 12,4Z"/>
     </svg>

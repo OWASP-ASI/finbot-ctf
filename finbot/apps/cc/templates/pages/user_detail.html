@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}{{ target_user.display_name or target_user.email or target_user.user_id[:12] }} — Users{% endblock %}
+{% block page_title %}Users{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/cc/users/" class="text-text-3 hover:text-text-1 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <div>
+            <h2 class="text-text-1 text-sm font-semibold truncate">{{ target_user.display_name or target_user.email or target_user.user_id }}</h2>
+            <p class="text-text-3 text-[10px] font-mono mt-0.5 truncate" title="{{ target_user.user_id }}">{{ target_user.user_id }}</p>
+        </div>
+        {% if not target_user.is_active %}
+        <span class="text-danger text-[10px] border border-danger/30 rounded px-2 py-0.5 ml-2">DEACTIVATED</span>
+        {% endif %}
+    </div>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ counts.completed }}<span class="text-text-3 text-sm">/{{ counts.attempted }}</span></p>
+            <p class="text-text-3 text-xs mt-1">Challenges</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ counts.badges }}</p>
+            <p class="text-text-3 text-xs mt-1">Badges</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ counts.sessions }}</p>
+            <p class="text-text-3 text-xs mt-1">Sessions</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ counts.events }}</p>
+            <p class="text-text-3 text-xs mt-1">Events</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ counts.chats }}</p>
+            <p class="text-text-3 text-xs mt-1">Messages</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4 overflow-hidden">
+            <p class="text-text-1 text-xs font-mono truncate" title="{{ target_user.namespace }}">{{ target_user.namespace }}</p>
+            <p class="text-text-3 text-xs mt-1">Namespace</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Identity -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Identity</h3>
+            <div class="space-y-2 text-xs">
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Email</span><span class="text-text-2 truncate" title="{{ target_user.email or '' }}">{{ target_user.email or '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Display Name</span><span class="text-text-2 truncate">{{ target_user.display_name or '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Created</span><span class="text-text-2">{{ target_user.created_at.strftime('%b %d, %Y %H:%M') if target_user.created_at else '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Last Login</span><span class="text-text-2">{{ target_user.last_login.strftime('%b %d, %Y %H:%M') if target_user.last_login else '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Active</span><span class="{% if target_user.is_active %}text-green{% else %}text-danger{% endif %}">{{ 'Yes' if target_user.is_active else 'No' }}</span></div>
+            </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Profile</h3>
+            {% if profile %}
+            <div class="space-y-2 text-xs">
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Username</span><span class="text-text-2 truncate">{{ profile.username or '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Bio</span><span class="text-text-2 truncate" title="{{ profile.bio or '' }}">{{ profile.bio or '-' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Avatar</span><span class="text-text-2">{{ profile.avatar_emoji }} ({{ profile.avatar_type or 'emoji' }})</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Public</span><span class="{% if profile.is_public %}text-green{% else %}text-text-3{% endif %}">{{ 'Yes' if profile.is_public else 'No' }}</span></div>
+                <div class="flex justify-between gap-4"><span class="text-text-3 shrink-0">Activity Feed</span><span class="text-text-2">{{ 'On' if profile.show_activity else 'Off' }}</span></div>
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No profile created</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sessions -->
+    {% if sessions %}
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Sessions ({{ sessions | length }})</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 text-[10px] uppercase tracking-wider">
+                        <th class="text-left px-3 py-2 font-semibold">Session ID</th>
+                        <th class="text-left px-3 py-2 font-semibold">Type</th>
+                        <th class="text-left px-3 py-2 font-semibold">Last Accessed</th>
+                        <th class="text-left px-3 py-2 font-semibold">Expires</th>
+                        <th class="text-left px-3 py-2 font-semibold">IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr class="border-b border-cc-border">
+                        <td class="px-3 py-2 font-mono text-text-3">{{ s.session_id[:16] }}...</td>
+                        <td class="px-3 py-2">
+                            {% if s.is_temporary %}
+                            <span class="text-amber">temp</span>
+                            {% else %}
+                            <span class="text-cyan">perm</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-text-2">{{ s.last_accessed.strftime('%b %d, %H:%M') if s.last_accessed else '-' }}</td>
+                        <td class="px-3 py-2 text-text-3">{{ s.expires_at.strftime('%b %d, %H:%M') if s.expires_at else '-' }}</td>
+                        <td class="px-3 py-2 text-text-3 font-mono">{{ s.current_ip or s.original_ip or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Challenge Progress -->
+    {% if progress %}
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Challenge Progress ({{ progress | length }})</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 text-[10px] uppercase tracking-wider">
+                        <th class="text-left px-3 py-2 font-semibold">Challenge</th>
+                        <th class="text-left px-3 py-2 font-semibold">Status</th>
+                        <th class="text-right px-3 py-2 font-semibold">Attempts</th>
+                        <th class="text-right px-3 py-2 font-semibold">Hints</th>
+                        <th class="text-left px-3 py-2 font-semibold">Completed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in progress %}
+                    {% set status_colors = {"completed": "text-green", "in_progress": "text-cyan", "available": "text-text-2", "locked": "text-text-3"} %}
+                    <tr class="border-b border-cc-border">
+                        <td class="px-3 py-2 text-text-2">{{ p.challenge_id }}</td>
+                        <td class="px-3 py-2 {{ status_colors.get(p.status, 'text-text-3') }} capitalize font-medium">{{ p.status }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums text-text-2">{{ p.attempts }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums {% if p.hints_used > 0 %}text-amber{% else %}text-text-3{% endif %}">{{ p.hints_used }}</td>
+                        <td class="px-3 py-2 text-text-3">{{ p.completed_at.strftime('%b %d, %H:%M') if p.completed_at else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Badges Earned -->
+    {% if badges_earned %}
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Badges Earned ({{ badges_earned | length }})</h3>
+        <div class="space-y-2">
+            {% for b in badges_earned %}
+            {% set rarity_colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+            <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="{{ rarity_colors.get(b.rarity, 'text-text-2') }} font-medium">{{ b.title }}</span>
+                    <span class="text-text-3 text-[10px] capitalize">{{ b.rarity }}</span>
+                </div>
+                <span class="text-text-3">{{ b.earned_at.strftime('%b %d, %H:%M') if b.earned_at else '-' }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Events -->
+    {% if recent_events %}
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-8">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Recent Events ({{ counts.events }} total, showing last 20)</h3>
+        <div class="space-y-1">
+            {% for e in recent_events %}
+            {% set sev_colors = {"info": "text-text-3", "success": "text-green", "warning": "text-amber", "danger": "text-danger"} %}
+            <div class="flex items-start gap-3 text-xs py-1">
+                <span class="text-text-3 tabular-nums shrink-0 text-[10px]">{{ e.timestamp.strftime('%b %d %H:%M') }}</span>
+                <span class="{{ sev_colors.get(e.severity, 'text-text-3') }} shrink-0 text-[10px] w-1">●</span>
+                <span class="text-text-2 truncate">{{ e.summary }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Actions</h3>
+        <div class="space-y-4">
+            <!-- Kill Sessions -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-text-2 text-xs font-medium">Kill Sessions</p>
+                    <p class="text-text-3 text-[10px]">Force logout — deletes all sessions. User can re-login.</p>
+                </div>
+                <button
+                    class="action-btn border border-cc-border text-text-2 text-xs px-4 py-1.5 rounded hover:border-text-3 transition-colors"
+                    data-action="kill-sessions"
+                    data-title="Kill Sessions"
+                    data-confirm="All active sessions for this user will be deleted. They will need to sign in again."
+                >Kill Sessions</button>
+            </div>
+
+            <!-- Delete Profile -->
+            <div class="flex items-center justify-between border-t border-cc-border pt-4">
+                <div>
+                    <p class="text-text-2 text-xs font-medium">Delete Profile</p>
+                    <p class="text-text-3 text-[10px]">Removes public profile (username, bio, avatar). User can recreate it.</p>
+                </div>
+                <button
+                    class="action-btn border border-amber/30 text-amber text-xs px-4 py-1.5 rounded hover:bg-amber/10 transition-colors"
+                    data-action="delete-profile"
+                    data-title="Delete Profile"
+                    data-confirm="This will remove the user's public profile including username, bio, avatar, and social links. They can recreate it."
+                    data-danger="true"
+                >Delete Profile</button>
+            </div>
+
+            <!-- Toggle Active -->
+            <div class="flex items-center justify-between border-t border-cc-border pt-4">
+                <div>
+                    <p class="text-text-2 text-xs font-medium">{{ 'Deactivate' if target_user.is_active else 'Reactivate' }} User</p>
+                    <p class="text-text-3 text-[10px]">{{ 'Blocks login. Preserves all data.' if target_user.is_active else 'Re-enables login access.' }}</p>
+                </div>
+                <button
+                    class="action-btn border border-{% if target_user.is_active %}amber{% else %}green{% endif %}/30 text-{% if target_user.is_active %}amber{% else %}green{% endif %} text-xs px-4 py-1.5 rounded hover:bg-{% if target_user.is_active %}amber{% else %}green{% endif %}/10 transition-colors"
+                    data-action="toggle-active"
+                    data-title="{{ 'Deactivate User' if target_user.is_active else 'Reactivate User' }}"
+                    data-confirm="{{ 'This user will be blocked from logging in. All their data will be preserved.' if target_user.is_active else 'This will re-enable login access for this user.' }}"
+                    data-danger="{{ 'true' if target_user.is_active else 'false' }}"
+                >{{ 'Deactivate' if target_user.is_active else 'Reactivate' }}</button>
+            </div>
+
+            <!-- Full CTF Reset -->
+            <div class="flex items-center justify-between border-t border-danger/20 pt-4">
+                <div>
+                    <p class="text-danger text-xs font-medium">Full CTF Reset</p>
+                    <p class="text-text-3 text-[10px]">Permanently deletes all progress, badges, events, chat, and sessions. Irreversible.</p>
+                </div>
+                <button
+                    class="border border-danger/30 text-danger text-xs px-4 py-1.5 rounded hover:bg-danger/10 transition-colors"
+                    id="full-reset-btn"
+                    data-counts="{{ counts.attempted }} progress, {{ counts.badges }} badges, {{ counts.events }} events, {{ counts.chats }} chats, {{ counts.sessions }} sessions"
+                >Full Reset...</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+<script>
+(function() {
+    const userId = '{{ target_user.user_id }}';
+
+    async function doAction(action) {
+        const res = await fetch(`/cc/users/api/${userId}/${action}`, { method: 'POST' });
+        if (!res.ok) throw new Error(res.statusText);
+        location.reload();
+    }
+
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const action = btn.dataset.action;
+            const msg = btn.dataset.confirm;
+            const title = btn.dataset.title || btn.textContent.trim();
+            const danger = btn.dataset.danger === 'true';
+
+            const confirmed = await showConfirmModal({
+                title,
+                message: msg,
+                confirmText: title,
+                danger,
+            });
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            try {
+                await doAction(action);
+            } catch (e) {
+                await showConfirmModal({ title: 'Error', message: 'Action failed: ' + e.message, confirmText: 'OK', cancelText: '' });
+                location.reload();
+            }
+        });
+    });
+
+    // Full CTF reset — input confirmation modal
+    document.getElementById('full-reset-btn').addEventListener('click', async () => {
+        const counts = document.getElementById('full-reset-btn').dataset.counts;
+        const confirmed = await showInputConfirmModal({
+            title: 'Full CTF Reset',
+            message: `This will permanently delete: ${counts}.\n\nThis action is irreversible.`,
+            inputLabel: 'Type the user ID to confirm:',
+            expectedValue: userId,
+            placeholder: userId,
+            confirmText: 'Reset Everything',
+        });
+        if (!confirmed) return;
+        try {
+            const res = await fetch(
+                `/cc/users/api/${userId}/full-ctf-reset?confirm_user_id=${encodeURIComponent(userId)}`,
+                { method: 'POST' }
+            );
+            if (!res.ok) throw new Error(res.statusText);
+            location.reload();
+        } catch (e) {
+            await showConfirmModal({ title: 'Error', message: 'Reset failed: ' + e.message, confirmText: 'OK', cancelText: '' });
+            location.reload();
+        }
+    });
+})();
+
+function showInputConfirmModal({ title, message, inputLabel, expectedValue, placeholder, confirmText }) {
+    return new Promise((resolve) => {
+        const existing = document.getElementById('confirm-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'confirm-modal';
+        modal.style.cssText = `
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            padding: 1rem;
+            animation: confirmModalFadeIn 0.15s ease-out;
+        `;
+
+        modal.innerHTML = `
+            <div style="background:#151520; border:1px solid rgba(255,255,255,0.1); border-radius:0.75rem;
+                        box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); max-width:28rem; width:100%;
+                        overflow:hidden; animation:confirmModalSlideIn 0.2s ease-out;">
+                <div style="padding:1rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <h3 style="font-size:1.125rem; font-weight:700; color:#ef4444; margin:0;">${title}</h3>
+                </div>
+                <div style="padding:1.25rem 1.5rem;">
+                    <p style="font-size:0.875rem; color:#94a3b8; line-height:1.625; margin:0 0 1rem 0; white-space:pre-line;">${message}</p>
+                    <p style="font-size:0.75rem; color:#64748b; margin:0 0 0.5rem 0;">${inputLabel}</p>
+                    <p style="font-size:0.75rem; color:#e2e8f0; font-family:'JetBrains Mono',monospace; margin:0 0 0.75rem 0; padding:0.375rem 0.5rem; background:rgba(255,255,255,0.03); border-radius:0.25rem; user-select:all;">${expectedValue}</p>
+                    <input id="input-confirm-field" type="text" placeholder="Paste or type the ID above"
+                        style="width:100%; padding:0.5rem 0.75rem; font-size:0.75rem; font-family:'JetBrains Mono',monospace;
+                        background:#0c0c14; border:1px solid rgba(255,255,255,0.06); border-radius:0.375rem;
+                        color:#e2e8f0; outline:none; box-sizing:border-box;" />
+                </div>
+                <div style="padding:1rem 1.5rem; border-top:1px solid rgba(255,255,255,0.05);
+                            display:flex; align-items:center; justify-content:flex-end; gap:0.75rem;">
+                    <button id="input-confirm-cancel" style="font-size:0.875rem; padding:0.5rem 1rem;
+                        border-radius:0.5rem; border:1px solid rgba(255,255,255,0.1); background:transparent;
+                        color:#94a3b8; cursor:pointer; transition:all 0.15s;"
+                        onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.2)'"
+                        onmouseout="this.style.color='#94a3b8';this.style.borderColor='rgba(255,255,255,0.1)'"
+                    >Cancel</button>
+                    <button id="input-confirm-ok" disabled style="font-size:0.875rem; padding:0.5rem 1rem;
+                        border-radius:0.5rem; border:1px solid rgba(239,68,68,0.3);
+                        background:rgba(239,68,68,0.2); color:#ef4444;
+                        cursor:pointer; font-weight:500; transition:all 0.15s;
+                        opacity:0.3;"
+                    >${confirmText}</button>
+                </div>
+            </div>
+        `;
+
+        if (!document.getElementById('confirm-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'confirm-modal-styles';
+            style.textContent = '@keyframes confirmModalFadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes confirmModalSlideIn { from { opacity: 0; transform: scale(0.95) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }';
+            document.head.appendChild(style);
+        }
+
+        const cleanup = (result) => {
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+            resolve(result);
+        };
+        const escHandler = (e) => { if (e.key === 'Escape') cleanup(false); };
+
+        document.body.appendChild(modal);
+        document.addEventListener('keydown', escHandler);
+        modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(false); });
+
+        const input = modal.querySelector('#input-confirm-field');
+        const okBtn = modal.querySelector('#input-confirm-ok');
+        const cancelBtn = modal.querySelector('#input-confirm-cancel');
+
+        input.addEventListener('input', () => {
+            const match = input.value === expectedValue;
+            okBtn.disabled = !match;
+            okBtn.style.opacity = match ? '1' : '0.3';
+        });
+
+        cancelBtn.addEventListener('click', () => cleanup(false));
+        okBtn.addEventListener('click', () => { if (!okBtn.disabled) cleanup(true); });
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !okBtn.disabled) cleanup(true); });
+        input.focus();
+    });
+}
+</script>
+{% endblock %}

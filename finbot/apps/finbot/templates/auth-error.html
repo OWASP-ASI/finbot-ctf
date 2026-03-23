@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error or 'Error' }} - OWASP FinBot CTF{% endblock %}
+
+{% block nav %}
+<a href="/" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Home</a>
+<a href="/portals" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Portals</a>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center px-6 pt-16">
+    <div class="max-w-md mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-danger/15 rounded-full mb-8">
+            <svg class="w-10 h-10 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold text-text-1 mb-4">{{ error or 'Something went wrong' }}</h1>
+
+        <p class="text-text-2 mb-8">{{ message or 'An unexpected error occurred. Please try again.' }}</p>
+
+        <a href="/portals" class="inline-flex items-center justify-center w-full bg-gradient-to-r from-cyan to-purple text-bg-primary px-6 py-3 rounded-xl font-semibold hover:shadow-[0_0_24px_rgba(0,212,255,0.25)] transition-all">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Portals
+        </a>
+    </div>
+</div>
+{% endblock %}

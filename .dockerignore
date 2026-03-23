@@ -1,0 +1,44 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+venv
+.eggs
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+
+# IDE
+.cursor
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+tests
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+docs
+*.md
+!README.md
+
+# CI
+.github

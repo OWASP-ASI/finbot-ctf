@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Stats - OWASP FinBot CTF{% endblock %}
+
+{% block content %}
+<section class="pt-28 pb-16 px-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">Community Pulse</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-text-1 mb-3">Platform Stats</h1>
+            <p class="text-text-3 max-w-xl mx-auto">Aggregate metrics from the OWASP FinBot CTF platform. Updated in real time.</p>
+        </div>
+
+        {% if coming_soon %}
+        <div class="glass rounded-xl p-10 text-center mb-10">
+            <p class="text-text-1 text-xl font-semibold mb-2">Coming Soon</p>
+            <p class="text-text-3 text-sm">Platform stats will be available once we have enough community activity. Check back soon.</p>
+        </div>
+        {% endif %}
+
+        {% if not coming_soon %}
+        <!-- Main stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-text-1">{{ total_users }}</p>
+                <p class="text-text-3 text-sm mt-1">Registered Users</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-text-1">{{ active_week }}</p>
+                <p class="text-text-3 text-sm mt-1">Active This Week</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-text-1">{{ active_month }}</p>
+                <p class="text-text-3 text-sm mt-1">Active This Month</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-green">{{ challenges_completed }}</p>
+                <p class="text-text-3 text-sm mt-1">Challenges Completed</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-purple">{{ badges_earned }}</p>
+                <p class="text-text-3 text-sm mt-1">Badges Earned</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+                <p class="text-3xl font-bold text-cyan">{{ vendors_registered }}</p>
+                <p class="text-text-3 text-sm mt-1">Vendors Registered</p>
+            </div>
+        </div>
+
+        <!-- Challenge categories -->
+        {% if categories %}
+        <div class="glass rounded-xl p-6">
+            <h2 class="text-text-1 font-semibold text-sm uppercase tracking-wider mb-4">Challenges by Category</h2>
+            <div class="space-y-3">
+                {% for cat in categories %}
+                {% set max_count = categories[0].count if categories else 1 %}
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-text-2 text-sm">{{ cat.name }}</span>
+                        <span class="text-text-1 text-sm font-semibold">{{ cat.count }}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-bg-secondary rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-cyan to-purple rounded-full" style="width: {{ (cat.count / max_count * 100)|int }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% endif %}
+
+        <div class="mt-10 text-center">
+            <a href="/portals" class="inline-flex items-center text-cyan hover:text-green font-medium text-sm transition-colors">
+                Join the community
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

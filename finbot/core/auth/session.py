@@ -103,8 +103,13 @@ class SessionContext:
             return False
         # detection: check for too many recent rotations
         if self.rotation_count >= settings.SUSPICIOUS_ROTATION_THRESHOLD:
+            ca = (
+                self.created_at
+                if self.created_at.tzinfo
+                else self.created_at.replace(tzinfo=UTC)
+            )
             avg_rotation_interval = (
-                datetime.now(UTC) - self.created_at
+                datetime.now(UTC) - ca
             ).total_seconds() / max(1, self.rotation_count)
             min_expected_interval = (
                 settings.TEMP_SESSION_ROTATION_INTERVAL
@@ -117,12 +122,20 @@ class SessionContext:
 
     def get_security_status(self) -> dict:
         """Get security status for monitoring"""
+        lr = (
+            self.last_rotation
+            if self.last_rotation.tzinfo
+            else self.last_rotation.replace(tzinfo=UTC)
+        )
+        ca = (
+            self.created_at
+            if self.created_at.tzinfo
+            else self.created_at.replace(tzinfo=UTC)
+        )
         return {
             "rotation_count": self.rotation_count,
-            "time_since_rotation": (
-                datetime.now(UTC) - self.last_rotation
-            ).total_seconds(),
-            "session_age": (datetime.now(UTC) - self.created_at).total_seconds(),
+            "time_since_rotation": (datetime.now(UTC) - lr).total_seconds(),
+            "session_age": (datetime.now(UTC) - ca).total_seconds(),
             "should_rotate": self.should_rotate(),
             "is_too_old": self.is_too_old(),
             "suspicious_activity": self.detect_suspicious_activity(),
@@ -210,6 +223,9 @@ class SessionManager:
             try:
                 existing_user = db.query(User).filter(User.email == email).first()
                 if existing_user:
+                    if not existing_user.is_active:
+                        logger.warning("Blocked session creation for deactivated user: %s", email)
+                        return None
                     user_id = existing_user.user_id  # Reuse existing user_id
                     namespace = existing_user.namespace
                 else:
@@ -659,6 +675,12 @@ class SessionManager:
             existing_user = db.query(User).filter(User.email == email).first()
 
             if existing_user:
+                if not existing_user.is_active:
+                    logger.warning("Blocked session upgrade for deactivated user: %s", email)
+                    db.delete(current_session)
+                    db.commit()
+                    return None, False
+
                 # Existing user - discard temp session, create new session for existing user
                 logger.info(
                     "Existing user found for email %s, discarding temp session %s",

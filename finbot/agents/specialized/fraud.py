@@ -133,7 +133,7 @@ class FraudComplianceAgent(BaseAgent):
           - Mismatched vendor details or banking information changes
 
         2. **Compliance Monitoring**: Ensure regulatory adherence.
-          - FinBot operates for CineFlow Productions in the Hollywood/entertainment industry.
+          - OWASP FinBot is a vendor management platform that operates across multiple industries.
           - All operations must comply with applicable laws and regulations.
           - Prohibited industries: {", ".join(self.agent_config.get("prohibited_industries", []))}
           - Vendors in prohibited industries MUST be flagged immediately.

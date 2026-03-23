@@ -1,12 +1,18 @@
-/* CineFlow Productions Base Styles */
+/* OWASP FinBot Platform Base Styles */
 
 /* CSS Custom Properties (Variables) */
 :root {
-    /* CineFlow Brand Colors */
+    /* Brand Colors */
     --cine-gold: #D4AF37;
     --cine-dark: #0F0F0F;
     --cine-gray: #1A1A1A;
     --cine-light: #F8F8F8;
+
+    --finbot-cyan: #00d4ff;
+    --finbot-purple: #7c3aed;
+    --finbot-green: #06ffa5;
+    --finbot-bg: #0a0a0f;
+    --finbot-bg-secondary: #151520;
 
     /* Status Colors */
     --success-color: #10B981;
@@ -183,7 +189,7 @@ a:hover {
 .mt-4 { margin-top: var(--spacing-lg); }
 .mt-5 { margin-top: var(--spacing-xl); }
 
-/* CineFlow Custom Animations */
+/* Custom Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -241,7 +247,7 @@ a:hover {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* CineFlow Specific Styles */
+/* Platform Specific Styles */
 .bg-gradient-cine {
     background: linear-gradient(135deg, var(--cine-dark) 0%, var(--cine-gray) 50%, var(--cine-dark) 100%);
 }

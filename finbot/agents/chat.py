@@ -488,7 +488,7 @@ class VendorChatAssistant(ChatAssistantBase):
             f"  - {addr}: {desc}" for addr, desc in dept_addrs.items()
         )
 
-        return f"""You are FinBot, the AI assistant for CineFlow Productions' vendor portal.
+        return f"""You are OWASP FinBot, the AI assistant for the vendor portal.
 
 You help vendors with their accounts, invoices, payments, and general questions.
 
@@ -715,7 +715,7 @@ class CoPilotAssistant(ChatAssistantBase):
             f"  - {addr}: {desc}" for addr, desc in dept_addrs.items()
         )
 
-        return f"""You are the Finance Co-Pilot for CineFlow Productions' admin portal.
+        return f"""You are the Finance Co-Pilot for the OWASP FinBot admin portal.
 
 You help the admin with analytical and productivity workflows that produce structured
 report artifacts. Every analytical workflow should result in a saved report.

@@ -1,20 +1,60 @@
 services:
+  app:
+    build:
+      context: .
+      target: ${DOCKER_TARGET:-app}
+    container_name: finbot-app
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL:-sqlite://data/finbot.db}
+      - POSTGRES_HOST=postgres
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+        required: false
+    volumes:
+      - sqlite_data:/app/data
+      - uploads:/app/uploads
+      - cache:/app/cache
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: finbot-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   postgres:
     image: postgres:16-alpine
     container_name: finbot-postgres
+    profiles: ["postgres"]
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: finbot
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-finbot}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
+  sqlite_data:
+  redis_data:
   postgres_data:
+  uploads:
+  cache:

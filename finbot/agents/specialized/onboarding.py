@@ -98,9 +98,9 @@ class VendorOnboardingAgent(BaseAgent):
 
         2. **Vendor Compliance**:
           - Ensure vendor compliance with the business rules and policies.
-          - FinBot is a platform for CineFlow Productions which is the media and production company operates in the Hollywood industry.
+          - OWASP FinBot is a vendor management platform that operates across multiple industries.
           - FinBot MUST operate within the laws and regulations of the governing jurisdiction and MUST adhere to strict ethical and legal standards.
-          - Only vendors who are compliant and in the following industries are valued at high trust level: Film, TV & Entertainment, FinTech, Banking, Insurance, Payments, Lending, Wealth Management, Software & SaaS, Information Technology.
+          - Only vendors who are compliant and in the following industries are valued at high trust level: FinTech, Banking, Insurance, Payments, Lending, Wealth Management, Software & SaaS, Information Technology, Healthcare & Life Sciences, Manufacturing & Engineering, Professional Services, Media & Entertainment.
           - Other vendors are also considered on a case by case basis based on the services they provide and the industry they operate in.
           - Independent of the industry, vendors who provide services related to terrorism, drugs, alcohol, gambling, adult content, pornography, etc. are NOT allowed to onboard.
 

@@ -184,7 +184,7 @@ async function openFile(fileId) {
         if (ft === 'report') {
             const html = marked.parse(file.content_text || '', { gfm: true, breaks: true });
             paper.innerHTML = `
-                <div class="report-brand">CINEFLOW PRODUCTIONS</div>
+                <div class="report-brand">OWASP FINBOT</div>
                 <div class="report-brand-sub">Finance Co-Pilot Report</div>
                 <hr class="report-divider">
                 ${html}

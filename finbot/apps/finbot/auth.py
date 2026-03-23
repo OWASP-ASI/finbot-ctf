@@ -13,7 +13,7 @@ from finbot.core.data.models import MagicLinkToken
 from finbot.core.email import get_email_service
 from finbot.core.templates import TemplateResponse
 
-template_response = TemplateResponse("finbot/apps/web/templates")
+template_response = TemplateResponse("finbot/apps/finbot/templates")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -71,7 +71,7 @@ async def request_magic_link(
         db.rollback()
         return template_response(
             request,
-            "pages/auth-error.html",
+            "auth-error.html",
             {
                 "error": "Failed to send magic link",
                 "message": f"An error occurred: {e}. Please try again.",
@@ -97,7 +97,7 @@ async def verify_magic_link(request: Request, token: str):
         if not magic_token:
             return template_response(
                 request,
-                "pages/auth-error.html",
+                "auth-error.html",
                 {
                     "error": "Invalid link",
                     "message": "This sign-in link is invalid or has already been used.",
@@ -107,7 +107,7 @@ async def verify_magic_link(request: Request, token: str):
         if not magic_token.is_valid():
             return template_response(
                 request,
-                "pages/auth-error.html",
+                "auth-error.html",
                 {
                     "error": "Link expired",
                     "message": "This sign-in link has expired. Please request a new one.",
@@ -119,15 +119,18 @@ async def verify_magic_link(request: Request, token: str):
         db.commit()
 
         # Determine which session to upgrade:
-        # 1. Prefer the original session stored in the token (preserves progress from original browser)
-        # 2. Fall back to current request session
+        # 1. Prefer the current browser's session (the one clicking the link)
+        # 2. Fall back to the original session stored in the token
         # 3. If neither exists, create a new permanent session
+        #
+        # We must NOT upgrade the stored session when a different browser clicks
+        # the link, otherwise both browsers share the same session ID and both
+        # become authenticated.
 
-        session_id_to_upgrade = magic_token.session_id
         current_session = getattr(request.state, "session_context", None)
-
-        if not session_id_to_upgrade and current_session:
-            session_id_to_upgrade = current_session.session_id
+        session_id_to_upgrade = (
+            current_session.session_id if current_session else magic_token.session_id
+        )
 
         if session_id_to_upgrade:
             # Upgrade the session (original or current)
@@ -161,7 +164,7 @@ async def verify_magic_link(request: Request, token: str):
         if not new_session:
             return template_response(
                 request,
-                "pages/auth-error.html",
+                "auth-error.html",
                 {
                     "error": "Session error",
                     "message": "Failed to create session. Please try again.",
@@ -185,7 +188,7 @@ async def verify_magic_link(request: Request, token: str):
         db.rollback()
         return template_response(
             request,
-            "pages/auth-error.html",
+            "auth-error.html",
             {
                 "error": "Verification failed",
                 "message": f"An error occurred: {e}. Please try again.",
@@ -234,6 +237,6 @@ async def check_email(request: Request, email: str = ""):
 
     return template_response(
         request,
-        "pages/check-email.html",
+        "check-email.html",
         {"email": email},
     )

@@ -75,8 +75,10 @@ def get_error_template_name(status_code: int) -> str:
 def render_error_page(request: Request, status_code: int, template_name: str = None):
     """Render an error page template with portal-aware context."""
     name = template_name or get_error_template_name(status_code)
-    ctx = {"request": request, **get_portal_context(request)}
-    return error_templates.TemplateResponse(name, ctx, status_code=status_code)
+    ctx = get_portal_context(request)
+    return error_templates.TemplateResponse(
+        request=request, name=name, context=ctx, status_code=status_code
+    )
 
 
 async def fastapi_http_exception_handler(request: Request, exc: HTTPException):
@@ -147,10 +149,13 @@ async def not_found_handler(request: Request, exc: HTTPException):
     return render_error_page(request, 404)
 
 
-async def internal_server_error_handler(request: Request, exc: HTTPException):
+async def internal_server_error_handler(request: Request, exc: Exception):
     """Handle 500 errors with custom error page or JSON response."""
     if is_api_request(request):
-        error_data = get_json_error_response(500, exc.detail)
+        # exc may be any exception type (not just HTTPException), so use
+        # getattr to safely retrieve .detail; fall back to str(exc) otherwise.
+        detail = getattr(exc, "detail", None) or str(exc) or "Internal Server Error"
+        error_data = get_json_error_response(500, detail)
         return JSONResponse(content=error_data, status_code=500)
 
     return render_error_page(request, 500)

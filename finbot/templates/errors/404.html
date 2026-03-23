@@ -14,41 +14,41 @@ wiggle: {
 {% endblock %}
 
 {% block background %}
-<div class="absolute inset-0 bg-gradient-to-br from-cine-dark via-cine-gray to-cine-dark">
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23D4AF37&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-portal-bg via-portal-bg-alt to-portal-bg">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%2300d4ff&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-9xl md:text-[12rem] font-display font-bold text-cine-gold animate-pulse-slow leading-none">
+    <h1 class="text-9xl md:text-[12rem] font-display font-bold text-ctf-primary animate-pulse-slow leading-none">
         4<span class="animate-wiggle inline-block">0</span>4
     </h1>
 </div>
 
 <div class="mb-8 animate-float">
-    <svg class="w-32 h-32 mx-auto text-cine-gold opacity-80" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>
-        <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.6"/>
+    <svg class="w-32 h-32 mx-auto text-ctf-primary opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5L10.5 13.5M10.5 10.5l3 3" opacity="0.6"/>
     </svg>
 </div>
 
 <div class="mb-8">
     <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">
-        Scene Not Found!
+        Target Not Found!
     </h2>
     <p class="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
-        Looks like this page took an unscheduled break from filming. 🎬
+        Looks like this endpoint has gone dark. 🔍
     </p>
     <p class="text-lg text-gray-400 max-w-2xl mx-auto">
-        Our director is frantically searching through the script, but this scene seems to have wandered off set.
-        Don't worry though - the show must go on!
+        Our systems scanned every route, but this target seems to have vanished from the network.
+        Don't worry though — the hunt continues!
     </p>
 </div>
 
 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
     <a href="{{ back_url }}"
-       class="group bg-cine-gold hover:bg-yellow-500 text-cine-dark font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cine-gold/25 flex items-center gap-2">
+       class="group bg-ctf-primary hover:bg-yellow-500 text-portal-bg font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-ctf-primary/25 flex items-center gap-2">
         <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
@@ -56,30 +56,30 @@ wiggle: {
     </a>
 
     <button onclick="window.history.back()"
-            class="group bg-transparent border-2 border-cine-gold hover:bg-cine-gold hover:text-cine-dark text-cine-gold font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+            class="group bg-transparent border-2 border-ctf-primary hover:bg-ctf-primary hover:text-portal-bg text-ctf-primary font-semibold px-8 py-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
         <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0L3 11.414a1 1 0 010-1.414L6.293 6.707a1 1 0 011.414 1.414L5.414 10H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
         </svg>
-        Previous Scene
+        Go Back
     </button>
 </div>
 
-<div class="mt-12 p-6 bg-cine-gray/50 rounded-lg border border-cine-gold/20 backdrop-blur-sm">
-    <p class="text-cine-gold font-display text-lg italic">
-        "In the cinema, as in life, sometimes you take a wrong turn... but that's where the adventure begins!"
+<div class="mt-12 p-6 bg-portal-bg-alt/50 rounded-lg border border-ctf-primary/20 backdrop-blur-sm">
+    <p class="text-ctf-primary font-display text-lg italic">
+        "In security, as in life, sometimes you hit a dead end... but that's where the real discovery begins!"
     </p>
-    <p class="text-gray-400 text-sm mt-2">- Anonymous Film Director</p>
+    <p class="text-gray-400 text-sm mt-2">- Anonymous Hacker</p>
 </div>
 {% endblock %}
 
 {% block floating_elements %}
-<div class="absolute top-10 left-10 text-cine-gold/20 animate-bounce-slow">
+<div class="absolute top-10 left-10 text-ctf-primary/20 animate-bounce-slow">
     <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
     </svg>
 </div>
 
-<div class="absolute bottom-10 right-10 text-cine-gold/20 animate-pulse-slow">
+<div class="absolute bottom-10 right-10 text-ctf-primary/20 animate-pulse-slow">
     <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
     </svg>

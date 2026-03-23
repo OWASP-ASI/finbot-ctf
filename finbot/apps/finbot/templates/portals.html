@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Portals - OWASP FinBot CTF{% endblock %}
+
+{% block extra_css %}
+        .portal-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .portal-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0,212,255,0.3);
+            box-shadow: 0 16px 48px rgba(0,212,255,0.08);
+        }
+        input:focus {
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+        }
+{% endblock %}
+
+{% block content %}
+<section class="pt-28 pb-16 min-h-[calc(100vh-5rem)] px-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+            <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">Access Points</p>
+            <h1 class="text-4xl sm:text-5xl font-bold text-text-1 mb-4">
+                Three Portals. <span class="gradient-text-alt">One Platform.</span>
+            </h1>
+            <p class="text-lg text-text-2 max-w-2xl mx-auto">
+                Choose your portal below. Sign in to save your progress across sessions and devices.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-8 items-start max-w-5xl mx-auto">
+
+            <!-- Left: Portal Cards -->
+            <div class="lg:col-span-3 space-y-4">
+                <a href="/vendor" class="portal-card glass rounded-xl p-5 flex items-center gap-5 block group hover:border-cyan/30">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan/20 to-cyan/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-bold text-text-1 group-hover:text-cyan transition-colors">Vendor Portal</h3>
+                        <p class="text-text-3 text-sm">Onboard vendors, chat with OWASP FinBot, manage invoices and payments</p>
+                    </div>
+                    <svg class="w-5 h-5 text-cyan group-hover:translate-x-1 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+
+                <a href="/admin" class="portal-card glass rounded-xl p-5 flex items-center gap-5 block group hover:border-purple/30">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple/20 to-purple/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-bold text-text-1 group-hover:text-purple transition-colors">Admin Portal</h3>
+                        <p class="text-text-3 text-sm">Configure MCP servers, manage agents, and administer the platform</p>
+                    </div>
+                    <svg class="w-5 h-5 text-purple group-hover:translate-x-1 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+
+                <a href="/ctf" class="portal-card glass rounded-xl p-5 flex items-center gap-5 block group hover:border-green/30">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green/20 to-green/5 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-bold text-text-1 group-hover:text-green transition-colors">CTF Portal</h3>
+                        <p class="text-text-3 text-sm">AI security challenges, badges, leaderboards, and vulnerability training</p>
+                    </div>
+                    <svg class="w-5 h-5 text-green group-hover:translate-x-1 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Right: User Status / Login -->
+            <div class="lg:col-span-2">
+                {% if user and user.email %}
+                <div class="glass rounded-2xl p-7 border border-green/30">
+                    <div class="flex items-center gap-4 mb-5">
+                        <div class="w-11 h-11 rounded-full bg-green/15 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-green font-medium">Signed in</p>
+                            <p class="text-text-1 font-semibold">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="bg-bg-primary/50 rounded-xl p-4 mb-5">
+                        <p class="text-text-3 text-sm">Your progress is being saved automatically. Challenges, badges, and achievements sync across all your devices.</p>
+                    </div>
+                    <div class="pt-4 border-t border-border-dim">
+                        <a href="/auth/logout" class="inline-flex items-center text-text-3 hover:text-text-1 text-sm transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Sign out
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="glass rounded-2xl p-7 border border-amber/30">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-amber/15 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-amber text-sm font-medium">Temporary Session</p>
+                    </div>
+                    <p class="text-text-3 text-sm mb-5">You can explore all portals and complete challenges, but your progress will only be saved in this browser session.</p>
+                    <div class="bg-bg-primary/50 rounded-xl p-5 mb-5">
+                        <h3 class="text-text-1 font-semibold mb-1">Save your progress</h3>
+                        <p class="text-text-3 text-xs mb-4">Enter your email and we'll send you a magic link — no password needed.</p>
+                        <form action="/auth/magic-link" method="POST" class="space-y-3">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="email" name="email" placeholder="your@email.com" required class="w-full bg-bg-secondary border border-text-3/30 rounded-lg px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none focus:border-cyan transition-colors text-sm">
+                            <button type="submit" class="inline-flex items-center justify-center w-full bg-gradient-to-r from-cyan to-purple text-bg-primary px-6 py-3 rounded-lg font-semibold hover:shadow-[0_0_24px_rgba(0,212,255,0.25)] transition-all text-sm">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                Send Magic Link
+                            </button>
+                        </form>
+                        <p class="text-xs text-text-3 mt-3">Already have an account? Signing in will restore your saved progress.</p>
+                    </div>
+                    <ul class="space-y-2">
+                        <li class="flex items-center gap-2 text-xs text-text-3">
+                            <svg class="w-4 h-4 text-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Keep your challenge progress forever
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-text-3">
+                            <svg class="w-4 h-4 text-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Sync across all your devices
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-text-3">
+                            <svg class="w-4 h-4 text-green flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            No password to remember
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

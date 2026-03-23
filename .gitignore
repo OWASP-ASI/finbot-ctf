@@ -75,4 +75,7 @@ google-credentials.json
 SECURITY_BUGS_REPORT.md
 
 
-.node_modules/ 
+.node_modules/
+
+# SQLite databases
+*.db
