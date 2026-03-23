@@ -35,7 +35,7 @@ def scrape_url_impl(
     """Core scraping logic, independent of FastMCP.
 
     Args:
-        url: The full URL to scrape (must start with http:// or https://).
+        url: The full URL to scrape (e.g., https://owasp-finbot-ctf-demo.onrender.com/entry.html).
         config: Merged server configuration dict.
         namespace: Session namespace for logging.
 
@@ -138,7 +138,7 @@ def create_finweb_server(
         during invoice processing.
 
         Args:
-            url: The full URL to scrape (must start with http:// or https://)
+            url: The full URL to scrape (e.g., https://owasp-finbot-ctf-demo.onrender.com/entry.html)
         """
         return scrape_url_impl(url, config, session_context.namespace)
 
