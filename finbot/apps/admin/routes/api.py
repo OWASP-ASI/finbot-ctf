@@ -23,6 +23,7 @@ from finbot.mcp.servers.finmail.server import DEFAULT_CONFIG as FINMAIL_DEFAULTS
 from finbot.mcp.servers.finstripe.server import DEFAULT_CONFIG as FINSTRIPE_DEFAULTS
 from finbot.mcp.servers.systemutils.server import DEFAULT_CONFIG as SYSTEMUTILS_DEFAULTS
 from finbot.mcp.servers.taxcalc.server import DEFAULT_CONFIG as TAXCALC_DEFAULTS
+from finbot.mcp.servers.finweb.server import DEFAULT_CONFIG as FINWEB_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,14 @@ MCP_SERVER_DEFAULTS = {
             **FINMAIL_DEFAULTS,
         },
         "description": "Internal email system for vendor and admin communications. Agents use this to send and read messages. Tool descriptions can be overridden for CTF email attack scenarios.",
+    },
+    "finweb": {
+        "display_name": "FinWeb",
+        "enabled": False,
+        "config": {
+            **FINWEB_DEFAULTS,
+        },
+        "description": "Web scraper for fetching external page content. Scraped text enters the agent context window -- the indirect prompt injection delivery mechanism for URL-based scenarios.",
     },
 }
 
@@ -498,6 +507,7 @@ _SERVER_INTROSPECTORS = {
     "systemutils": "finbot.mcp.servers.systemutils.server.create_systemutils_server",
     "findrive": "finbot.mcp.servers.findrive.server.create_findrive_server",
     "finmail": "finbot.mcp.servers.finmail.server.create_finmail_server",
+    "finweb": "finbot.mcp.servers.finweb.server.create_finweb_server",
 }
 
 
