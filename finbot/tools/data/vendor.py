@@ -70,6 +70,19 @@ async def update_vendor_status(
         risk_level,
         agent_notes,
     )
+
+    valid_statuses = {"pending", "active", "inactive"}
+    if status not in valid_statuses:
+        raise ValueError(
+            f"Invalid status: {status!r}. Must be one of {valid_statuses}"
+        )
+
+    valid_risk_levels = {"low", "medium", "high"}
+    if risk_level not in valid_risk_levels:
+        raise ValueError(
+            f"Invalid risk_level: {risk_level!r}. Must be one of {valid_risk_levels}"
+        )
+
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
