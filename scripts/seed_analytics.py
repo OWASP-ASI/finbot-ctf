@@ -1,8 +1,14 @@
 """
-Seed the page_views table with realistic mock analytics data.
+Seed Analytics Data
+
+Populates the page_views table with realistic mock pageview data and
+creates mock UserProfile records for testing the Command Center analytics
+dashboard and social/profile features.
+
+Audience: Development/testing only.
 
 Usage:
-    python scripts/seed_analytics.py            # insert ~2500 pageviews over 30 days
+    python scripts/seed_analytics.py            # ~2500 pageviews over 30 days
     python scripts/seed_analytics.py --days 14  # 14 days of data
     python scripts/seed_analytics.py --clear    # wipe existing data first
 """
@@ -21,26 +27,41 @@ sys.path.insert(0, str(project_root))
 # ruff: noqa: E402
 from finbot.core.analytics import models as _analytics_models  # noqa: F401
 from finbot.core.analytics.models import PageView
+from finbot.core.data import models as _data_models  # noqa: F401
+from finbot.core.data.models import User, UserProfile
 from finbot.core.data.database import SessionLocal, create_tables
+
+MOCK_USERNAMES = ["yello", "hackr42", "ctfpro", "nullbyte", "0xdead"]
+MOCK_BADGE_IDS = [
+    "first-blood", "renaissance-hacker", "goal-hijacker",
+    "puppet-master", "wrecking-ball", "policy-architect",
+]
 
 PATHS = [
     ("/", 30),
     ("/portals", 25),
-    ("/portals/finbot", 18),
-    ("/portals/cineflow", 8),
-    ("/agreement", 12),
+    ("/about", 12),
+    ("/stats", 6),
+    ("/agreement", 10),
     ("/auth/magic-link", 15),
     ("/auth/verify", 10),
     ("/ctf", 14),
     ("/ctf/challenges", 12),
-    ("/ctf/scoreboard", 10),
-    ("/ctf/profile", 6),
-    ("/ctf/badges", 4),
-    ("/demo/cineflow", 3),
-    ("/vendor/dashboard", 5),
-    ("/vendor/settings", 2),
-    ("/admin/dashboard", 2),
-    ("/api/session/status", 8),
+    ("/ctf/badges", 8),
+    ("/ctf/activity", 6),
+    ("/ctf/profile/settings", 5),
+    ("/vendor/dashboard", 8),
+    ("/vendor/settings", 3),
+    ("/admin/dashboard", 3),
+    ("/api/session/status", 6),
+    ("/demo/cineflow", 1),
+]
+
+SHARE_PATHS = [
+    (lambda: f"/ctf/h/{random.choice(MOCK_USERNAMES)}", 6),
+    (lambda: f"/ctf/share/profile/{random.choice(MOCK_USERNAMES)}/card.png", 4),
+    (lambda: f"/ctf/share/badge/{random.choice(MOCK_BADGE_IDS)}/card.png", 3),
+    (lambda: f"/ctf/api/v1/profile/u/{random.choice(MOCK_USERNAMES)}", 5),
 ]
 
 BROWSERS = [
@@ -136,7 +157,11 @@ def generate_pageviews(days: int = 30, base_daily: int = 80) -> list[PageView]:
             second = random.randint(0, 59)
             ts = day_base.replace(hour=hour, minute=minute, second=second, microsecond=0)
 
-            path = weighted_choice(PATHS)
+            if random.random() < 0.08:
+                share_fn = weighted_choice(SHARE_PATHS)
+                path = share_fn()
+            else:
+                path = weighted_choice(PATHS)
             browser = weighted_choice(BROWSERS)
             os_name = weighted_choice(OSES)
             device = weighted_choice(DEVICES)
@@ -183,6 +208,85 @@ def generate_pageviews(days: int = 30, base_daily: int = 80) -> list[PageView]:
     return records
 
 
+MOCK_PROFILES = [
+    {
+        "username": "hackr42", "bio": "Red teamer by day, CTF player by night",
+        "avatar_emoji": "💀", "is_public": True, "show_activity": True,
+        "social_github": "https://github.com/hackr42",
+        "social_twitter": "https://twitter.com/hackr42",
+    },
+    {
+        "username": "ctfpro", "bio": "OWASP contributor | AI security researcher",
+        "avatar_emoji": "🎯", "is_public": True, "show_activity": False,
+        "social_github": "https://github.com/ctfpro",
+        "social_linkedin": "https://linkedin.com/in/ctfpro",
+    },
+    {
+        "username": "nullbyte", "bio": None,
+        "avatar_emoji": "🔓", "is_public": True, "show_activity": False,
+    },
+    {
+        "username": "0xdead", "bio": "Just here for the badges",
+        "avatar_emoji": "☠️", "is_public": False, "show_activity": False,
+        "social_website": "https://0xdead.dev",
+    },
+]
+
+
+def seed_profiles(db):
+    """Create mock UserProfile records linked to mock users."""
+    existing_users = {u.display_name: u for u in db.query(User).all()}
+
+    created_users = 0
+    created_profiles = 0
+
+    for p in MOCK_PROFILES:
+        username = p["username"]
+
+        if username not in existing_users:
+            user = User(
+                user_id=f"user_{hashlib.md5(username.encode()).hexdigest()[:16]}",
+                email=f"{username}@example.com",
+                display_name=username,
+                namespace=f"ns_{username}",
+                is_active=True,
+            )
+            db.add(user)
+            db.flush()
+            existing_users[username] = user
+            created_users += 1
+
+        user = existing_users[username]
+
+        existing_profile = (
+            db.query(UserProfile)
+            .filter(UserProfile.user_id == user.user_id)
+            .first()
+        )
+        if existing_profile:
+            continue
+
+        profile = UserProfile(
+            user_id=user.user_id,
+            username=p["username"],
+            bio=p.get("bio"),
+            avatar_emoji=p.get("avatar_emoji", "🦊"),
+            avatar_type="emoji",
+            is_public=p.get("is_public", True),
+            show_activity=p.get("show_activity", False),
+            social_github=p.get("social_github"),
+            social_twitter=p.get("social_twitter"),
+            social_linkedin=p.get("social_linkedin"),
+            social_website=p.get("social_website"),
+            featured_badge_ids='["first-blood", "goal-hijacker"]' if random.random() > 0.5 else None,
+        )
+        db.add(profile)
+        created_profiles += 1
+
+    db.commit()
+    print(f"Seeded {created_users} mock users, {created_profiles} profiles")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Seed analytics mock data")
     parser.add_argument("--days", type=int, default=30, help="Days of data to generate (default: 30)")
@@ -208,6 +312,8 @@ def main():
 
         total = db.query(PageView).count()
         print(f"Inserted {len(records)} mock pageviews ({total} total)")
+
+        seed_profiles(db)
     except Exception:
         db.rollback()
         raise

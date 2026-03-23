@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}CTF Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Tab bar -->
+    {% include "partials/analytics_tabs.html" %}
+
+    <!-- Overview stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.challenges_cracked }}<span class="text-text-3 text-sm">/{{ overview.total_challenges }}</span></p>
+            <p class="text-text-3 text-xs mt-1">Challenges Cracked</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.completion_rate }}%</p>
+            <p class="text-text-3 text-xs mt-1">Cracked Rate</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.active_players }}</p>
+            <p class="text-text-3 text-xs mt-1">Active Players</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.badges_earned }}<span class="text-text-3 text-sm">/{{ overview.badges_defined }}</span></p>
+            <p class="text-text-3 text-xs mt-1">Badges Earned</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ events_7d }}</p>
+            <p class="text-text-3 text-xs mt-1">Events (7d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            {% set mins = (overview.avg_solve_seconds // 60) %}
+            <p class="text-text-1 text-2xl font-semibold">{% if mins > 0 %}{{ mins }}<span class="text-sm">m</span>{% else %}-{% endif %}</p>
+            <p class="text-text-3 text-xs mt-1">Avg Solve Time</p>
+        </div>
+    </div>
+
+    <!-- Challenges: Difficulty + Category -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">By Difficulty</h3>
+            {% if by_difficulty %}
+            <div class="space-y-3">
+                {% for d in by_difficulty %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-text-2 capitalize">{{ d.difficulty }}</span>
+                        <span class="text-text-3 tabular-nums">{{ d.completions }}/{{ d.attempts }} players &middot; {{ d.total_challenges }} challenges</span>
+                    </div>
+                    <div class="flex gap-0.5" style="height: 4px;">
+                        {% if d.attempts > 0 %}
+                        <div class="bg-green rounded-l" style="width: {{ d.rate }}%; min-width: 2px;"></div>
+                        <div class="bg-cc-border rounded-r" style="width: {{ 100 - d.rate }}%;"></div>
+                        {% else %}
+                        <div class="bg-cc-border rounded w-full"></div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No challenge data</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">By Category</h3>
+            {% if by_category %}
+            <div class="space-y-3">
+                {% for c in by_category %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-text-2">{{ c.category | replace('_', ' ') | title }}</span>
+                        <span class="text-text-3 tabular-nums">{{ c.completions }}/{{ c.attempts }} players &middot; {{ c.total_challenges }} challenges</span>
+                    </div>
+                    <div class="flex gap-0.5" style="height: 4px;">
+                        {% if c.attempts > 0 %}
+                        <div class="bg-cyan rounded-l" style="width: {{ c.rate }}%; min-width: 2px;"></div>
+                        <div class="bg-cc-border rounded-r" style="width: {{ 100 - c.rate }}%;"></div>
+                        {% else %}
+                        <div class="bg-cc-border rounded w-full"></div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No challenge data</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top Challenges + Unsolved + Top Players -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Challenges Solved</h3>
+            {% if top_challenges %}
+            <div class="space-y-2">
+                {% for c in top_challenges %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3">{{ c.title }}</span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-text-3 text-[10px] capitalize">{{ c.difficulty }}</span>
+                        <span class="text-text-1 font-semibold tabular-nums">{{ c.solves }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No completions yet</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Unsolved Challenges</h3>
+            {% if unsolved %}
+            <div class="space-y-2">
+                {% for c in unsolved %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3">{{ c.title }}</span>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-danger text-[10px] capitalize">{{ c.difficulty }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-green text-xs">All challenges have been solved!</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Players</h3>
+            {% if top_players %}
+            <div class="space-y-2">
+                {% for p in top_players %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3">{{ p.display_name }}</span>
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="text-green tabular-nums" title="Completed">{{ p.completed }}</span>
+                        <span class="text-text-3 tabular-nums" title="Attempted">{{ p.attempted }}</span>
+                        <span class="text-text-3 tabular-nums text-[10px]" title="Total attempts">{{ p.total_attempts }} att</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No players yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Daily Completions chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Daily Completions</h3>
+            <div class="flex gap-1" id="completions-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="completions-chart-wrap" style="height: 180px; position: relative;">
+            <canvas id="completions-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Badges + Player Sessions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Top badges earned -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Badges Earned</h3>
+            {% if top_badges %}
+            <div class="space-y-2">
+                {% for b in top_badges %}
+                {% set colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="{{ colors.get(b.rarity, 'text-text-2') }} truncate mr-2">{{ b.title }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums shrink-0">{{ b.earned }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No badges earned yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Badges by rarity -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Badges by Rarity</h3>
+            {% if badges_by_rarity %}
+            <div class="space-y-3">
+                {% for b in badges_by_rarity %}
+                {% set colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="{{ colors.get(b.rarity, 'text-text-2') }} capitalize font-medium">{{ b.rarity }}</span>
+                    <span class="text-text-1 tabular-nums">{{ b.earned }} <span class="text-text-3">/ {{ b.defined }}</span></span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No badge data</p>
+            {% endif %}
+        </div>
+
+        <!-- Recently earned -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Recently Earned</h3>
+            {% if recent_badges %}
+            <div class="space-y-2">
+                {% for b in recent_badges %}
+                {% set colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="{{ colors.get(b.rarity, 'text-text-2') }} truncate mr-2">{{ b.badge_title }}</span>
+                    <span class="text-text-3 tabular-nums shrink-0 truncate ml-2" style="max-width: 140px;">{{ b.display_name }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No badges earned yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Player session breakdown -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Player Sessions</h3>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Authenticated</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ ctf_sessions.perm }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Temporary</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ ctf_sessions.temp }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs border-t border-cc-border pt-2 mt-2">
+                    <span class="text-text-3">Total Players</span>
+                    <span class="text-text-2 font-semibold tabular-nums">{{ ctf_sessions.total }}</span>
+                </div>
+                {% if ctf_sessions.total > 0 %}
+                <div class="flex gap-1 mt-3" style="height: 4px;">
+                    <div class="bg-cyan rounded-l" style="width: {{ (ctf_sessions.perm / ctf_sessions.total * 100) | round }}%;"></div>
+                    <div class="bg-amber rounded-r" style="width: {{ (ctf_sessions.temp / ctf_sessions.total * 100) | round }}%;"></div>
+                </div>
+                <div class="flex justify-between text-[9px] text-text-3 mt-1">
+                    <span>{{ (ctf_sessions.perm / ctf_sessions.total * 100) | round }}% auth</span>
+                    <span>{{ (ctf_sessions.temp / ctf_sessions.total * 100) | round }}% temp</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Social: Profile Adoption + Share Links -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Profile Adoption</h3>
+            <div class="space-y-2">
+                {% set pa = profile_adoption %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Profiles Created</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.profiles_created }} <span class="text-text-3">/ {{ pa.total_users }} users</span></span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Public</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.public }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Username Claimed</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.with_username }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Bio Written</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.with_bio }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Featured Badges Set</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.with_featured_badges }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Activity Feed On</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.show_activity }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Social Links Added</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ pa.with_social_links }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Share Links (7d)</h3>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Profile Card Views</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ share_stats.profile_card_views }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Badge Card Views</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ share_stats.badge_card_views }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2">Public Profile Views</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ share_stats.public_profile_views }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs border-t border-cc-border pt-2 mt-2">
+                    <span class="text-text-3">Total Share Hits</span>
+                    <span class="text-text-2 font-semibold tabular-nums">{{ share_stats.total }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Volume chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Event Volume</h3>
+            <div class="flex gap-1" id="events-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="events-chart-wrap" style="height: 220px; position: relative;">
+            <canvas id="events-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Activity breakdowns -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Event Types (7d)</h3>
+            {% if top_event_types %}
+            <div class="space-y-2">
+                {% for e in top_event_types %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3 font-mono text-[10px]">{{ e.event_type.split('.')[-1] }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums shrink-0">{{ e.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No events yet</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Agents (7d)</h3>
+            {% if top_agents %}
+            <div class="space-y-2">
+                {% for a in top_agents %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3">{{ a.agent | replace('_', ' ') | title }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums shrink-0">{{ a.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No agent data</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Tools (7d)</h3>
+            {% if top_tools %}
+            <div class="space-y-2">
+                {% for t in top_tools %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 truncate mr-3 font-mono text-[10px]">{{ t.tool }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums shrink-0">{{ t.count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No tool data</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    var _initialEvents = {{ daily_events | tojson }};
+    var _initialCompletions = {{ daily_completions | tojson }};
+</script>
+{% endblock %}
+
+{% block extra_css %}
+.range-btn {
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06);
+    background: transparent;
+    cursor: pointer;
+}
+.range-btn:hover {
+    color: #94a3b8;
+    border-color: #64748b;
+}
+.range-btn.active {
+    color: #e2e8f0;
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    const GRID = 'rgba(255,255,255,0.06)';
+    const TICK = '#64748b';
+    const FONT = { family: "'JetBrains Mono', monospace" };
+    const TT = {
+        backgroundColor: '#1e1e2e', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
+        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleFont: { ...FONT, size: 11 }, bodyFont: { ...FONT, size: 11 },
+        padding: 10, cornerRadius: 6,
+    };
+
+    function fmtDate(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return d.toLocaleString('en', { month: 'short', day: 'numeric' });
+    }
+
+    let eventsChart = null;
+    const wrap = document.getElementById('events-chart-wrap');
+
+    function buildEventsChart(data) {
+        if (!data || !data.length) {
+            if (eventsChart) { eventsChart.destroy(); eventsChart = null; }
+            wrap.innerHTML = '<p class="text-text-3 text-xs">No event data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const agent = data.map(d => d.agent);
+        const business = data.map(d => d.business);
+
+        if (eventsChart) {
+            eventsChart.data.labels = labels;
+            eventsChart.data.datasets[0].data = agent;
+            eventsChart.data.datasets[1].data = business;
+            eventsChart.update('none');
+            return;
+        }
+        wrap.innerHTML = '<canvas id="events-canvas"></canvas>';
+        eventsChart = new Chart(document.getElementById('events-canvas'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Agent', data: agent, backgroundColor: 'rgba(0,212,255,0.35)', hoverBackgroundColor: 'rgba(0,212,255,0.6)', borderRadius: 2 },
+                    { label: 'Business', data: business, backgroundColor: 'rgba(6,255,165,0.35)', hoverBackgroundColor: 'rgba(6,255,165,0.6)', borderRadius: 2 },
+                ],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { stacked: true, grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, padding: 4 }, border: { display: false } },
+                    y: { stacked: true, beginAtZero: true, grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, padding: 8 }, border: { display: false } },
+                },
+                plugins: {
+                    legend: { display: true, position: 'top', align: 'end', labels: { color: TICK, font: { ...FONT, size: 10 }, boxWidth: 12, boxHeight: 3, padding: 12 } },
+                    tooltip: TT,
+                },
+            },
+        });
+    }
+
+    // Range buttons
+    const container = document.getElementById('events-range-btns');
+    const btns = container.querySelectorAll('.range-btn');
+    let active = 30;
+    btns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const days = parseInt(btn.dataset.days, 10);
+            if (days === active) return;
+            active = days;
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            try {
+                const res = await fetch(`/cc/analytics/api/daily-events?days=${days}`);
+                if (!res.ok) throw new Error(res.statusText);
+                buildEventsChart(await res.json());
+            } catch { buildEventsChart([]); }
+        });
+    });
+
+    buildEventsChart(_initialEvents);
+
+    // --- Daily Completions chart ---
+    let compChart = null;
+    const compWrap = document.getElementById('completions-chart-wrap');
+
+    function buildCompChart(data) {
+        if (!data || !data.length) {
+            if (compChart) { compChart.destroy(); compChart = null; }
+            compWrap.innerHTML = '<p class="text-text-3 text-xs">No completion data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const completions = data.map(d => d.completions);
+
+        if (compChart) {
+            compChart.data.labels = labels;
+            compChart.data.datasets[0].data = completions;
+            compChart.update('none');
+            return;
+        }
+        compWrap.innerHTML = '<canvas id="completions-canvas"></canvas>';
+        compChart = new Chart(document.getElementById('completions-canvas'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Completions',
+                    data: completions,
+                    backgroundColor: 'rgba(6,255,165,0.4)',
+                    hoverBackgroundColor: 'rgba(6,255,165,0.7)',
+                    borderRadius: 2,
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, padding: 4 }, border: { display: false } },
+                    y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, padding: 8, stepSize: 1 }, border: { display: false } },
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: TT,
+                },
+            },
+        });
+    }
+
+    // Completions range buttons
+    (function() {
+        const cContainer = document.getElementById('completions-range-btns');
+        const cBtns = cContainer.querySelectorAll('.range-btn');
+        let cActive = 30;
+        cBtns.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const days = parseInt(btn.dataset.days, 10);
+                if (days === cActive) return;
+                cActive = days;
+                cBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                try {
+                    const res = await fetch(`/cc/analytics/api/daily-completions?days=${days}`);
+                    if (!res.ok) throw new Error(res.statusText);
+                    buildCompChart(await res.json());
+                } catch { buildCompChart([]); }
+            });
+        });
+    })();
+
+    buildCompChart(_initialCompletions);
+})();
+</script>
+{% endblock %}

@@ -41,8 +41,7 @@ def client():
     and definition loader to prevent CancelledError from async background
     tasks during test teardown.
     """
-    with patch("finbot.main.start_processor_task", return_value=None), \
-         patch("finbot.main.load_definitions_on_startup", return_value={"challenges": [], "badges": []}):
+    with patch("finbot.main.start_processor_task", return_value=None):
         with TestClient(app) as test_client:
             yield test_client
 

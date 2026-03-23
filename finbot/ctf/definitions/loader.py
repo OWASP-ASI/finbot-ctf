@@ -108,7 +108,7 @@ class DefinitionLoader:
             "is_active": challenge.is_active,
             "order_index": challenge.order_index,
         }
-        self._upsert(db, Challenge, values, "id")
+        self._upsert(db, Challenge, values, "id", preserve_on_update={"is_active"})
 
     def _upsert_badge(self, db: Session, badge: BadgeSchema):
         """Insert or update badge in database (dialect-agnostic)"""
@@ -127,26 +127,39 @@ class DefinitionLoader:
             "is_active": badge.is_active,
             "is_secret": badge.is_secret,
         }
-        self._upsert(db, Badge, values, "id")
+        self._upsert(db, Badge, values, "id", preserve_on_update={"is_active"})
 
-    def _upsert(self, db: Session, model, values: dict, conflict_column: str = "id"):
-        """Dialect-agnostic upsert (INSERT ... ON CONFLICT UPDATE)"""
+    def _upsert(
+        self,
+        db: Session,
+        model,
+        values: dict,
+        conflict_column: str = "id",
+        preserve_on_update: set[str] | None = None,
+    ):
+        """Dialect-agnostic upsert (INSERT ... ON CONFLICT UPDATE).
+
+        Fields in ``preserve_on_update`` are included in the INSERT (for new
+        rows) but excluded from the ON CONFLICT UPDATE set, so existing DB
+        values are kept across restarts.
+        """
         dialect = db.bind.dialect.name if db.bind else "sqlite"
+        skip = {conflict_column} | (preserve_on_update or set())
+        update_set = {k: v for k, v in values.items() if k not in skip}
 
         if dialect == "sqlite":
             stmt = sqlite_insert(model).values(**values)
             stmt = stmt.on_conflict_do_update(
                 index_elements=[conflict_column],
-                set_={k: v for k, v in values.items() if k != conflict_column},
+                set_=update_set,
             )
         elif dialect == "postgresql":
             stmt = pg_insert(model).values(**values)
             stmt = stmt.on_conflict_do_update(
                 index_elements=[conflict_column],
-                set_={k: v for k, v in values.items() if k != conflict_column},
+                set_=update_set,
             )
         else:
-            # Fallback: use merge (works but slower)
             instance = model(**values)
             db.merge(instance)
             return

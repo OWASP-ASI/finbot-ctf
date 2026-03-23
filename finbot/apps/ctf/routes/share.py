@@ -2,11 +2,13 @@
 
 import base64
 import hashlib
+import io
 import logging
 from pathlib import Path
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+import segno
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, Response
 from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import Session
@@ -145,6 +147,20 @@ def _badge_template_context(badge: object) -> dict:
 _xp_progress = xp_progress
 
 
+def _make_qr_data_uri(url: str, dark: str = "#64748b") -> str:
+    """Generate a QR code as an SVG data URI suitable for embedding in HTML."""
+    qr = segno.make(url)
+    buf = io.BytesIO()
+    qr.save(buf, kind="svg", xmldecl=False, border=0, dark=dark, light=None)
+    svg_bytes = buf.getvalue()
+    return f"data:image/svg+xml;base64,{base64.b64encode(svg_bytes).decode()}"
+
+
+def _profile_url(request: Request, username: str) -> str:
+    """Build the public profile URL from the current request."""
+    return f"{request.base_url}ctf/h/{username}"
+
+
 def _render_html(template_name: str, context: dict) -> str:
     """Render a share-card Jinja2 template to an HTML string."""
     template = _jinja_env.get_template(template_name)
@@ -164,6 +180,7 @@ async def _render_card(template_name: str, context: dict) -> bytes:
 
 @router.get("/profile/{username}/card.png")
 async def get_profile_card(
+    request: Request,
     username: str,
     db: Session = Depends(get_db),
     html: bool = Query(
@@ -241,6 +258,9 @@ async def get_profile_card(
     if avatar_url:
         avatar_image_b64 = await _fetch_avatar_b64(avatar_url)
 
+    profile_link = _profile_url(request, profile.username)
+    qr_data_uri = _make_qr_data_uri(profile_link)
+
     template_context = {
         "username": profile.username,
         "avatar_emoji": profile.avatar_emoji or "",
@@ -258,6 +278,7 @@ async def get_profile_card(
         "rarity_colors": RARITY_COLORS_HEX,
         "logo_b64": _get_image_b64("finbot.png"),
         "owasp_logo_b64": _get_image_b64("GenAI_OWASP_Logo.png"),
+        "qr_data_uri": qr_data_uri,
     }
 
     if html and settings.DEBUG:
@@ -294,6 +315,7 @@ async def get_profile_card(
 
 @router.get("/badge/{username}/{badge_id}/card.png")
 async def get_user_badge_card(
+    request: Request,
     username: str,
     badge_id: str,
     db: Session = Depends(get_db),
@@ -329,6 +351,9 @@ async def get_user_badge_card(
 
     context = _badge_template_context(badge)
     context["username"] = username
+    context["qr_data_uri"] = _make_qr_data_uri(
+        _profile_url(request, username), dark=context["rarity_color"]
+    )
 
     if html and settings.DEBUG:
         return HTMLResponse(_render_html("user_badge_card.html", context))

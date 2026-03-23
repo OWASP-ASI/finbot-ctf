@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Threat Intel — Analytics{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Tab bar -->
+    {% include "partials/analytics_tabs.html" %}
+
+    <!-- Overview stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-danger text-2xl font-semibold">{{ overview.total_hits }}</p>
+            <p class="text-text-3 text-xs mt-1">Total Probes (7d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.avg_daily }}</p>
+            <p class="text-text-3 text-xs mt-1">Avg Daily</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.unique_paths }}</p>
+            <p class="text-text-3 text-xs mt-1">Unique Paths</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.unique_sources }}</p>
+            <p class="text-text-3 text-xs mt-1">Unique Sources</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ overview.active_days }}</p>
+            <p class="text-text-3 text-xs mt-1">Days with Probes</p>
+        </div>
+    </div>
+
+    <!-- Probe volume chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Probe Volume</h3>
+            <div class="flex gap-1" id="probes-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="probes-chart-wrap" style="height: 220px; position: relative;">
+            <canvas id="probes-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Categories + Sources -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Probe categories -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">What They're Looking For (7d)</h3>
+            {% if categories %}
+            <div class="space-y-3">
+                {% set max_hits = categories[0].hits if categories else 1 %}
+                {% for c in categories %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-text-2">{{ c.category }}</span>
+                        <span class="text-text-1 font-semibold tabular-nums">{{ c.hits }}</span>
+                    </div>
+                    <div class="flex gap-0.5" style="height: 3px;">
+                        <div class="bg-danger/50 rounded" style="width: {{ (c.hits / max_hits * 100) | round }}%; min-width: 2px;"></div>
+                        <div class="bg-cc-border rounded" style="width: {{ (100 - c.hits / max_hits * 100) | round }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No probe data yet</p>
+            {% endif %}
+        </div>
+
+        <!-- Top sources -->
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Scanner Sources (7d)</h3>
+            {% if top_sources %}
+            <div class="space-y-2">
+                {% for s in top_sources %}
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-text-2 font-mono text-[10px]">{{ s.source }}</span>
+                    <span class="text-text-1 font-semibold tabular-nums">{{ s.hits }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No source data yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top probed paths -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Probed Paths (7d)</h3>
+        {% if top_paths %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 text-[10px] uppercase tracking-wider">
+                        <th class="text-left px-3 py-2 font-semibold">Path</th>
+                        <th class="text-right px-3 py-2 font-semibold">Hits</th>
+                        <th class="text-left px-3 py-2 font-semibold w-1/3">Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set max_path_hits = top_paths[0].hits if top_paths else 1 %}
+                    {% for p in top_paths %}
+                    <tr class="border-b border-cc-border">
+                        <td class="px-3 py-2 font-mono text-danger text-[10px]">{{ p.path }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums text-text-1 font-semibold">{{ p.hits }}</td>
+                        <td class="px-3 py-2">
+                            <div class="flex gap-0.5" style="height: 3px;">
+                                <div class="bg-danger/40 rounded" style="width: {{ (p.hits / max_path_hits * 100) | round }}%; min-width: 2px;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-text-3 text-xs">No probe data yet. Probes will appear here once the platform receives scanner traffic.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>var _initialProbes = {{ daily_probes | tojson }};</script>
+{% endblock %}
+
+{% block extra_css %}
+.range-btn {
+    color: #64748b;
+    border-color: rgba(255,255,255,0.06);
+    background: transparent;
+    cursor: pointer;
+}
+.range-btn:hover {
+    color: #94a3b8;
+    border-color: #64748b;
+}
+.range-btn.active {
+    color: #e2e8f0;
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.1);
+}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    const GRID = 'rgba(255,255,255,0.06)';
+    const TICK = '#64748b';
+    const FONT = { family: "'JetBrains Mono', monospace" };
+    const TT = {
+        backgroundColor: '#1e1e2e', titleColor: '#e2e8f0', bodyColor: '#94a3b8',
+        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleFont: { ...FONT, size: 11 }, bodyFont: { ...FONT, size: 11 },
+        padding: 10, cornerRadius: 6,
+    };
+
+    function fmtDate(iso) {
+        const d = new Date(iso + 'T00:00:00');
+        return d.toLocaleString('en', { month: 'short', day: 'numeric' });
+    }
+
+    let probesChart = null;
+    const wrap = document.getElementById('probes-chart-wrap');
+
+    function buildProbesChart(data) {
+        if (!data || !data.length) {
+            if (probesChart) { probesChart.destroy(); probesChart = null; }
+            wrap.innerHTML = '<p class="text-text-3 text-xs">No probe data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const hits = data.map(d => d.hits);
+
+        if (probesChart) {
+            probesChart.data.labels = labels;
+            probesChart.data.datasets[0].data = hits;
+            probesChart.update('none');
+            return;
+        }
+        wrap.innerHTML = '<canvas id="probes-canvas"></canvas>';
+        probesChart = new Chart(document.getElementById('probes-canvas'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Probes',
+                    data: hits,
+                    backgroundColor: 'rgba(255,51,102,0.35)',
+                    hoverBackgroundColor: 'rgba(255,51,102,0.6)',
+                    borderRadius: 2,
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, padding: 4 }, border: { display: false } },
+                    y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, padding: 8 }, border: { display: false } },
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: TT,
+                },
+            },
+        });
+    }
+
+    // Range buttons
+    const container = document.getElementById('probes-range-btns');
+    const btns = container.querySelectorAll('.range-btn');
+    let active = 30;
+    btns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const days = parseInt(btn.dataset.days, 10);
+            if (days === active) return;
+            active = days;
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            try {
+                const res = await fetch('/cc/analytics/api/daily-probes?days=' + days);
+                if (!res.ok) throw new Error(res.statusText);
+                buildProbesChart(await res.json());
+            } catch { buildProbesChart([]); }
+        });
+    });
+
+    buildProbesChart(_initialProbes);
+})();
+</script>
+{% endblock %}

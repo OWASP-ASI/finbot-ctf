@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Badges{% endblock %}
+{% block page_title %}Badges{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Summary stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ summary.total }}</p>
+            <p class="text-text-3 text-xs mt-1">Total</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-green text-2xl font-semibold">{{ summary.active }}</p>
+            <p class="text-text-3 text-xs mt-1">Active</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-purple text-2xl font-semibold">{{ summary.secret }}</p>
+            <p class="text-text-3 text-xs mt-1">Secret</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-cyan text-2xl font-semibold">{{ summary.earned_any }}</p>
+            <p class="text-text-3 text-xs mt-1">Earned</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-amber text-2xl font-semibold">{{ summary.unearned }}</p>
+            <p class="text-text-3 text-xs mt-1">Unearned</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="{% if summary.invalid_evaluators > 0 %}text-danger{% else %}text-green{% endif %} text-2xl font-semibold">{{ summary.invalid_evaluators }}</p>
+            <p class="text-text-3 text-xs mt-1">Invalid Evaluators</p>
+        </div>
+    </div>
+
+    <!-- Rarity distribution -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-3">Rarity Distribution</h3>
+        <div class="flex gap-6">
+            {% for r in rarity_summary %}
+            {% set colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+            {% set bg_colors = {"common": "bg-text-2", "rare": "bg-cyan", "epic": "bg-purple", "legendary": "bg-amber"} %}
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full {{ bg_colors.get(r.rarity, 'bg-text-3') }}"></div>
+                <span class="{{ colors.get(r.rarity, 'text-text-2') }} text-xs capitalize font-medium">{{ r.rarity }}</span>
+                <span class="text-text-1 text-xs tabular-nums font-semibold">{{ r.earned }}</span>
+                <span class="text-text-3 text-xs tabular-nums">/ {{ r.defined }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Info banner -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-3 mb-6 flex items-start gap-3">
+        <span class="text-text-3 text-xs shrink-0 mt-0.5">ℹ</span>
+        <p class="text-text-3 text-xs leading-relaxed">
+            Definitions are loaded from YAML on startup. The <strong class="text-text-2">active toggle is preserved</strong> across restarts — deactivated badges stay deactivated until re-enabled here or via a YAML change. Secret badges are hidden from players until earned.
+        </p>
+    </div>
+
+    <!-- Badge table -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 uppercase tracking-wider text-[10px]">
+                        <th class="text-left px-4 py-3 font-semibold">Badge</th>
+                        <th class="text-left px-3 py-3 font-semibold">Category</th>
+                        <th class="text-left px-3 py-3 font-semibold">Rarity</th>
+                        <th class="text-right px-3 py-3 font-semibold">Pts</th>
+                        <th class="text-right px-3 py-3 font-semibold">Earned</th>
+                        <th class="text-left px-3 py-3 font-semibold">Evaluator</th>
+                        <th class="text-center px-3 py-3 font-semibold">Secret</th>
+                        <th class="text-center px-3 py-3 font-semibold">Valid</th>
+                        <th class="text-center px-3 py-3 font-semibold">Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in badges %}
+                    {% set rarity_colors = {"common": "text-text-2", "rare": "text-cyan", "epic": "text-purple", "legendary": "text-amber"} %}
+                    <tr class="border-b border-cc-border hover:bg-white/[0.02] transition-colors {% if not b.is_active %}opacity-50{% endif %}">
+                        <td class="px-4 py-3">
+                            <div class="flex flex-col">
+                                <span class="text-text-1 font-medium">{{ b.title }}</span>
+                                <span class="text-text-3 text-[10px] mt-0.5 truncate max-w-xs">{{ b.description }}</span>
+                            </div>
+                        </td>
+                        <td class="px-3 py-3">
+                            <span class="text-text-2 capitalize">{{ b.category_display }}</span>
+                        </td>
+                        <td class="px-3 py-3">
+                            <span class="{{ rarity_colors.get(b.rarity, 'text-text-2') }} capitalize font-medium">{{ b.rarity }}</span>
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums text-text-2">{{ b.points }}</td>
+                        <td class="px-3 py-3 text-right tabular-nums">
+                            {% if b.earn_count > 0 %}
+                            <span class="text-green font-semibold">{{ b.earn_count }}</span>
+                            {% else %}
+                            <span class="text-text-3">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3">
+                            <span class="text-text-3 font-mono text-[10px]">{{ b.evaluator_class }}</span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            {% if b.is_secret %}
+                            <span class="text-purple text-[10px]">●</span>
+                            {% else %}
+                            <span class="text-text-3 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            {% if b.evaluator_valid %}
+                            <span class="text-green text-[10px]" title="{{ b.evaluator_class }}">✓</span>
+                            {% else %}
+                            <span class="text-danger text-[10px]" title="{{ b.evaluator_class }} — not registered">✗</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            <button
+                                class="toggle-btn w-8 h-4 rounded-full relative transition-colors cursor-pointer {% if b.is_active %}bg-green/30{% else %}bg-cc-border{% endif %}"
+                                data-badge-id="{{ b.id }}"
+                                data-active="{{ 'true' if b.is_active else 'false' }}"
+                                title="Toggle active state (runtime only)"
+                            >
+                                <span class="absolute top-0.5 {% if b.is_active %}right-0.5{% else %}left-0.5{% endif %} w-3 h-3 rounded-full transition-all {% if b.is_active %}bg-green{% else %}bg-text-3{% endif %}"></span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const id = btn.dataset.badgeId;
+        try {
+            const res = await fetch(`/cc/badges/api/toggle?badge_id=${encodeURIComponent(id)}`, { method: 'POST' });
+            if (!res.ok) throw new Error(res.statusText);
+            const data = await res.json();
+            const dot = btn.querySelector('span');
+            if (data.is_active) {
+                btn.classList.replace('bg-cc-border', 'bg-green/30');
+                dot.classList.replace('bg-text-3', 'bg-green');
+                dot.classList.replace('left-0.5', 'right-0.5');
+                btn.closest('tr').classList.remove('opacity-50');
+            } else {
+                btn.classList.replace('bg-green/30', 'bg-cc-border');
+                dot.classList.replace('bg-green', 'bg-text-3');
+                dot.classList.replace('right-0.5', 'left-0.5');
+                btn.closest('tr').classList.add('opacity-50');
+            }
+            btn.dataset.active = data.is_active;
+        } catch (e) {
+            console.error('Toggle failed:', e);
+        }
+    });
+});
+</script>
+{% endblock %}

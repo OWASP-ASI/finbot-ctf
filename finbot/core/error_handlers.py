@@ -75,8 +75,10 @@ def get_error_template_name(status_code: int) -> str:
 def render_error_page(request: Request, status_code: int, template_name: str = None):
     """Render an error page template with portal-aware context."""
     name = template_name or get_error_template_name(status_code)
-    ctx = {"request": request, **get_portal_context(request)}
-    return error_templates.TemplateResponse(name, ctx, status_code=status_code)
+    ctx = get_portal_context(request)
+    return error_templates.TemplateResponse(
+        request=request, name=name, context=ctx, status_code=status_code
+    )
 
 
 async def fastapi_http_exception_handler(request: Request, exc: HTTPException):

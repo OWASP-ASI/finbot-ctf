@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Audit{% endblock %}
+{% block page_title %}Audit{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Header + total -->
+    <div class="flex items-center justify-between mb-4">
+        <p class="text-text-3 text-xs">{{ pagination.total }} events{% if active_filters.search %} matching "{{ active_filters.search }}"{% endif %}</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" action="/cc/audit/" class="bg-cc-surface border border-cc-border rounded-lg p-4 mb-6">
+        <div class="flex flex-wrap gap-3 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="text-text-3 text-[10px] uppercase tracking-wider block mb-1">Search</label>
+                <input type="text" name="search" value="{{ active_filters.search }}" placeholder="Summary, event type, or user ID..."
+                    class="w-full bg-cc-bg border border-cc-border rounded px-3 py-1.5 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-cyan/50" />
+            </div>
+            <div>
+                <label class="text-text-3 text-[10px] uppercase tracking-wider block mb-1">Category</label>
+                <select name="category" class="bg-cc-bg border border-cc-border rounded px-3 py-1.5 text-xs text-text-1 focus:outline-none focus:border-cyan/50">
+                    <option value="">All</option>
+                    {% for c in filters.categories %}
+                    <option value="{{ c }}" {% if active_filters.category == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-text-3 text-[10px] uppercase tracking-wider block mb-1">Severity</label>
+                <select name="severity" class="bg-cc-bg border border-cc-border rounded px-3 py-1.5 text-xs text-text-1 focus:outline-none focus:border-cyan/50">
+                    <option value="">All</option>
+                    {% for s in filters.severities %}
+                    <option value="{{ s }}" {% if active_filters.severity == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-text-3 text-[10px] uppercase tracking-wider block mb-1">Agent</label>
+                <select name="agent" class="bg-cc-bg border border-cc-border rounded px-3 py-1.5 text-xs text-text-1 focus:outline-none focus:border-cyan/50">
+                    <option value="">All</option>
+                    {% for a in filters.agents %}
+                    <option value="{{ a }}" {% if active_filters.agent == a %}selected{% endif %}>{{ a | replace('_', ' ') | title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="bg-cyan/10 border border-cyan/30 text-cyan text-xs px-4 py-1.5 rounded hover:bg-cyan/20 transition-colors">Filter</button>
+                {% if active_filters.search or active_filters.category or active_filters.severity or active_filters.agent %}
+                <a href="/cc/audit/" class="border border-cc-border text-text-3 text-xs px-3 py-1.5 rounded hover:text-text-2 transition-colors">Clear</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <!-- Event list -->
+    <div class="space-y-1">
+        {% for e in events %}
+        {% set sev_colors = {"info": "border-l-text-3", "success": "border-l-green", "warning": "border-l-amber", "danger": "border-l-danger"} %}
+        {% set sev_dots = {"info": "text-text-3", "success": "text-green", "warning": "text-amber", "danger": "text-danger"} %}
+        <div class="bg-cc-surface border border-cc-border {{ sev_colors.get(e.severity, 'border-l-text-3') }} border-l-2 rounded-lg overflow-hidden">
+            <div class="event-row px-4 py-3 cursor-pointer hover:bg-white/[0.02] transition-colors" data-event-id="{{ e.id }}">
+                <div class="flex items-start gap-3">
+                    <!-- Severity dot + timestamp -->
+                    <div class="shrink-0 flex items-center gap-2 mt-0.5">
+                        <span class="{{ sev_dots.get(e.severity, 'text-text-3') }} text-[8px]">●</span>
+                        <span class="text-text-3 text-[10px] tabular-nums whitespace-nowrap">{{ e.timestamp.strftime('%b %d %H:%M:%S') }}</span>
+                    </div>
+                    <!-- Summary -->
+                    <div class="flex-1 min-w-0">
+                        <p class="text-text-2 text-xs truncate">{{ e.summary }}</p>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-text-3 text-[10px] font-mono">{{ e.event_type }}</span>
+                            {% if e.agent_name %}
+                            <span class="text-cyan text-[10px]">{{ e.agent_name | replace('_', ' ') | title }}</span>
+                            {% endif %}
+                            {% if e.tool_name %}
+                            <span class="text-purple text-[10px] font-mono">{{ e.tool_name }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <!-- User + category badge -->
+                    <div class="shrink-0 flex items-center gap-3">
+                        <a href="/cc/users/{{ e.user_id }}" class="text-text-3 text-[10px] hover:text-cyan transition-colors truncate" style="max-width: 120px;">{{ e.display_name }}</a>
+                        <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border
+                            {% if e.event_category == 'business' %}text-green border-green/20 bg-green/5
+                            {% elif e.event_category == 'agent' %}text-cyan border-cyan/20 bg-cyan/5
+                            {% else %}text-text-3 border-cc-border{% endif %}">{{ e.event_category }}</span>
+                        <!-- Expand chevron -->
+                        <svg class="w-3 h-3 text-text-3 expand-icon transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </div>
+            <!-- Expandable detail -->
+            <div class="event-detail hidden border-t border-cc-border px-4 py-3 bg-cc-bg/50">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-[10px] mb-3">
+                    <div><span class="text-text-3">Event ID</span><p class="text-text-2 font-mono mt-0.5">{{ e.id }}</p></div>
+                    <div><span class="text-text-3">Category</span><p class="text-text-2 mt-0.5">{{ e.event_category }}</p></div>
+                    <div><span class="text-text-3">Severity</span><p class="text-text-2 mt-0.5 capitalize">{{ e.severity }}</p></div>
+                    <div><span class="text-text-3">User</span><p class="text-text-2 mt-0.5"><a href="/cc/users/{{ e.user_id }}" class="hover:text-cyan transition-colors">{{ e.display_name }}</a></p></div>
+                    {% if e.agent_name %}
+                    <div><span class="text-text-3">Agent</span><p class="text-text-2 mt-0.5">{{ e.agent_name }}</p></div>
+                    {% endif %}
+                    {% if e.tool_name %}
+                    <div><span class="text-text-3">Tool</span><p class="text-text-2 font-mono mt-0.5">{{ e.tool_name }}</p></div>
+                    {% endif %}
+                    {% if e.llm_model %}
+                    <div><span class="text-text-3">LLM Model</span><p class="text-text-2 font-mono mt-0.5">{{ e.llm_model }}</p></div>
+                    {% endif %}
+                    {% if e.duration_ms %}
+                    <div><span class="text-text-3">Duration</span><p class="text-text-2 mt-0.5">{{ e.duration_ms }}ms</p></div>
+                    {% endif %}
+                    {% if e.workflow_id %}
+                    <div><span class="text-text-3">Workflow</span><p class="text-text-2 font-mono mt-0.5 truncate" title="{{ e.workflow_id }}">{{ e.workflow_id[:16] }}...</p></div>
+                    {% endif %}
+                    {% if e.vendor_id %}
+                    <div><span class="text-text-3">Vendor ID</span><p class="text-text-2 mt-0.5">{{ e.vendor_id }}</p></div>
+                    {% endif %}
+                    <div><span class="text-text-3">Namespace</span><p class="text-text-2 font-mono mt-0.5 truncate" title="{{ e.namespace }}">{{ e.namespace }}</p></div>
+                </div>
+                {% if e.details %}
+                <div>
+                    <span class="text-text-3 text-[10px]">Payload</span>
+                    <pre class="text-text-2 text-[10px] font-mono mt-1 bg-cc-bg border border-cc-border rounded p-3 overflow-x-auto max-h-48 overflow-y-auto">{{ e.details | tojson(indent=2) if e.details is mapping else e.details }}</pre>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not events %}
+        <div class="bg-cc-surface border border-cc-border rounded-lg px-4 py-8 text-center">
+            <p class="text-text-3 text-xs">{% if active_filters.search or active_filters.category or active_filters.severity or active_filters.agent %}No events matching these filters{% else %}No events recorded yet{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.total_pages > 1 %}
+    <div class="flex items-center justify-between mt-6">
+        <p class="text-text-3 text-xs">
+            Page {{ pagination.page }} of {{ pagination.total_pages }}
+        </p>
+        <div class="flex gap-2">
+            {% if pagination.has_prev %}
+            <a href="?page={{ pagination.page - 1 }}&category={{ active_filters.category }}&severity={{ active_filters.severity }}&agent={{ active_filters.agent }}&search={{ active_filters.search }}"
+               class="border border-cc-border text-text-3 text-xs px-3 py-1.5 rounded hover:text-text-2 hover:border-text-3 transition-colors">Prev</a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a href="?page={{ pagination.page + 1 }}&category={{ active_filters.category }}&severity={{ active_filters.severity }}&agent={{ active_filters.agent }}&search={{ active_filters.search }}"
+               class="border border-cc-border text-text-3 text-xs px-3 py-1.5 rounded hover:text-text-2 hover:border-text-3 transition-colors">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.event-row').forEach(row => {
+    row.addEventListener('click', () => {
+        const detail = row.nextElementSibling;
+        const icon = row.querySelector('.expand-icon');
+        detail.classList.toggle('hidden');
+        icon.style.transform = detail.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    });
+});
+</script>
+{% endblock %}

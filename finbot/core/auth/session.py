@@ -223,6 +223,9 @@ class SessionManager:
             try:
                 existing_user = db.query(User).filter(User.email == email).first()
                 if existing_user:
+                    if not existing_user.is_active:
+                        logger.warning("Blocked session creation for deactivated user: %s", email)
+                        return None
                     user_id = existing_user.user_id  # Reuse existing user_id
                     namespace = existing_user.namespace
                 else:
@@ -672,6 +675,12 @@ class SessionManager:
             existing_user = db.query(User).filter(User.email == email).first()
 
             if existing_user:
+                if not existing_user.is_active:
+                    logger.warning("Blocked session upgrade for deactivated user: %s", email)
+                    db.delete(current_session)
+                    db.commit()
+                    return None, False
+
                 # Existing user - discard temp session, create new session for existing user
                 logger.info(
                     "Existing user found for email %s, discarding temp session %s",

@@ -433,6 +433,25 @@
   }
 
   .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .qr-code {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    opacity: 0.55;
+  }
+
+  .qr-code img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .footer-meta {
     font-size: 11px;
     color: #334155;
     font-weight: 500;
@@ -441,6 +460,7 @@
   .footer-right {
     display: flex;
     gap: 20px;
+    align-items: center;
   }
 
   .footer-url {
@@ -570,11 +590,14 @@
 
     <!-- Footer -->
     <div class="footer">
-      {% if member_since %}
-        <span class="footer-left">Member since {{ member_since }}</span>
-      {% else %}
-        <span class="footer-left"></span>
-      {% endif %}
+      <div class="footer-left">
+        {% if qr_data_uri %}
+          <div class="qr-code"><img src="{{ qr_data_uri }}" alt=""></div>
+        {% endif %}
+        {% if member_since %}
+          <span class="footer-meta">Member since {{ member_since }}</span>
+        {% endif %}
+      </div>
       <div class="footer-right">
         <span class="footer-url">genai.owasp.org</span>
         <span class="footer-tag">#OWASPGenAISecurityProject</span>

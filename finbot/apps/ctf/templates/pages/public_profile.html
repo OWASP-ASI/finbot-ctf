@@ -886,11 +886,9 @@ function renderProfile(profile) {
             shareUrl.value = profileUrl;
 
 const shareText = `Check out my hacker profile on FinBot CTF! ${profile.total_points.toLocaleString()} points, ${profile.badges_earned} badges earned. #OWASPGenAISecurityProject #OWASPFinBotCTF`;
-            const linkedInTitle = `@${profile.username} - FinBot CTF Hacker Profile`;
-            const linkedInSummary = `${profile.total_points.toLocaleString()} points | ${profile.badges_earned} badges | ${profile.completion_percentage}% complete`;
             
             shareTwitter.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(profileUrl)}`;
-            shareLinkedin.href = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(profileUrl)}&title=${encodeURIComponent(linkedInTitle)}&summary=${encodeURIComponent(linkedInSummary)}`;
+            shareLinkedin.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}`;
 
             const downloadCard = document.getElementById('download-card');
             const cardUrl = `/ctf/share/profile/${encodeURIComponent(profile.username)}/card.png`;

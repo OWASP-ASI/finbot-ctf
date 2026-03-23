@@ -291,6 +291,12 @@
     padding: 0 4px;
   }
 
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   .earned-by {
     font-size: 16px;
     font-weight: 700;
@@ -319,6 +325,19 @@
     font-weight: 600;
     letter-spacing: 0.3px;
     opacity: 0.6;
+  }
+
+  .qr-code {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    opacity: 0.45;
+  }
+
+  .qr-code img {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 
   .secret-badge {
@@ -414,7 +433,12 @@
 
     <!-- Footer -->
     <div class="footer">
-      <span class="earned-by"><span>Earned by</span> @{{ username }}</span>
+      <div class="footer-left">
+        {% if qr_data_uri %}
+          <div class="qr-code"><img src="{{ qr_data_uri }}" alt=""></div>
+        {% endif %}
+        <span class="earned-by"><span>Earned by</span> @{{ username }}</span>
+      </div>
       <div class="footer-right">
         {% if owasp_logo_b64 %}
           <img class="owasp-logo" src="data:image/png;base64,{{ owasp_logo_b64 }}" alt="OWASP">

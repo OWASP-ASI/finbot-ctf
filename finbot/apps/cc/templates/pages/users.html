@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+{% block page_title %}Users{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- Header with search -->
+    <div class="flex items-center justify-between mb-6">
+        <p class="text-text-3 text-xs">{{ total_users }} total users</p>
+        <form method="GET" action="/cc/users/" class="flex gap-2">
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search by email, name, or ID..."
+                class="bg-cc-surface border border-cc-border rounded px-3 py-1.5 text-xs text-text-1 placeholder-text-3 w-64 focus:outline-none focus:border-cyan/50"
+            />
+            <button type="submit" class="bg-cyan/10 border border-cyan/30 text-cyan text-xs px-3 py-1.5 rounded hover:bg-cyan/20 transition-colors">Search</button>
+            {% if search %}
+            <a href="/cc/users/" class="border border-cc-border text-text-3 text-xs px-3 py-1.5 rounded hover:text-text-2 transition-colors">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if search %}
+    <p class="text-text-3 text-xs mb-4">Showing {{ users | length }} results for "{{ search }}"</p>
+    {% endif %}
+
+    <!-- User table -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-cc-border text-text-3 uppercase tracking-wider text-[10px]">
+                        <th class="text-left px-4 py-3 font-semibold">User</th>
+                        <th class="text-left px-3 py-3 font-semibold">Session</th>
+                        <th class="text-center px-3 py-3 font-semibold">Profile</th>
+                        <th class="text-right px-3 py-3 font-semibold">Solved</th>
+                        <th class="text-right px-3 py-3 font-semibold">Badges</th>
+                        <th class="text-left px-3 py-3 font-semibold">Last Active</th>
+                        <th class="text-center px-3 py-3 font-semibold">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr class="border-b border-cc-border hover:bg-white/[0.02] transition-colors {% if not u.is_active %}opacity-50{% endif %}">
+                        <td class="px-4 py-3">
+                            <a href="/cc/users/{{ u.user_id }}" class="group">
+                                <div class="flex flex-col">
+                                    <span class="text-text-1 font-medium group-hover:text-cyan transition-colors">{{ u.display_name or u.email or u.user_id[:12] + '...' }}</span>
+                                    <span class="text-text-3 text-[10px] mt-0.5">{{ u.email or u.user_id }}</span>
+                                </div>
+                            </a>
+                        </td>
+                        <td class="px-3 py-3">
+                            {% if u.session_type == 'perm' %}
+                            <span class="text-cyan text-[10px] font-medium">AUTH</span>
+                            {% elif u.session_type == 'temp' %}
+                            <span class="text-amber text-[10px] font-medium">TEMP</span>
+                            {% else %}
+                            <span class="text-text-3 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            {% if u.has_profile %}
+                            <span class="text-green text-[10px]">✓</span>
+                            {% else %}
+                            <span class="text-text-3 text-[10px]">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums">
+                            {% if u.completed > 0 %}
+                            <span class="text-green font-semibold">{{ u.completed }}</span><span class="text-text-3">/{{ u.attempted }}</span>
+                            {% else %}
+                            <span class="text-text-3">{{ u.completed }}/{{ u.attempted }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-right tabular-nums">
+                            {% if u.badges > 0 %}
+                            <span class="text-text-1 font-semibold">{{ u.badges }}</span>
+                            {% else %}
+                            <span class="text-text-3">0</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-text-3">
+                            {% if u.last_active %}
+                            {{ u.last_active.strftime('%b %d, %H:%M') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                            {% if u.is_active %}
+                            <span class="w-2 h-2 rounded-full bg-green inline-block" title="Active"></span>
+                            {% else %}
+                            <span class="w-2 h-2 rounded-full bg-danger inline-block" title="Deactivated"></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not users %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-text-3 text-xs">
+                            {% if search %}No users matching "{{ search }}"{% else %}No users yet{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

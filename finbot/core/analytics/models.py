@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, Index, Integer, SmallInteger, String
+from sqlalchemy import Column, Date, Index, Integer, SmallInteger, String, UniqueConstraint
 from sqlalchemy import DateTime as _DateTime
 
 from finbot.core.data.database import Base
@@ -36,4 +36,24 @@ class PageView(Base):
     __table_args__ = (
         Index("ix_pageview_timestamp", "timestamp"),
         Index("ix_pageview_path_ts", "path", "timestamp"),
+    )
+
+
+class ProbeLog(Base):
+    """Aggregated scan/bot traffic — one row per (date, path, source) combo.
+
+    Keeps probe intelligence without bloating page_views.
+    """
+
+    __tablename__ = "probe_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(Date, nullable=False)
+    path = Column(String(500), nullable=False)
+    source = Column(String(100), nullable=True)
+    hits = Column(Integer, default=1, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("date", "path", "source", name="uq_probe_date_path_source"),
+        Index("ix_probe_date", "date"),
     )

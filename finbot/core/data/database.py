@@ -125,6 +125,20 @@ def db_session() -> Generator[Session, None, None]:
         db.close()
 
 
+def run_migrations() -> None:
+    """Run Alembic migrations to bring the database schema up to date."""
+    from alembic import command
+    from alembic.config import Config
+
+    try:
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database migrations completed successfully")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.error("Migration failed: %s — falling back to create_tables()", e)
+        create_tables()
+
+
 def create_tables() -> None:
     """Create all tables in the database
     - This may be called during fresh application startup or during database reset
@@ -157,11 +171,7 @@ def test_database_connection() -> bool:
     """Test the database connection Return True if successful, False otherwise"""
     try:
         with engine.connect() as connection:
-            result = None
-            if settings.DATABASE_TYPE == "sqlite":
-                result = connection.execute(text("SELECT 1")).fetchone()
-            elif settings.DATABASE_TYPE == "postgresql":
-                result = connection.execute(text("SELECT version()")).fetchone()
+            result = connection.execute(text("SELECT 1")).fetchone()
             logger.info("Database connection test result: %s", result)
             return result is not None and result[0] == 1
     except Exception as e:  # pylint: disable=broad-exception-caught

@@ -1,9 +1,15 @@
 """
-Push test WebSocket events to a connected browser session.
+Test WebSocket Events
 
-The browser's CTF sidecar must be open (WebSocket connected) to receive
-these events. This script pushes via the debug HTTP endpoint so events
-flow through ws_manager exactly as they would from the event processor.
+Pushes synthetic CTF events (activity, challenge_completed, badge_earned,
+challenge_progress) to a connected browser session via the debug HTTP
+endpoint. Events flow through ws_manager exactly as they would from the
+real event processor.
+
+Requires the server running with DEBUG=True and a browser with the CTF
+sidecar WebSocket connected.
+
+Audience: Development/testing only.
 
 Usage:
     python scripts/test_websocket.py --namespace ns_user_abc --user-id user_abc

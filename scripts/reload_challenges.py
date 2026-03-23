@@ -1,10 +1,17 @@
 """
-Reload CTF challenge (and optionally badge) definitions from YAML into the database.
-Run this on a server to sync definitions without restarting the app.
+Reload CTF Definitions
+
+Re-reads challenge (and optionally badge) YAML files from
+finbot/ctf/definitions/ and upserts them into the database.
+Use this on a running server to sync definition changes
+without restarting the application.
+
+Audience: Production ops — run after editing YAML definitions.
 
 Usage:
-  python scripts/reload_challenges.py           # challenges only
-  python scripts/reload_challenges.py --badges  # challenges + badges
+    python scripts/reload_challenges.py           # challenges only
+    python scripts/reload_challenges.py --badges  # challenges + badges
+    python scripts/reload_challenges.py -q        # quiet (counts only)
 """
 
 import argparse

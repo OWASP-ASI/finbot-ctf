@@ -119,15 +119,18 @@ async def verify_magic_link(request: Request, token: str):
         db.commit()
 
         # Determine which session to upgrade:
-        # 1. Prefer the original session stored in the token (preserves progress from original browser)
-        # 2. Fall back to current request session
+        # 1. Prefer the current browser's session (the one clicking the link)
+        # 2. Fall back to the original session stored in the token
         # 3. If neither exists, create a new permanent session
+        #
+        # We must NOT upgrade the stored session when a different browser clicks
+        # the link, otherwise both browsers share the same session ID and both
+        # become authenticated.
 
-        session_id_to_upgrade = magic_token.session_id
         current_session = getattr(request.state, "session_context", None)
-
-        if not session_id_to_upgrade and current_session:
-            session_id_to_upgrade = current_session.session_id
+        session_id_to_upgrade = (
+            current_session.session_id if current_session else magic_token.session_id
+        )
 
         if session_id_to_upgrade:
             # Upgrade the session (original or current)
