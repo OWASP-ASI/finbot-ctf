@@ -82,6 +82,11 @@ async def update_invoice_agent_notes(
         invoice_id,
         agent_notes,
     )
+    if not agent_notes or not agent_notes.strip():
+        raise ValueError("agent_notes must not be empty or whitespace-only")
+    if "[Fraud Agent]" in agent_notes:
+        raise ValueError("agent_notes must not contain reserved agent prefixes")
+
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
         invoice = invoice_repo.get_invoice(invoice_id)
