@@ -48,6 +48,11 @@ async def update_invoice_status(
         status,
         agent_notes,
     )
+    VALID_STATUSES = {"submitted", "processing", "approved", "rejected", "paid"}
+    if status not in VALID_STATUSES:
+        raise ValueError(
+            f"Invalid status: {status!r}. Must be one of {VALID_STATUSES}"
+        )
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
         invoice = invoice_repo.get_invoice(invoice_id)
