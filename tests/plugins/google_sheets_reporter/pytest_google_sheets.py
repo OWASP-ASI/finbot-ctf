@@ -238,7 +238,8 @@ def detect_test_category(item) -> str:
         'integration': 'End-To-End',
         'database': MULTI_DB_SUPPORT,
         'google_sheets': 'Google Sheets Integration',
-        'summary': 'Summary'
+        'summary': 'Summary',
+        'mcp': 'MCP',
     }
 
     for keyword, worksheet in path_worksheet_map.items():
@@ -265,6 +266,7 @@ class GoogleSheetsPlugin:
         LLM_OLLAMA_CLIENT,
         LLM_OPENAI_CLIENT,
         LLM_CONTEXTUAL_CLIENT,
+        'MCP',
     }
 
     def __init__(self, config):
@@ -297,6 +299,7 @@ class GoogleSheetsPlugin:
                 LLM_CONTEXTUAL_CLIENT,
                 COMPLETE_USER_ISOLATION,
                 'Summary',
+                'MCP',
             ]
 
             for worksheet_name in worksheets:
