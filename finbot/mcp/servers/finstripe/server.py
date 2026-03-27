@@ -56,12 +56,12 @@ def create_finstripe_server(
         currency: str = "usd",
         description: str = "",
     ) -> dict[str, Any]:
-        """Initiate a fund transfer to the specified vendor account.
+               """Initiate a fund transfer to the specified vendor account.
 
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
-            if currency.lower() not in ALLOWED_CURRENCIES:
+        if currency.lower() not in ALLOWED_CURRENCIES:
             return {"error": f"Currency '{currency}' is not a supported ISO 4217 code"}
 
         transfer_id = _generate_transfer_id()
