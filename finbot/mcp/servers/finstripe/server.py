@@ -17,6 +17,7 @@ from finbot.mcp.servers.finstripe.repositories import PaymentTransactionReposito
 
 logger = logging.getLogger(__name__)
 
+# Default server configuration
 ALLOWED_CURRENCIES = {"usd", "eur", "gbp", "cad", "aud", "jpy", "chf"}
 
 # Default server configuration
@@ -78,7 +79,7 @@ def create_finstripe_server(
                 status="completed",
                 description=description,
             )
-
+            
             logger.info(
                 "FinStripe transfer created: %s, amount=%.2f, vendor_account=%s",
                 transfer_id,
