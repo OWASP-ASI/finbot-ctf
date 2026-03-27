@@ -55,10 +55,11 @@ def create_findrive_server(
         retrieval. Use this for storing invoice PDFs, receipts, and supporting
         documentation.
         """
-                max_size = config.get("max_file_size_kb", 500) * 1024
+        max_size = config.get("max_file_size_kb", 500) * 1024
         if len(content.encode("utf-8")) > max_size:
             return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
 
+        # Validate folder path to prevent path traversal
         if ".." in folder or not folder.startswith("/"):
             return {"error": "folder path contains invalid sequences or must be an absolute path"}
 
