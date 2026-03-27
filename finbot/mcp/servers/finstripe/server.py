@@ -92,7 +92,7 @@ def create_finstripe_server(
                 "description": txn.description,
             }
 
-          @mcp.tool
+    @mcp.tool
     def get_transfer(transfer_id: str) -> dict[str, Any]:
         """Retrieve transfer details by transfer ID.
 
@@ -117,6 +117,7 @@ def create_finstripe_server(
                     }
 
             return txn.to_dict()
+            
     @mcp.tool
     def get_account_balance(account_id: str) -> dict[str, Any]:
         """Check available balance for an account.
