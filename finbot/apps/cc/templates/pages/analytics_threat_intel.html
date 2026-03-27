@@ -94,7 +94,7 @@
     </div>
 
     <!-- Top probed paths -->
-    <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-8">
         <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Top Probed Paths (7d)</h3>
         {% if top_paths %}
         <div class="overflow-x-auto">
@@ -126,9 +126,112 @@
         <p class="text-text-3 text-xs">No probe data yet. Probes will appear here once the platform receives scanner traffic.</p>
         {% endif %}
     </div>
+
+    <!-- ================================================================= -->
+    <!-- Bot Crawl Traffic on Valid Routes                                  -->
+    <!-- ================================================================= -->
+
+    <div class="border-t border-cc-border pt-8 mb-8">
+        <h2 class="text-text-1 text-sm font-semibold uppercase tracking-wider mb-1">Bot Crawl Traffic</h2>
+        <p class="text-text-3 text-xs mb-6">Non-human traffic hitting genuine application routes — crawlers, scripts, and automated tools that reach real pages rather than probing for vulnerabilities.</p>
+    </div>
+
+    <!-- Bot overview stats -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-amber text-2xl font-semibold">{{ bot_overview.total_hits }}</p>
+            <p class="text-text-3 text-xs mt-1">Bot Hits (7d)</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ bot_overview.unique_pages }}</p>
+            <p class="text-text-3 text-xs mt-1">Pages Crawled</p>
+        </div>
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
+            <p class="text-text-1 text-2xl font-semibold">{{ bot_overview.unique_agents }}</p>
+            <p class="text-text-3 text-xs mt-1">Bot Types</p>
+        </div>
+    </div>
+
+    <!-- Bot daily volume chart -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">Bot Crawl Volume</h3>
+            <div class="flex gap-1" id="bot-range-btns">
+                <button data-days="7"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">7d</button>
+                <button data-days="14" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">14d</button>
+                <button data-days="30" class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors active">30d</button>
+                <button data-days="0"  class="range-btn px-2.5 py-1 text-[10px] rounded border transition-colors">All</button>
+            </div>
+        </div>
+        <div id="bot-chart-wrap" style="height: 180px; position: relative;">
+            <canvas id="bot-canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Bot top pages + agent types -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Most Crawled Pages (7d)</h3>
+            {% if bot_top_pages %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-cc-border text-text-3 text-[10px] uppercase tracking-wider">
+                            <th class="text-left px-3 py-2 font-semibold">Path</th>
+                            <th class="text-right px-3 py-2 font-semibold">Hits</th>
+                            <th class="text-left px-3 py-2 font-semibold w-1/4">Volume</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set max_bot_hits = bot_top_pages[0].hits if bot_top_pages else 1 %}
+                        {% for p in bot_top_pages %}
+                        <tr class="border-b border-cc-border">
+                            <td class="px-3 py-2 font-mono text-amber text-[10px]">{{ p.path }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums text-text-1 font-semibold">{{ p.hits }}</td>
+                            <td class="px-3 py-2">
+                                <div class="flex gap-0.5" style="height: 3px;">
+                                    <div class="bg-amber/40 rounded" style="width: {{ (p.hits / max_bot_hits * 100) | round }}%; min-width: 2px;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No bot crawl data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-cc-surface border border-cc-border rounded-lg p-5">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider mb-4">Bot Types (7d)</h3>
+            {% if bot_agents %}
+            <div class="space-y-3">
+                {% set max_agent_hits = bot_agents[0].hits if bot_agents else 1 %}
+                {% for a in bot_agents %}
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-text-2 font-mono text-[10px]">{{ a.agent }}</span>
+                        <span class="text-text-1 font-semibold tabular-nums">{{ a.hits }}</span>
+                    </div>
+                    <div class="flex gap-0.5" style="height: 3px;">
+                        <div class="bg-amber/40 rounded" style="width: {{ (a.hits / max_agent_hits * 100) | round }}%; min-width: 2px;"></div>
+                        <div class="bg-cc-border rounded" style="width: {{ (100 - a.hits / max_agent_hits * 100) | round }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-text-3 text-xs">No bot data yet.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
-<script>var _initialProbes = {{ daily_probes | tojson }};</script>
+<script>
+var _initialProbes = {{ daily_probes | tojson }};
+var _initialBot = {{ daily_bot | tojson }};
+</script>
 {% endblock %}
 
 {% block extra_css %}
@@ -234,6 +337,70 @@
     });
 
     buildProbesChart(_initialProbes);
+
+    // --- Bot crawl chart ---
+    let botChart = null;
+    const botWrap = document.getElementById('bot-chart-wrap');
+
+    function buildBotChart(data) {
+        if (!data || !data.length) {
+            if (botChart) { botChart.destroy(); botChart = null; }
+            botWrap.innerHTML = '<p class="text-text-3 text-xs">No bot crawl data for this range.</p>';
+            return;
+        }
+        const labels = data.map(d => fmtDate(d.day));
+        const hits = data.map(d => d.hits);
+
+        if (botChart) {
+            botChart.data.labels = labels;
+            botChart.data.datasets[0].data = hits;
+            botChart.update('none');
+            return;
+        }
+        botWrap.innerHTML = '<canvas id="bot-canvas"></canvas>';
+        botChart = new Chart(document.getElementById('bot-canvas'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Bot Hits',
+                    data: hits,
+                    backgroundColor: 'rgba(255,184,0,0.3)',
+                    hoverBackgroundColor: 'rgba(255,184,0,0.55)',
+                    borderRadius: 2,
+                }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10, padding: 4 }, border: { display: false } },
+                    y: { beginAtZero: true, grid: { color: GRID, drawTicks: false }, ticks: { color: TICK, font: { ...FONT, size: 9 }, padding: 8 }, border: { display: false } },
+                },
+                plugins: { legend: { display: false }, tooltip: TT },
+            },
+        });
+    }
+
+    const botContainer = document.getElementById('bot-range-btns');
+    const botBtns = botContainer.querySelectorAll('.range-btn');
+    let botActive = 30;
+    botBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const days = parseInt(btn.dataset.days, 10);
+            if (days === botActive) return;
+            botActive = days;
+            botBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            try {
+                const res = await fetch('/cc/analytics/api/daily-bot-traffic?days=' + days);
+                if (!res.ok) throw new Error(res.statusText);
+                buildBotChart(await res.json());
+            } catch { buildBotChart([]); }
+        });
+    });
+
+    buildBotChart(_initialBot);
 })();
 </script>
 {% endblock %}

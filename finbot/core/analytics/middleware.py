@@ -122,6 +122,8 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
             return "scan_path"
         if any(path_lower.endswith(ext) for ext in SCAN_PATTERNS):
             return "scan_extension"
+        if any(path.startswith(p) for p in _known_app_prefixes) or path == "/":
+            return None
         ua = (request.headers.get("user-agent") or "").lower()
         if ua:
             for marker in BOT_UA_MARKERS:

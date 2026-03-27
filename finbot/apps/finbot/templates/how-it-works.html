@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works - OWASP FinBot CTF{% endblock %}
+
+{% block meta %}
+    <meta name="description" content="Learn how OWASP FinBot CTF works. Wear the hat of a vendor, an admin, and a hacker to experience agentic AI threats from every seat at the table.">
+{% endblock %}
+
+{% block extra_css %}
+        .hat-card {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .threat-line {
+            position: relative;
+            padding-left: 1.75rem;
+        }
+        .threat-line::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0.6rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.6;
+        }
+
+        .flow-connector {
+            position: relative;
+        }
+        .flow-connector::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -2rem;
+            width: 2px;
+            height: 2rem;
+            background: linear-gradient(to bottom, rgba(100,116,139,0.3), transparent);
+        }
+
+        .step-num {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+{% endblock %}
+
+{% block nav %}
+                <a href="/" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Home</a>
+                <a href="/portals" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03] hidden sm:inline-flex">Portals</a>
+                <a href="/about" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03] hidden md:inline-flex">About</a>
+                <a href="https://github.com/GenAI-Security-Project/finbot-ctf" target="_blank" rel="noopener" class="ml-2 flex items-center space-x-2 px-4 py-2 rounded-lg bg-purple/15 border border-purple/30 text-purple hover:bg-purple/25 transition text-sm font-medium">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+{% endblock %}
+
+{% block content %}
+        <!-- Hero -->
+        <section class="relative pt-32 pb-16 px-6">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-gradient-to-b from-cyan/[0.06] via-purple/[0.03] to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-4xl mx-auto text-center relative">
+                <p class="font-mono text-cyan text-xs tracking-widest uppercase mb-4">How It Works</p>
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-text-1 tracking-tight mb-6 leading-[1.1]">
+                    Three hats.<br>
+                    <span class="gradient-text">One platform.</span>
+                </h1>
+                <p class="text-lg sm:text-xl text-text-2 max-w-2xl mx-auto leading-relaxed">
+                    Step into a simulated financial services platform. Play as a vendor, see the world through an admin's eyes, and track your exploits in the CTF portal. Experience Agentic AI threats from every seat at the table.
+                </p>
+            </div>
+        </section>
+
+        <!-- The Premise -->
+        <section class="py-16 px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="glass rounded-2xl p-8 sm:p-10 border border-border-dim relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber/[0.03] to-transparent pointer-events-none"></div>
+                    <div class="relative">
+                        <div class="flex items-start gap-4 mb-5">
+                            <div class="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg class="w-5 h-5 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-text-1 mb-3">The premise</h2>
+                                <p class="text-text-2 leading-relaxed">
+                                    OWASP FinBot simulates a <strong class="text-text-1">vendor management system</strong> powered by AI agents. Vendors onboard, submit invoices, receive payments. Admins oversee the platform and configure the tools agents rely on. Everything is connected. Everything is autonomous.
+                                </p>
+                                <p class="text-text-2 leading-relaxed mt-3">
+                                    The catch? The system has <strong class="text-text-1">real agentic AI vulnerabilities</strong> baked in. And the threats don't just come from you. They come from <em class="text-amber">other vendors</em>, <em class="text-amber">the supply chain</em>, and <em class="text-amber">the tools themselves</em>. Even if you play by the rules, you're not safe.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Three Hats -->
+        <section class="py-16 px-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-14">
+                    <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">Wear Every Hat</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">See threats from <span class="gradient-text-alt">every angle</span></h2>
+                </div>
+
+                <div class="space-y-6">
+
+                    <!-- Hat 1: Vendor -->
+                    <div class="hat-card glass rounded-2xl border border-cyan/15 overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="flex-1 p-8 sm:p-10">
+                                <div class="flex items-center gap-3 mb-5">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan/20 to-cyan/5 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-text-1">The Vendor</h3>
+                                        <p class="text-cyan text-xs font-mono tracking-wide">VENDOR PORTAL</p>
+                                    </div>
+                                </div>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    You're a third-party vendor onboarding onto a financial platform. You chat with FinBot, an AI assistant that handles your registration, manages invoices, processes payments, and communicates on your behalf. Normal business operations.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    But here's the thing: <strong class="text-text-1">you're not the only vendor</strong>. Other vendors are on the same platform. Some may be malicious. Their prompts, their data, their actions can bleed into your experience through the shared AI agents. And <em class="text-cyan">you</em> can probe those boundaries too.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed">
+                                    It goes the other way too. A malicious vendor can plant <strong class="text-text-1">indirect prompt injections</strong> in their data: a company name, an invoice line item, a message. That poisoned data doesn't just stay in the vendor portal. It flows upstream to the admin's AI, and laterally to other vendors through shared agent context. As a good vendor, you can get caught in the crossfire without doing anything wrong.
+                                </p>
+                            </div>
+
+                            <div class="md:w-80 flex-shrink-0 bg-cyan/[0.04] md:border-l border-t md:border-t-0 border-cyan/10 p-8 sm:p-10 flex flex-col">
+                                <p class="text-text-3 text-xs font-mono uppercase tracking-wider mb-4">What you'll explore</p>
+                                <div class="space-y-2.5 text-sm flex-1">
+                                    <p class="threat-line text-text-2">Can you get the AI to leak another vendor's data?</p>
+                                    <p class="threat-line text-text-2">Can you bypass compliance rules through conversation?</p>
+                                    <p class="threat-line text-text-2">Can a crafted invoice trick the agent into unauthorized payments?</p>
+                                    <p class="threat-line text-text-2">How does another vendor's poisoned data impact you?</p>
+                                </div>
+                                <a href="/vendor" class="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-cyan/10 border border-cyan/20 text-cyan font-semibold text-sm hover:bg-cyan/20 hover:border-cyan/40 transition-all group">
+                                    Enter Vendor Portal
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hat 2: Admin -->
+                    <div class="hat-card glass rounded-2xl border border-purple/15 overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="flex-1 p-8 sm:p-10">
+                                <div class="flex items-center gap-3 mb-5">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple/20 to-purple/5 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-text-1">The Admin</h3>
+                                        <p class="text-purple text-xs font-mono tracking-wide">ADMIN PORTAL</p>
+                                    </div>
+                                </div>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    Now flip the script. You're the platform administrator. You see the Finance Co-Pilot, the AI that helps manage the vendor ecosystem. You configure MCP tool servers that the agents rely on. You review activity. You're the defender.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    But you didn't write every tool the agent uses. Some come from <strong class="text-text-1">external MCP servers</strong>, and those descriptions, those capabilities, <em class="text-purple">can be poisoned</em>. A compromised tool server doesn't need to break in. It just needs the agent to trust it. This is where supply chain attacks become real.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed">
+                                    And it's not just the tools. Remember those vendors from the other portal? Their data flows into the admin-side AI too. A malicious vendor can embed <strong class="text-text-1">indirect prompt injections</strong> in their company name, invoice descriptions, or messages. The Finance Co-Pilot processes that data in good faith, and suddenly your trusted assistant is acting on an attacker's instructions. You configured everything correctly. You still got compromised.
+                                </p>
+                            </div>
+
+                            <div class="md:w-80 flex-shrink-0 bg-purple/[0.04] md:border-l border-t md:border-t-0 border-purple/10 p-8 sm:p-10 flex flex-col">
+                                <p class="text-text-3 text-xs font-mono uppercase tracking-wider mb-4">What you'll explore</p>
+                                <div class="space-y-2.5 text-sm flex-1">
+                                    <p class="threat-line text-text-2">What happens when an MCP tool description is tampered with?</p>
+                                    <p class="threat-line text-text-2">Can a poisoned tool trick the agent into executing arbitrary code?</p>
+                                    <p class="threat-line text-text-2">Can vendor-submitted data hijack the admin's Co-Pilot?</p>
+                                    <p class="threat-line text-text-2">How does the admin's configuration surface become an attack vector?</p>
+                                </div>
+                                <a href="/admin" class="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-purple/10 border border-purple/20 text-purple font-semibold text-sm hover:bg-purple/20 hover:border-purple/40 transition-all group">
+                                    Enter Admin Portal
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hat 3: CTF / Hacker -->
+                    <div class="hat-card glass rounded-2xl border border-green/15 overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="flex-1 p-8 sm:p-10">
+                                <div class="flex items-center gap-3 mb-5">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green/20 to-green/5 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-text-1">The Hacker</h3>
+                                        <p class="text-green text-xs font-mono tracking-wide">CTF PORTAL</p>
+                                    </div>
+                                </div>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    This is your mission control. The CTF portal doesn't hold the challenges, the <strong class="text-text-1">vendor and admin portals do</strong>. Think of the CTF portal as your map, your field guide, and your scorecard all in one.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed">
+                                    Browse challenges organized by category: recon, policy bypass, data exfiltration, destructive actions, and remote code execution. Each challenge tells you what to look for, gives hints when you're stuck, and maps directly to <strong class="text-text-1">OWASP Top 10</strong> standards. Your exploits are <em class="text-green">automatically detected</em>. No flag submission needed. Just hack the agents and watch your progress update in real time.
+                                </p>
+                            </div>
+
+                            <div class="md:w-80 flex-shrink-0 bg-green/[0.04] md:border-l border-t md:border-t-0 border-green/10 p-8 sm:p-10 flex flex-col">
+                                <p class="text-text-3 text-xs font-mono uppercase tracking-wider mb-4">What you get</p>
+                                <div class="space-y-2.5 text-sm flex-1">
+                                    <p class="threat-line text-text-2">Progressive challenges from beginner to expert</p>
+                                    <p class="threat-line text-text-2">Hints and resources when you're stuck</p>
+                                    <p class="threat-line text-text-2">Badges and achievements for milestones</p>
+                                    <p class="threat-line text-text-2">Leaderboard ranking and shareable profile cards</p>
+                                </div>
+                                <a href="/ctf" class="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-green/10 border border-green/20 text-green font-semibold text-sm hover:bg-green/20 hover:border-green/40 transition-all group">
+                                    Enter CTF Portal
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- The Twist: Ecosystem Threats -->
+        <section class="py-16 px-6 bg-bg-secondary/50">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <p class="font-mono text-danger text-xs tracking-widest uppercase mb-3">The Real Lesson</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">Being a good actor <span class="gradient-text">doesn't make you safe</span></h2>
+                </div>
+
+                <div class="glass rounded-2xl p-8 sm:p-10 border border-danger/15 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-danger/[0.02] to-transparent pointer-events-none"></div>
+                    <div class="relative">
+                        <p class="text-text-2 leading-relaxed mb-6">
+                            In real agentic AI systems, you don't just worry about <em>your own</em> behavior. You worry about the entire ecosystem. FinBot lets you experience this firsthand:
+                        </p>
+
+                        <div class="grid sm:grid-cols-2 gap-5">
+                            <div class="bg-bg-primary/50 rounded-xl p-5 border border-border-dim">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                    <h4 class="text-text-1 font-semibold text-sm">Other vendors</h4>
+                                </div>
+                                <p class="text-text-3 text-sm leading-relaxed">A malicious vendor on the same platform can craft prompts that affect your data, your standing, or your payments through shared agents.</p>
+                            </div>
+
+                            <div class="bg-bg-primary/50 rounded-xl p-5 border border-border-dim">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                                    <h4 class="text-text-1 font-semibold text-sm">Indirect prompt injection</h4>
+                                </div>
+                                <p class="text-text-3 text-sm leading-relaxed">Malicious instructions hidden in vendor data (names, invoices, messages) flow into the admin's AI. The Co-Pilot processes them as trusted input and acts on the attacker's behalf.</p>
+                            </div>
+
+                            <div class="bg-bg-primary/50 rounded-xl p-5 border border-border-dim">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                                    <h4 class="text-text-1 font-semibold text-sm">Poisoned tools</h4>
+                                </div>
+                                <p class="text-text-3 text-sm leading-relaxed">An MCP tool server with a tampered description can manipulate agent behavior without ever directly attacking the platform. The agent trusts it.</p>
+                            </div>
+
+                            <div class="bg-bg-primary/50 rounded-xl p-5 border border-border-dim">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                    <h4 class="text-text-1 font-semibold text-sm">Supply chain</h4>
+                                </div>
+                                <p class="text-text-3 text-sm leading-relaxed">The agents rely on tools and data sources you don't fully control. A compromised upstream dependency can turn a helpful agent into an attack vector.</p>
+                            </div>
+
+                            <div class="bg-bg-primary/50 rounded-xl p-5 border border-border-dim sm:col-span-2">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    <h4 class="text-text-1 font-semibold text-sm">Autonomous decisions</h4>
+                                </div>
+                                <p class="text-text-3 text-sm leading-relaxed">Agents act on their own: approving vendors, processing payments, sending communications. When they're manipulated, the damage is automatic.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How Scoring Works -->
+        <section class="py-16 px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <p class="font-mono text-purple text-xs tracking-widest uppercase mb-3">Under the Hood</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">No flag submission. <span class="gradient-text">Automatic detection.</span></h2>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="step-num bg-cyan/10 border border-cyan/20 text-cyan mx-auto mb-5">1</div>
+                        <h3 class="text-text-1 font-semibold mb-2">Interact with agents</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Use the Vendor or Admin portal. Chat with FinBot, explore workflows, try things that shouldn't work.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="step-num bg-purple/10 border border-purple/20 text-purple mx-auto mb-5">2</div>
+                        <h3 class="text-text-1 font-semibold mb-2">Detectors watch for exploits</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Behind the scenes, an event pipeline analyzes agent behavior and tool usage. When you trigger a vulnerability, it knows.</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="step-num bg-green/10 border border-green/20 text-green mx-auto mb-5">3</div>
+                        <h3 class="text-text-1 font-semibold mb-2">Progress updates live</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Challenges complete automatically. Badges unlock. Your CTF profile reflects what you've accomplished in real time.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- What You Walk Away With -->
+        <section class="py-16 px-6 bg-bg-secondary/50">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12">
+                    <p class="font-mono text-green text-xs tracking-widest uppercase mb-3">The Takeaway</p>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-text-1">What you walk away with</h2>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-5">
+                    <div class="glass rounded-xl p-6 border border-border-dim">
+                        <div class="w-10 h-10 rounded-xl bg-cyan/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold mb-2">Attacker intuition</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">You'll understand how agentic AI systems can be manipulated (prompt injection, tool misuse, data exfiltration) because you did it yourself.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim">
+                        <div class="w-10 h-10 rounded-xl bg-purple/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold mb-2">Defender perspective</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">By wearing the admin hat, you'll see the configuration surface, the trust decisions, and where guardrails need to go, from the builder's side.</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim">
+                        <div class="w-10 h-10 rounded-xl bg-green/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold mb-2">Supply chain awareness</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">You'll experience how MCP tools, third-party integrations, and multi-tenant platforms create attack surfaces even when everyone's "doing the right thing."</p>
+                    </div>
+
+                    <div class="glass rounded-xl p-6 border border-border-dim">
+                        <div class="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center mb-4">
+                            <svg class="w-5 h-5 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        </div>
+                        <h3 class="text-text-1 font-semibold mb-2">OWASP fluency</h3>
+                        <p class="text-text-3 text-sm leading-relaxed">Every challenge maps to OWASP Top 10 for LLMs and Agentic Applications. You'll speak the language of agentic AI risk with real experience behind it.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="py-20 px-6">
+            <div class="max-w-3xl mx-auto">
+                <div class="glass rounded-2xl p-10 sm:p-12 border border-border-dim text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-cyan/[0.03] to-purple/[0.03]"></div>
+                    <div class="relative">
+                        <h2 class="text-3xl sm:text-4xl font-bold text-text-1 mb-4">Ready to wear the hats?</h2>
+                        <p class="text-text-2 mb-8 max-w-xl mx-auto">No setup needed. Pick a portal, start exploring, and let the CTF engine track your progress automatically. Sign in with a magic link to save your progress.</p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <a href="/portals" class="group flex items-center px-8 py-4 rounded-xl bg-gradient-to-r from-cyan to-purple text-bg-primary font-bold hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] hover:scale-[1.03] transition-all">
+                                Go to Portals
+                                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </a>
+                            <a href="/" class="px-8 py-4 rounded-xl border-2 border-text-3/30 text-text-2 font-semibold hover:border-cyan/40 hover:text-cyan transition-all">
+                                Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+{% endblock %}

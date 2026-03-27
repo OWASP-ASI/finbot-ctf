@@ -555,9 +555,14 @@ function initializeInvoiceSidecar() {
     if (editBtn) {
         editBtn.addEventListener('click', () => {
             if (InvoiceState.currentInvoice) {
+                const invoiceId = InvoiceState.currentInvoice.id;
                 closeInvoiceSidecar();
                 setTimeout(() => {
-                    openInvoiceModal(InvoiceState.currentInvoice);
+                    if (invoiceId) {
+                        editInvoice(invoiceId);
+                    } else {
+                        openInvoiceModal();
+                    }
                 }, 300);
             }
         });
@@ -977,23 +982,40 @@ function confirmPickerSelection() {
 
 function renderAttachmentChips() {
     const container = document.getElementById('invoice-attachments');
-    const noMsg = document.getElementById('no-attachments-msg');
+    if (!container) return;
 
-    if (InvoiceState.pendingAttachments.length === 0) {
-        container.innerHTML = '';
-        container.appendChild(noMsg);
-        noMsg.classList.remove('hidden');
+    const attachments = Array.isArray(InvoiceState.pendingAttachments)
+        ? InvoiceState.pendingAttachments
+        : [];
+    InvoiceState.pendingAttachments = attachments;
+
+    let noMsgEl = document.getElementById('no-attachments-msg');
+    if (!noMsgEl || !(noMsgEl instanceof Node)) {
+        noMsgEl = document.createElement('p');
+        noMsgEl.id = 'no-attachments-msg';
+        noMsgEl.className = 'text-xs text-text-secondary italic';
+        noMsgEl.textContent =
+            'No files attached. Click "Attach from FinDrive" to add supporting documents.';
+    }
+
+    container.innerHTML = '';
+    container.appendChild(noMsgEl);
+
+    if (attachments.length === 0) {
+        noMsgEl.classList.remove('hidden');
         return;
     }
 
-    noMsg.classList.add('hidden');
-    container.innerHTML = InvoiceState.pendingAttachments.map(a => `
+    noMsgEl.classList.add('hidden');
+
+    const chipsHtml = attachments.map(a => `
         <span class="attach-chip">
             <span style="color:${a.file_type === 'doc' ? '#60a5fa' : '#f87171'}">${(a.file_type || 'pdf').toUpperCase()}</span>
             ${_esc(a.filename)}
             <button type="button" class="attach-chip-remove" data-fid="${a.file_id}">&times;</button>
         </span>
     `).join('');
+    container.insertAdjacentHTML('beforeend', chipsHtml);
 
     container.querySelectorAll('.attach-chip-remove').forEach(btn => {
         btn.addEventListener('click', () => {

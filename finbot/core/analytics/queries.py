@@ -7,10 +7,12 @@ from datetime import UTC, datetime, timedelta
 from itertools import groupby
 from operator import attrgetter
 
-from sqlalchemy import case, distinct, func
+from sqlalchemy import case, distinct, func, or_
 from sqlalchemy.orm import Session
 
 from .models import PageView
+
+_HUMAN = or_(PageView.device_type != "bot", PageView.device_type.is_(None))
 
 
 def _since(days: int | None) -> datetime | None:
@@ -33,14 +35,27 @@ def _percentile(sorted_values: list[int | float], p: float) -> float:
 
 def get_pageviews_count(db: Session, days: int = 7) -> int:
     since = datetime.now(UTC) - timedelta(days=days)
-    return db.query(func.count(PageView.id)).filter(PageView.timestamp >= since).scalar() or 0
+    return (
+        db.query(func.count(PageView.id))
+        .filter(PageView.timestamp >= since, _HUMAN)
+        .scalar() or 0
+    )
+
+
+def get_bot_pageviews_count(db: Session, days: int = 7) -> int:
+    since = datetime.now(UTC) - timedelta(days=days)
+    return (
+        db.query(func.count(PageView.id))
+        .filter(PageView.timestamp >= since, PageView.device_type == "bot")
+        .scalar() or 0
+    )
 
 
 def get_unique_visitors(db: Session, days: int = 7) -> int:
     since = datetime.now(UTC) - timedelta(days=days)
     return (
         db.query(func.count(distinct(PageView.session_id)))
-        .filter(PageView.timestamp >= since, PageView.session_id.isnot(None))
+        .filter(PageView.timestamp >= since, PageView.session_id.isnot(None), _HUMAN)
         .scalar()
         or 0
     )
@@ -50,7 +65,7 @@ def get_top_pages(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
         db.query(PageView.path, func.count(PageView.id).label("views"))
-        .filter(PageView.timestamp >= since)
+        .filter(PageView.timestamp >= since, _HUMAN)
         .group_by(PageView.path)
         .order_by(func.count(PageView.id).desc())
         .limit(limit)
@@ -338,4 +353,4 @@ def get_page_referer_breakdown(
 
 
 def get_total_pageviews(db: Session) -> int:
-    return db.query(func.count(PageView.id)).scalar() or 0
+    return db.query(func.count(PageView.id)).filter(_HUMAN).scalar() or 0

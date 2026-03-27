@@ -13,7 +13,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
         <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
             <p class="text-text-1 text-2xl font-semibold">{{ pageviews_7d }}</p>
-            <p class="text-text-3 text-xs mt-1">Views (7d)</p>
+            <p class="text-text-3 text-xs mt-1">Views (7d){% if bot_views_7d %} <span class="text-amber/70">+{{ bot_views_7d }} bot</span>{% endif %}</p>
         </div>
         <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
             <p class="text-text-1 text-2xl font-semibold">{{ visitors_7d }}</p>
@@ -21,7 +21,7 @@
         </div>
         <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
             <p class="text-text-1 text-2xl font-semibold">{{ pageviews_30d }}</p>
-            <p class="text-text-3 text-xs mt-1">Views (30d)</p>
+            <p class="text-text-3 text-xs mt-1">Views (30d){% if bot_views_30d %} <span class="text-amber/70">+{{ bot_views_30d }} bot</span>{% endif %}</p>
         </div>
         <div class="bg-cc-surface border border-cc-border rounded-lg p-4">
             <p class="text-text-1 text-2xl font-semibold">{{ visitors_30d }}</p>

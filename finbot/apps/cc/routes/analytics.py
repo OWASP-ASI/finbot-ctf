@@ -4,9 +4,13 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
 from finbot.core.analytics.probe_queries import (
+    get_bot_traffic_overview,
+    get_bot_ua_breakdown,
+    get_daily_bot_traffic,
     get_daily_probes,
     get_probe_categories,
     get_probe_overview,
+    get_top_bot_crawled_pages,
     get_top_probed_paths,
     get_top_sources,
 )
@@ -32,6 +36,7 @@ from finbot.core.analytics.ctf_queries import (
 )
 from finbot.core.analytics.queries import (
     get_auth_funnel,
+    get_bot_pageviews_count,
     get_browser_breakdown,
     get_daily_latency,
     get_daily_pageviews,
@@ -75,6 +80,8 @@ async def analytics_dashboard(request: Request):
             "pageviews_30d": get_pageviews_count(db, days=30),
             "visitors_7d": get_unique_visitors(db, days=7),
             "visitors_30d": get_unique_visitors(db, days=30),
+            "bot_views_7d": get_bot_pageviews_count(db, days=7),
+            "bot_views_30d": get_bot_pageviews_count(db, days=30),
             "total_pageviews": get_total_pageviews(db),
             "top_pages": get_top_pages(db, days=7, limit=10),
             "browsers": get_browser_breakdown(db, days=7),
@@ -200,6 +207,10 @@ async def threat_intel(request: Request):
             "top_paths": get_top_probed_paths(db, days=7, limit=15),
             "top_sources": get_top_sources(db, days=7, limit=10),
             "categories": get_probe_categories(db, days=7),
+            "bot_overview": get_bot_traffic_overview(db, days=7),
+            "bot_top_pages": get_top_bot_crawled_pages(db, days=7, limit=10),
+            "bot_agents": get_bot_ua_breakdown(db, days=7, limit=10),
+            "daily_bot": get_daily_bot_traffic(db, days=30),
         }
     finally:
         db.close()
@@ -214,5 +225,16 @@ async def daily_probes_api(days: int = Query(default=30)):
     db = SessionLocal()
     try:
         return get_daily_probes(db, days=days or None)
+    finally:
+        db.close()
+
+
+@router.get("/api/daily-bot-traffic")
+async def daily_bot_traffic_api(days: int = Query(default=30)):
+    """JSON endpoint for daily bot crawl volume on valid routes."""
+    days = _sanitize_days(days)
+    db = SessionLocal()
+    try:
+        return get_daily_bot_traffic(db, days=days or None)
     finally:
         db.close()

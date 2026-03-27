@@ -4,10 +4,10 @@
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func
+from sqlalchemy import distinct, func
 from sqlalchemy.orm import Session
 
-from .models import ProbeLog
+from .models import PageView, ProbeLog
 
 
 def _since(days: int | None) -> datetime | None:
@@ -143,3 +143,91 @@ def get_probe_categories(db: Session, days: int = 7) -> list[dict]:
         for k, v in sorted(categories.items(), key=lambda x: -x[1])
         if v > 0
     ]
+
+
+# ---------------------------------------------------------------------------
+# Bot crawl traffic on valid app routes (from page_views, not probe_log)
+# ---------------------------------------------------------------------------
+
+_BOT = PageView.device_type == "bot"
+
+
+def get_bot_traffic_overview(db: Session, days: int = 7) -> dict:
+    """Summary stats for bot traffic on genuine application routes."""
+    since = _since(days)
+    base = db.query(PageView).filter(_BOT)
+    if since:
+        base = base.filter(PageView.timestamp >= since)
+
+    total_hits = base.count()
+    unique_pages = (
+        base.with_entities(func.count(distinct(PageView.path))).scalar() or 0
+    )
+    unique_agents = (
+        base.with_entities(func.count(distinct(PageView.browser))).scalar() or 0
+    )
+    return {
+        "total_hits": total_hits,
+        "unique_pages": unique_pages,
+        "unique_agents": unique_agents,
+    }
+
+
+def get_top_bot_crawled_pages(
+    db: Session, days: int = 7, limit: int = 10,
+) -> list[dict]:
+    """App routes most frequently hit by bots."""
+    since = _since(days)
+    q = (
+        db.query(PageView.path, func.count(PageView.id).label("hits"))
+        .filter(_BOT)
+    )
+    if since:
+        q = q.filter(PageView.timestamp >= since)
+    rows = (
+        q.group_by(PageView.path)
+        .order_by(func.count(PageView.id).desc())
+        .limit(limit)
+        .all()
+    )
+    return [{"path": r.path, "hits": r.hits} for r in rows]
+
+
+def get_bot_ua_breakdown(
+    db: Session, days: int = 7, limit: int = 10,
+) -> list[dict]:
+    """Which bot types are crawling valid routes."""
+    since = _since(days)
+    q = (
+        db.query(PageView.browser, func.count(PageView.id).label("hits"))
+        .filter(_BOT, PageView.browser.isnot(None))
+    )
+    if since:
+        q = q.filter(PageView.timestamp >= since)
+    rows = (
+        q.group_by(PageView.browser)
+        .order_by(func.count(PageView.id).desc())
+        .limit(limit)
+        .all()
+    )
+    return [{"agent": r.browser, "hits": r.hits} for r in rows]
+
+
+def get_daily_bot_traffic(db: Session, days: int | None = 30) -> list[dict]:
+    """Daily bot crawl volume on valid routes."""
+    since = _since(days)
+    q = (
+        db.query(
+            func.date(PageView.timestamp).label("day"),
+            func.count(PageView.id).label("hits"),
+        )
+        .filter(_BOT)
+    )
+    if since:
+        q = q.filter(PageView.timestamp >= since)
+    rows = (
+        q.group_by(func.date(PageView.timestamp))
+        .order_by(func.date(PageView.timestamp))
+        .all()
+    )
+    return [{"day": str(r.day), "hits": r.hits} for r in rows]

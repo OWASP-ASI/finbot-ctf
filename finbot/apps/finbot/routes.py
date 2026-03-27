@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from finbot.core.templates import TemplateResponse
 
 finbot_templates = TemplateResponse("finbot/apps/finbot/templates")
-web_templates = TemplateResponse("finbot/apps/web/templates")
 
 router = APIRouter()
 
@@ -23,10 +22,16 @@ async def portals(request: Request):
     return finbot_templates(request, "portals.html")
 
 
+@router.get("/how-it-works", response_class=HTMLResponse)
+async def how_it_works(request: Request):
+    """How it works - user-centric guide to the platform"""
+    return finbot_templates(request, "how-it-works.html")
+
+
 @router.get("/about", response_class=HTMLResponse)
 async def about(request: Request):
     """About OWASP FinBot - project info, team, and contributors"""
-    return web_templates(request, "pages/finbot.html")
+    return finbot_templates(request, "about.html")
 
 
 @router.get("/stats", response_class=HTMLResponse)
