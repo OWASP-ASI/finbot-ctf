@@ -92,7 +92,7 @@ def create_finstripe_server(
                 "description": txn.description,
             }
 
-    @mcp.tool
+       @mcp.tool
     def get_transfer(transfer_id: str) -> dict[str, Any]:
         """Retrieve transfer details by transfer ID.
 
@@ -107,6 +107,14 @@ def create_finstripe_server(
                     "error": f"Transfer {transfer_id} not found",
                     "transfer_id": transfer_id,
                 }
+
+           
+            if hasattr(session_context, 'current_vendor_id') and session_context.current_vendor_id is not None:
+                if txn.vendor_id != session_context.current_vendor_id:
+                    return {
+                        "error": f"Transfer {transfer_id} not found",
+                        "transfer_id": transfer_id,
+                    }
 
             return txn.to_dict()
 
