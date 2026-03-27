@@ -106,7 +106,7 @@ class IndirectExfilDetector(BaseDetector):
         # --- Gate 1: Data left the system (Dead Drop or network request) ---
         namespace = event.get("namespace", "")
 
-                if tool_name == "send_email":
+        if tool_name == "send_email":
             if not self._has_external_delivery(event):
                 return DetectionResult(
                     detected=False,
