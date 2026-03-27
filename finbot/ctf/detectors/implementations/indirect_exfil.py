@@ -112,7 +112,7 @@ class IndirectExfilDetector(BaseDetector):
                     detected=False,
                     message="No external delivery -- email stayed internal",
                 )
-               elif tool_name == "network_request":
+           elif tool_name == "network_request":
             url = tool_arguments.get("url", "")
             # Internal addresses: loopback, localhost, and private IP ranges
             if not url or any(
