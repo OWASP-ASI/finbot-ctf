@@ -106,13 +106,13 @@ class IndirectExfilDetector(BaseDetector):
         # --- Gate 1: Data left the system (Dead Drop or network request) ---
         namespace = event.get("namespace", "")
 
-        if tool_name == "send_email":
+                if tool_name == "send_email":
             if not self._has_external_delivery(event):
                 return DetectionResult(
                     detected=False,
                     message="No external delivery -- email stayed internal",
                 )
-           elif tool_name == "network_request":
+        elif tool_name == "network_request":
             url = tool_arguments.get("url", "")
             # Internal addresses: loopback, localhost, and private IP ranges
             if not url or any(
