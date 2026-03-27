@@ -17,6 +17,8 @@ from finbot.mcp.servers.finstripe.repositories import PaymentTransactionReposito
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_CURRENCIES = {"usd", "eur", "gbp", "cad", "aud", "jpy", "chf"}
+
 # Default server configuration
 DEFAULT_CONFIG: dict[str, Any] = {
     "max_payment": 50000,
@@ -59,6 +61,9 @@ def create_finstripe_server(
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
+            if currency.lower() not in ALLOWED_CURRENCIES:
+            return {"error": f"Currency '{currency}' is not a supported ISO 4217 code"}
+
         transfer_id = _generate_transfer_id()
 
         with db_session() as db:
