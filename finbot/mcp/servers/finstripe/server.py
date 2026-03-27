@@ -92,7 +92,7 @@ def create_finstripe_server(
                 "description": txn.description,
             }
 
-       @mcp.tool
+          @mcp.tool
     def get_transfer(transfer_id: str) -> dict[str, Any]:
         """Retrieve transfer details by transfer ID.
 
@@ -108,7 +108,7 @@ def create_finstripe_server(
                     "transfer_id": transfer_id,
                 }
 
-           
+            # Vendor sessions must own the transfer
             if hasattr(session_context, 'current_vendor_id') and session_context.current_vendor_id is not None:
                 if txn.vendor_id != session_context.current_vendor_id:
                     return {
@@ -117,7 +117,6 @@ def create_finstripe_server(
                     }
 
             return txn.to_dict()
-
     @mcp.tool
     def get_account_balance(account_id: str) -> dict[str, Any]:
         """Check available balance for an account.
