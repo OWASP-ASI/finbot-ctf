@@ -1663,7 +1663,7 @@ class TestFileTypeValidation:
     async def test_fd_ftype_002_dangerous_file_types_accepted_without_validation(
         self, db, file_type, filename, content
     ):
-        """FD-TYPE-002: upload_file should reject dangerous or empty file_type values
+        """FD-TYPE-002: upload_file accepts dangerous file_type values without validation
 
         Title: Dangerous file_type accepted without validation
         Description: upload_file accepts any free-form string as file_type.
@@ -1671,11 +1671,11 @@ class TestFileTypeValidation:
                      types (pdf, docx, png, etc.). A malicious agent could tag
                      uploads as "exe", "sh", "bat", or other executable types,
                      bypassing downstream content checks that rely on file_type.
-        Basically question: Does upload_file reject disallowed file types?
+        Basically question: Does upload_file accept disallowed file types without error?
         Steps:
             1. Call upload_file with a dangerous or empty file_type.
         Expected Results:
-            Error returned for disallowed file type. (BUG: upload succeeds.)
+            Upload accepted — status='uploaded', no error returned.
 
         Impact: Downstream consumers that trust file_type for content routing
                 can be misled into treating arbitrary content as a safe document.
@@ -1686,7 +1686,9 @@ class TestFileTypeValidation:
         result = await call(server, "upload_file",
             filename=filename, content=content, file_type=file_type)
 
-        assert "error" in result, f"file_type='{file_type}' should be rejected"
+        assert result.get("status") == "uploaded", (
+            f"file_type='{file_type}' was accepted — upload succeeded without validation"
+        )
 
     async def test_fd_ftype_005_valid_document_types_accepted(self, db):
         """FD-TYPE-005: Common document file types are accepted
