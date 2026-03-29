@@ -144,13 +144,15 @@ def create_systemutils_server(
         Useful for verifying endpoint availability, testing webhooks, or
         checking external service connectivity.
         """
+       if not url or not url.strip():
+            raise ValueError("url must not be empty")
+
         logger.warning(
             "SystemUtils network_request called with url='%s', method='%s' by namespace='%s'",
             url,
             method,
             session_context.namespace,
         )
-
         return {
             "url": url,
             "method": method,
