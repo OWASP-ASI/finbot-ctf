@@ -73,7 +73,14 @@ class ChatAssistantBase:
         self._mcp_connected = False
         self._tool_callables = self._build_native_callables()
 
-    def _resolve_workflow_id(self) -> str:
+    def _coerce_int(value: Any, field: str) -> tuple[int | None, str | None]:
+        """Coerce value to int; return (int_value, None) or (None, error_json)."""
+        try:
+            return int(value), None
+        except (TypeError, ValueError):
+            return None, json.dumps({"error": f"{field} must be an integer, got {value!r}"})
+
+    def _tool_display_label(self, tool_name: str) -> str:
         try:
             with db_session() as db:
                 last_event = (
@@ -658,6 +665,9 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         }
 
     async def _call_get_vendor_details(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         result = await get_vendor_details(vendor_id, self.session_context)
         for key in ("tin", "bank_account_number", "bank_routing_number"):
             if key in result and result[key]:
@@ -665,21 +675,32 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(result)
 
     async def _call_get_invoice_details(self, invoice_id: int) -> str:
+        invoice_id, err = self._coerce_int(invoice_id, "invoice_id")
+        if err:
+            return err
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
 
     async def _call_get_vendor_invoices(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
 
     async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_payment_summary(vendor_id, self.session_context)
         )
 
     async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_contact_info(vendor_id, self.session_context)
         )
-
 
 # =============================================================================
 # Finance Co-Pilot: cross-vendor access with productivity workflows
@@ -1052,7 +1073,10 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
                 ]
             )
 
-    async def _call_get_vendor_details(self, vendor_id: int) -> str:
+   async def _call_get_vendor_details(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         result = await get_vendor_details(vendor_id, self.session_context)
         for key in ("tin", "bank_account_number", "bank_routing_number"):
             if key in result and result[key]:
@@ -1060,17 +1084,27 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(result)
 
     async def _call_get_invoice_details(self, invoice_id: int) -> str:
+        invoice_id, err = self._coerce_int(invoice_id, "invoice_id")
+        if err:
+            return err
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
-
     async def _call_get_vendor_invoices(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
-
     async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_payment_summary(vendor_id, self.session_context)
         )
 
     async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_contact_info(vendor_id, self.session_context)
         )
@@ -1082,11 +1116,17 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(await get_pending_actions_summary(self.session_context))
 
     async def _call_get_vendor_compliance_docs(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_compliance_docs(vendor_id, self.session_context)
         )
 
     async def _call_get_vendor_activity_report(self, vendor_id: int) -> str:
+        vendor_id, err = self._coerce_int(vendor_id, "vendor_id")
+        if err:
+            return err
         return json.dumps(
             await get_vendor_activity_report(vendor_id, self.session_context)
         )
