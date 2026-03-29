@@ -59,6 +59,9 @@ def create_finstripe_server(
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
+        if _is_vendor_session(session_context) and not session_context.current_vendor_id:
+            return {"error": "Vendor session has no vendor identity — transfer rejected"}
+
         transfer_id = _generate_transfer_id()
 
         with db_session() as db:
