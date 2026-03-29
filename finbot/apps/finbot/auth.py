@@ -10,7 +10,7 @@ from finbot.config import settings
 from finbot.core.auth.session import session_manager
 from finbot.core.data.database import SessionLocal
 from finbot.core.data.models import MagicLinkToken
-from finbot.core.email import get_email_service
+from finbot.core.email_service import get_email_service
 from finbot.core.templates import TemplateResponse
 
 template_response = TemplateResponse("finbot/apps/finbot/templates")

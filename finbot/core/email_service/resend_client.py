@@ -3,7 +3,7 @@
 import logging
 
 from finbot.config import settings
-from finbot.core.email.base import EmailService
+from finbot.core.email_service.base import EmailService
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 """Console email service for development - prints magic links to console"""
 
-from finbot.core.email.base import EmailService
+from finbot.core.email_service.base import EmailService
 
 
 class ConsoleEmailService(EmailService):
