@@ -55,6 +55,9 @@ def create_findrive_server(
         retrieval. Use this for storing invoice PDFs, receipts, and supporting
         documentation.
         """
+        if not filename or not filename.strip():
+            return {"error": "Filename must not be empty"}
+
         max_size = config.get("max_file_size_kb", 500) * 1024
         if len(content.encode("utf-8")) > max_size:
             return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
