@@ -26,6 +26,8 @@ from finbot.mcp.servers.finmail.routing import get_admin_address, route_and_deli
 
 logger = logging.getLogger(__name__)
 
+MAX_SENDER_NAME = 100
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "max_results_per_query": 50,
     "default_sender": "OWASP FinBot",
@@ -96,8 +98,9 @@ def create_finmail_server(
         effective_sender = sender_name or config.get(
             "default_sender", "OWASP FinBot"
         )
+        if len(effective_sender) > MAX_SENDER_NAME:
+            return {"error": f"sender_name exceeds maximum length of {MAX_SENDER_NAME} characters"}
         inv_id = related_invoice_id if related_invoice_id > 0 else None
-
         if _is_vendor_session(session_context):
             from_addr = _get_vendor_email(session_context) or get_admin_address(
                 session_context.namespace
