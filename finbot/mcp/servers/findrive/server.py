@@ -59,6 +59,9 @@ def create_findrive_server(
         if len(content.encode("utf-8")) > max_size:
             return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
 
+        if ".." in filename or filename.startswith("/"):
+            return {"error": "filename contains invalid path traversal sequences"}
+
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)
 
