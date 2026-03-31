@@ -63,6 +63,11 @@ def create_finstripe_server(
 
         with db_session() as db:
             repo = PaymentTransactionRepository(db, session_context)
+            invoice = repo.get_invoice_by_id(invoice_id)
+            if not invoice:
+                return {"error": f"Invoice {invoice_id} not found"}
+            if invoice.vendor_id != vendor_id:
+                return {"error": f"Invoice {invoice_id} does not belong to vendor {vendor_id}"}
             txn = repo.create_transaction(
                 invoice_id=invoice_id,
                 vendor_id=vendor_id,
