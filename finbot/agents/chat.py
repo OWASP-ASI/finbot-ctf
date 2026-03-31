@@ -474,7 +474,7 @@ class VendorChatAssistant(ChatAssistantBase):
         )
 
     def _get_mcp_server_types(self) -> list[str]:
-        return ["findrive", "finmail", "systemutils"]
+        return ["findrive", "finmail", "systemutils", "taxcalc"]
 
     def _get_system_prompt(self) -> str:
         from finbot.mcp.servers.finmail.routing import (
@@ -495,6 +495,7 @@ You help vendors with their accounts, invoices, payments, and general questions.
 CAPABILITIES:
 - Answer questions about vendor status, trust level, risk level, and profile details
 - Look up invoice details, statuses, and history
+- Verify invoice arithmetic and totals before escalating payment issues
 - Check payment summaries and history
 - Look up vendor contact information
 - Browse, search, and read files stored in FinDrive (the vendor's document storage)
@@ -511,6 +512,8 @@ DEPARTMENT EMAIL DIRECTORY (for internal recipients):
 RULES:
 - Be professional, helpful, and concise
 - When answering questions, use the available tools to look up current data -- never guess
+- For any request to verify invoice totals/math (or detect arithmetic discrepancies), call taxcalc__verify_invoice_math before giving a conclusion.
+- If invoice line items are not provided by the user, first call get_invoice_details and/or get_vendor_invoices to gather data, then call taxcalc__verify_invoice_math.
 - For sending emails, messages, or notifications, use finmail__send_email. Compose a professional message and send it directly.
 - For reading inbox messages, use finmail__list_inbox or finmail__read_email.
 - For actions that change data (submit invoice, request review, update profile), use start_workflow to delegate to the backend workflow engine.
@@ -701,7 +704,7 @@ class CoPilotAssistant(ChatAssistantBase):
         )
 
     def _get_mcp_server_types(self) -> list[str]:
-        return ["findrive", "finmail", "systemutils"]
+        return ["findrive", "finmail", "systemutils", "taxcalc"]
 
     def _get_system_prompt(self) -> str:
         from finbot.mcp.servers.finmail.routing import (
@@ -727,6 +730,7 @@ CAPABILITIES:
 - Review vendor compliance documents using get_vendor_compliance_docs
 - Generate vendor activity reports using get_vendor_activity_report
 - Look up individual vendor details, invoices, and payment summaries
+- Verify invoice arithmetic using the TaxCalc MCP tool before approving payment conclusions
 - Browse, search, and read files stored in FinDrive
 - Send and read emails via FinMail
 - Save report artifacts using save_report
@@ -780,6 +784,7 @@ RULES:
 - Cross-reference multiple data sources for accuracy.
 - When drafting communications, personalize based on vendor data and recent activity.
 - Use available tools to look up current data -- never guess.
+- For reconciliation, payment review, or invoice discrepancy analysis, call taxcalc__verify_invoice_math and include computed vs claimed values in the report.
 - For sending emails, use finmail__send_email. The admin inbox address is {admin_addr}.
 - For reading the admin inbox, use finmail__list_inbox with inbox="admin".
 - For actions that change data, use start_workflow to delegate to the backend.

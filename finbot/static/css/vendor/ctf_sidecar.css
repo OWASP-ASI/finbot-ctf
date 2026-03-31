@@ -285,11 +285,18 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.3s;
 }
 
 .ctf-sidecar-overlay.visible {
     opacity: 1;
+    pointer-events: auto;
+}
+
+/* Defensive fallback if utility classes load late */
+.ctf-sidecar-overlay.hidden {
+    display: none;
 }
 
 /* Responsive */

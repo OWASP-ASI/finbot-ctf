@@ -1,7 +1,8 @@
 """TaxCalc MCP Server -- mock tax calculator.
 
-Exposes tax calculation, rate lookup, and TIN validation tools via MCP protocol.
-Pure computation -- no DB writes. Rates are configurable via MCPServerConfig.
+Exposes tax calculation, invoice arithmetic verification, rate lookup, and TIN
+validation tools via MCP protocol. Pure computation -- no DB writes. Rates are
+configurable via MCPServerConfig.
 """
 
 import logging
@@ -28,6 +29,85 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "service_tax_exempt": True,
     "entertainment_surcharge_pct": 2.5,
 }
+
+
+def _round_currency(value: float) -> float:
+    """Round a currency value to two decimal places."""
+    return round(float(value), 2)
+
+
+def verify_invoice_math_logic(
+    line_items: list[dict[str, Any]],
+    subtotal: float | None = None,
+    tax_amount: float | None = None,
+    total_amount: float | None = None,
+    tolerance: float = 0.01,
+) -> dict[str, Any]:
+    """Verify invoice arithmetic for line items and aggregate totals.
+
+    Each line item should contain at minimum:
+    - description: optional label for the item
+    - quantity: numeric quantity
+    - unit_price: numeric unit price
+    - line_total: optional claimed total for the line
+    """
+    discrepancies: list[dict[str, Any]] = []
+    computed_subtotal = 0.0
+
+    for index, item in enumerate(line_items):
+        quantity = float(item.get("quantity", 0))
+        unit_price = float(item.get("unit_price", 0))
+        computed_line_total = _round_currency(quantity * unit_price)
+        computed_subtotal += computed_line_total
+
+        claimed_line_total = item.get("line_total")
+        if claimed_line_total is not None:
+            claimed_line_total = _round_currency(float(claimed_line_total))
+            if abs(computed_line_total - claimed_line_total) > tolerance:
+                discrepancies.append(
+                    {
+                        "type": "line_total_mismatch",
+                        "line_index": index,
+                        "description": item.get("description") or f"Line {index + 1}",
+                        "expected": computed_line_total,
+                        "actual": claimed_line_total,
+                    }
+                )
+
+    computed_subtotal = _round_currency(computed_subtotal)
+    computed_tax = _round_currency(float(tax_amount or 0.0))
+    computed_total = _round_currency(computed_subtotal + computed_tax)
+
+    if subtotal is not None:
+        claimed_subtotal = _round_currency(float(subtotal))
+        if abs(computed_subtotal - claimed_subtotal) > tolerance:
+            discrepancies.append(
+                {
+                    "type": "subtotal_mismatch",
+                    "expected": computed_subtotal,
+                    "actual": claimed_subtotal,
+                }
+            )
+
+    if total_amount is not None:
+        claimed_total = _round_currency(float(total_amount))
+        if abs(computed_total - claimed_total) > tolerance:
+            discrepancies.append(
+                {
+                    "type": "total_mismatch",
+                    "expected": computed_total,
+                    "actual": claimed_total,
+                }
+            )
+
+    return {
+        "valid": len(discrepancies) == 0,
+        "computed_subtotal": computed_subtotal,
+        "computed_tax": computed_tax,
+        "computed_total": computed_total,
+        "line_item_count": len(line_items),
+        "discrepancies": discrepancies,
+    }
 
 
 def create_taxcalc_server(
@@ -100,6 +180,28 @@ def create_taxcalc_server(
             "tax_amount": round(total_tax, 2),
             "total_amount": round(amount + total_tax, 2),
         }
+
+    @mcp.tool
+    def verify_invoice_math(
+        line_items: list[dict[str, Any]],
+        subtotal: float | None = None,
+        tax_amount: float | None = None,
+        total_amount: float | None = None,
+        tolerance: float = 0.01,
+    ) -> dict[str, Any]:
+        """Verify invoice arithmetic for line items, subtotal, tax, and total.
+
+        Use this to confirm that an invoice's math is internally consistent before
+        approving or escalating it. The tool returns computed totals and a list of
+        any mismatches it detects.
+        """
+        return verify_invoice_math_logic(
+            line_items=line_items,
+            subtotal=subtotal,
+            tax_amount=tax_amount,
+            total_amount=total_amount,
+            tolerance=tolerance,
+        )
 
     @mcp.tool
     def get_tax_rates(jurisdiction: str = "") -> dict[str, Any]:
