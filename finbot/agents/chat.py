@@ -187,6 +187,9 @@ class ChatAssistantBase:
         invoice_id: int | None = None,
         attachment_file_ids: list[int] | None = None,
     ) -> str:
+        if description is None:
+        raise ValueError("description is required")
+        
         if not self.background_tasks:
             return json.dumps({"error": "Workflow engine not available"})
 
