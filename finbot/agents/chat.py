@@ -446,7 +446,7 @@ class ChatAssistantBase:
                 "response_length": len(full_response),
                 "response_content": full_response,
                 "duration_ms": duration_ms,
-                "user_message": user_message,
+                "user_message": effective_message,
                 "vendor_id": self.session_context.current_vendor_id,
                 "llm_model": self._model,
             },
