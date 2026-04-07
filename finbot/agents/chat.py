@@ -660,10 +660,9 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
     async def _call_get_vendor_details(self, vendor_id: int) -> str:
         result = await get_vendor_details(vendor_id, self.session_context)
         for key in ("tin", "bank_account_number", "bank_routing_number"):
-            if key in result and result[key]:
+            if key in result and result[key] is not None:
                 result[key] = "****" + str(result[key])[-4:]
         return json.dumps(result)
-
     async def _call_get_invoice_details(self, invoice_id: int) -> str:
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
 
@@ -1055,10 +1054,10 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
     async def _call_get_vendor_details(self, vendor_id: int) -> str:
         result = await get_vendor_details(vendor_id, self.session_context)
         for key in ("tin", "bank_account_number", "bank_routing_number"):
-            if key in result and result[key]:
+            if key in result and result[key] is not None:
                 result[key] = "****" + str(result[key])[-4:]
         return json.dumps(result)
-
+        
     async def _call_get_invoice_details(self, invoice_id: int) -> str:
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
 
