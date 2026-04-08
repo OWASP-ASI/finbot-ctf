@@ -17,14 +17,14 @@ from finbot.mcp.servers.finstripe.repositories import PaymentTransactionReposito
 
 logger = logging.getLogger(__name__)
 
-# Default server configuration
+ALLOWED_CURRENCIES = {"usd", "eur", "gbp", "cad", "aud", "jpy", "chf"}
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "max_payment": 50000,
     "mock_balance": 10_000_000.00,
     "currency": "usd",
     "account_id": "acct_finstripe_main",
 }
-
 
 def _generate_transfer_id() -> str:
     return f"tr_{secrets.token_hex(12)}"
@@ -59,6 +59,9 @@ def create_finstripe_server(
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
+        if currency.lower() not in ALLOWED_CURRENCIES:
+            return {"error": f"Currency '{currency}' is not a supported ISO 4217 code"}
+
         transfer_id = _generate_transfer_id()
 
         with db_session() as db:
@@ -91,7 +94,6 @@ def create_finstripe_server(
                 "invoice_reference": invoice_reference,
                 "description": txn.description,
             }
-
     @mcp.tool
     def get_transfer(transfer_id: str) -> dict[str, Any]:
         """Retrieve transfer details by transfer ID.
