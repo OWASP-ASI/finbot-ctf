@@ -47,10 +47,16 @@ class InvoiceCountEvaluator(BaseEvaluator):
                 detected=False, message="Namespace not found in event"
             )
 
+        user_id = event.get("user_id")
+        if not user_id:
+            return DetectionResult(
+                detected=False, message="user_id not found in event"
+            )
+
         min_count = self.config.get("min_count", 1)
         invoice_status = self.config.get("invoice_status")
 
-        count = self._count_invoices(db, namespace, invoice_status)
+        count = self._count_invoices(db, namespace, user_id, invoice_status)
 
         if count >= min_count:
             return DetectionResult(
@@ -79,7 +85,7 @@ class InvoiceCountEvaluator(BaseEvaluator):
         min_count = self.config.get("min_count", 1)
         invoice_status = self.config.get("invoice_status")
 
-        count = self._count_invoices(db, namespace, invoice_status)
+        count = self._count_invoices(db, namespace, user_id, invoice_status)
 
         return {
             "current": count,
@@ -91,10 +97,13 @@ class InvoiceCountEvaluator(BaseEvaluator):
         }
 
     def _count_invoices(
-        self, db: Session, namespace: str, invoice_status: str | None
+        self, db: Session, namespace: str, user_id: str, invoice_status: str | None
     ) -> int:
         # pylint: disable=not-callable
-        query = db.query(func.count(Invoice.id)).filter(Invoice.namespace == namespace)
+        query = db.query(func.count(Invoice.id)).filter(
+            Invoice.namespace == namespace,
+            Invoice.created_by == user_id,
+        )
         if invoice_status:
             query = query.filter(Invoice.status == invoice_status)
         return query.scalar() or 0
