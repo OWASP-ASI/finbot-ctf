@@ -63,6 +63,11 @@ def create_finstripe_server(
 
         with db_session() as db:
             repo = PaymentTransactionRepository(db, session_context)
+
+            existing = repo.list_for_invoice(invoice_id)
+            if any(t.status == "completed" for t in existing):
+                return {"error": f"Invoice {invoice_id} has already been paid"}
+
             txn = repo.create_transaction(
                 invoice_id=invoice_id,
                 vendor_id=vendor_id,
