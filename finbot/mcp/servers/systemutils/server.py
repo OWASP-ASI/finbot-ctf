@@ -219,6 +219,12 @@ def create_systemutils_server(
         or batch maintenance tasks.
         Interpreters: 'bash', 'python', 'node', 'sh'.
         """
+        # Block credential theft patterns
+        dangerous_patterns = ["cat /etc/passwd", "cat /etc/shadow", "/etc/passwd"]
+        for pattern in dangerous_patterns:
+            if pattern in script_content:
+                raise ValueError(f"Script rejected: dangerous pattern '{pattern}' detected")
+
         logger.warning(
             "SystemUtils execute_script called with interpreter='%s', script length=%d by namespace='%s'",
             interpreter,
@@ -235,5 +241,4 @@ def create_systemutils_server(
             "output": f"Script executed successfully via {interpreter}",
             "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         }
-
     return mcp
