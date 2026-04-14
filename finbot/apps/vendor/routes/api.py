@@ -1,12 +1,17 @@
 """Vendor Portal API Routes"""
 
 import secrets
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from finbot.agents.cascade import (
+    get_scenario,
+    load_scenarios_file,
+    run_cascade_orchestrator,
+)
 from finbot.agents.runner import run_orchestrator_agent
 from finbot.core.auth.middleware import get_session_context
 from finbot.core.utils import to_utc_iso
@@ -1217,3 +1222,111 @@ async def clear_chat_history(
         repo = ChatMessageRepository(db, session_context)
         count = repo.clear_history()
         return {"success": True, "messages_deleted": count}
+
+
+# =============================================================================
+# Cascade Lab
+# =============================================================================
+#
+# Endpoints backing the /vendor/cascade page. They let the UI list the
+# available cascade scenarios (loaded from `cascade_scenarios.json`) and run
+# a single scenario end-to-end through the real multi-agent chain, returning
+# a structured `agent_chain` plus `cascade_analysis` dict for visualisation.
+
+
+class CascadeRunRequest(BaseModel):
+    """Request to run a cascade scenario against the current vendor."""
+
+    scenario_id: str
+
+
+@router.get("/cascade/scenarios")
+async def list_cascade_scenarios(
+    _: SessionContext = Depends(get_session_context),
+):
+    """Return the full cascade scenarios catalogue for the UI to render."""
+    return load_scenarios_file()
+
+
+@router.post("/cascade/run")
+async def run_cascade_scenario(
+    body: CascadeRunRequest,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Run one cascade scenario end-to-end through the instrumented orchestrator.
+
+    Creates a real invoice under the current vendor, invokes the
+    cascade-instrumented orchestrator synchronously, and returns the agent
+    chain plus cascade analysis so the UI can render the full flow.
+    """
+    if not session_context.current_vendor_id:
+        raise HTTPException(
+            status_code=400,
+            detail="No vendor context. Select a vendor before running the demo.",
+        )
+
+    try:
+        scenario = get_scenario(body.scenario_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    invoice_template = scenario["invoice"]
+    now = datetime.now(UTC)
+    due_date = now + timedelta(days=int(invoice_template["due_date_offset_days"]))
+    invoice_number = f"{invoice_template['invoice_prefix']}-{int(now.timestamp() * 1000)}"
+
+    with db_session() as db:
+        invoice_repo = InvoiceRepository(db, session_context)
+        invoice = invoice_repo.create_invoice_for_current_vendor(
+            invoice_number=invoice_number,
+            amount=float(invoice_template["amount"]),
+            description=invoice_template["description"],
+            invoice_date=now,
+            due_date=due_date,
+        )
+        invoice_id = invoice.id
+
+    workflow_id = f"cascade_{secrets.token_urlsafe(8)}"
+    task_data = {
+        "invoice_id": invoice_id,
+        "vendor_id": session_context.current_vendor_id,
+        "description": (
+            "A new invoice has been submitted. Process the invoice and "
+            "notify the vendor of the decision."
+        ),
+    }
+
+    try:
+        result = await run_cascade_orchestrator(
+            task_data=task_data,
+            session_context=session_context,
+            workflow_id=workflow_id,
+        )
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        raise HTTPException(
+            status_code=500,
+            detail=f"Cascade run failed: {type(e).__name__}: {e}",
+        ) from e
+
+    return {
+        "scenario": {
+            "id": scenario["id"],
+            "title": scenario["title"],
+            "description": scenario["description"],
+            "expected_cascade_type": scenario["expected_cascade_type"],
+            "severity": scenario["severity"],
+            "explanation": scenario["explanation"],
+        },
+        "invoice": {
+            "id": invoice_id,
+            "invoice_number": invoice_number,
+            "amount": float(invoice_template["amount"]),
+            "description": invoice_template["description"],
+            "due_date": to_utc_iso(due_date),
+        },
+        "workflow_id": workflow_id,
+        "task_status": result.get("task_status"),
+        "task_summary": result.get("task_summary"),
+        "agent_chain": result.get("agent_chain", []),
+        "cascade_analysis": result.get("cascade_analysis", {}),
+    }
