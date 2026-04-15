@@ -12,6 +12,8 @@ from finbot.core.auth.session import SessionContext
 from finbot.core.data.models import LLMRequest, LLMResponse
 from finbot.core.llm.client import LLMClient, get_llm_client
 from finbot.core.messaging import event_bus
+from finbot.guardrails.schemas import HookKind
+from finbot.guardrails.service import GuardrailHookService
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,10 @@ class ContextualLLMClient:
         self.workflow_id = workflow_id or f"wf_{secrets.token_urlsafe(12)}"
         self.llm_client = llm_client or get_llm_client()
         self.call_count = 0
+        self._guardrail_service = GuardrailHookService(
+            session_context=session_context,
+            workflow_id=self.workflow_id,
+        )
 
         logger.debug(
             "Initialized ContextualLLMClient for agent=%s, user=%s, workflow=%s",
@@ -144,6 +150,12 @@ class ContextualLLMClient:
             summary=f"LLM request started (model: {request.model}, messages: {len(request.messages or [])})",
         )
 
+        await self._guardrail_service.invoke(
+            HookKind.before_model,
+            model=resolved_model,
+            user_message=user_message_info.get("user_message"),
+        )
+
         start_time = datetime.now(UTC)
 
         try:
@@ -151,6 +163,13 @@ class ContextualLLMClient:
             response = await self.llm_client.chat(request=request)
 
             duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
+
+            await self._guardrail_service.invoke(
+                HookKind.after_model,
+                model=resolved_model,
+                user_message=user_message_info.get("user_message"),
+                model_output=response.content,
+            )
 
             # Emit success event
             await event_bus.emit_agent_event(

@@ -110,10 +110,18 @@ class SystemPromptLeakDetector(BaseDetector):
         )
 
     def _extract_texts(self, event: dict[str, Any]) -> tuple[str, str, str]:
-        """Extract system prompt, LLM output, and tool call text from event."""
+        """Extract system prompt, LLM output, and tool call text from event.
+
+        Operational tool calls (e.g. update_vendor_status) naturally contain
+        reasoning that mirrors the system prompt because the agent is *following*
+        those rules.  Including them causes the judge to flag normal onboarding
+        as a leak.  ``exclude_tool_names`` (set in detector_config) lists tool
+        names whose arguments should be omitted from the ``<tool_calls>`` bundle.
+        """
         system_prompt = ""
         llm_output = ""
         tool_call_text = ""
+        exclude_tools: set[str] = set(self.config.get("exclude_tool_names", []))
 
         request_dump = event.get("request_dump", None)
         if request_dump:
@@ -124,6 +132,7 @@ class SystemPromptLeakDetector(BaseDetector):
                 elif message.get("role") == "assistant":
                     llm_output += message.get("content", "")
                 elif message.get("type") == "function_call":
-                    tool_call_text += str(message.get("arguments", ""))
+                    if message.get("name") not in exclude_tools:
+                        tool_call_text += str(message.get("arguments", ""))
 
         return system_prompt, llm_output, tool_call_text

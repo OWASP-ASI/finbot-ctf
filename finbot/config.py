@@ -132,6 +132,11 @@ class Settings(BaseSettings):
     MAGIC_LINK_EXPIRY_MINUTES: int = 15
     MAGIC_LINK_BASE_URL: str = PLATFORM_URL
 
+    # Labs Guardrail Config
+    LABS_GUARDRAIL_DEFAULT_TIMEOUT: int = 5  # seconds
+    LABS_GUARDRAIL_MAX_TIMEOUT: int = 30  # seconds
+    LABS_GUARDRAIL_MAX_PAYLOAD_BYTES: int = 65536  # 64 KiB
+
     # Email Config
     EMAIL_PROVIDER: str = "console"  # "console" | "resend"
     RESEND_API_KEY: str = ""

@@ -10,6 +10,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from finbot.apps.admin.main import app as admin_app
+from finbot.apps.darklab.main import app as darklab_app
+from finbot.apps.labs import labs_app
 from finbot.apps.cc import models as _cc_models  # noqa: F401
 from finbot.apps.ctf import ctf_app
 from finbot.apps.ctf.rendering import get_renderer
@@ -137,7 +139,9 @@ app.mount("/static", StaticFiles(directory="finbot/static"), name="static")
 # Mount all the applications for the platform
 app.mount("/vendor", vendor_app)
 app.mount("/admin", admin_app)
+app.mount("/darklab", darklab_app)
 app.mount("/ctf", ctf_app)
+app.mount("/labs", labs_app)
 
 # Command Center — platform management for maintainers
 if settings.CC_ENABLED:

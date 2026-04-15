@@ -87,18 +87,6 @@ async def ctf_activity(
     )
 
 
-@router.get("/toolkit", response_class=HTMLResponse, name="ctf_toolkit")
-async def ctf_toolkit(
-    request: Request, session_context: SessionContext = Depends(get_session_context)
-):
-    """Hacker Toolkit page"""
-    return template_response(
-        request,
-        "pages/toolkit.html",
-        {"session_context": session_context},
-    )
-
-
 @router.get("/badges", response_class=HTMLResponse, name="ctf_badges")
 async def ctf_badges(
     request: Request, session_context: SessionContext = Depends(get_session_context)

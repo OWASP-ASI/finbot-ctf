@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}FinBot Dark Lab -- Adversary Threat Surface{% endblock %}">
+
+    <title>{% block title %}Dark Lab - FinBot{% endblock %}</title>
+
+    {{ csrf_token_meta | safe }}
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'darklab-primary': '#ef4444',
+                        'darklab-secondary': '#dc2626',
+                        'darklab-accent': '#f87171',
+                        'darklab-danger': '#ff3366',
+                        'darklab-success': '#22c55e',
+                        'darklab-muted': '#991b1b',
+
+                        'portal-bg-primary': '#0a0a0f',
+                        'portal-bg-secondary': '#151520',
+                        'portal-bg-tertiary': '#1a1a2e',
+
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-bright': '#ffffff',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/portal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/dashboard.css') }}">
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        .darklab-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .darklab-nav-item:hover {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.05);
+            border-left-color: rgba(239, 68, 68, 0.3);
+        }
+        .darklab-nav-item.active {
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-portal-bg-primary flex flex-col min-h-screen">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
+
+    <div class="flex flex-1 min-h-0 relative z-10 overflow-hidden bg-portal-bg-primary">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col overflow-y-auto border-r border-darklab-primary/20 bg-portal-bg-secondary/50">
+            <!-- Logo -->
+            <div class="sidebar-logo-section p-6 border-b border-darklab-primary/20">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-darklab-primary to-darklab-secondary p-0.5 shadow-lg flex-shrink-0">
+                        <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
+                    </div>
+                    <div class="flex flex-col sidebar-collapsible-text">
+                        <span class="text-text-bright font-bold text-xl tracking-wide">FINBOT</span>
+                        <span class="text-darklab-primary text-xs font-mono tracking-wider">DARK LAB</span>
+                        <div class="flex items-center gap-2 mt-1.5 opacity-80">
+                            <div class="flex-1 h-px bg-gray-500"></div>
+                            <span class="text-gray-400 text-[10px] font-semibold font-mono tracking-widest">OWASP ASI</span>
+                            <div class="flex-1 h-px bg-gray-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 py-6">
+                <div class="space-y-1">
+                    <a href="/darklab/dashboard" class="darklab-nav-item {% block nav_dashboard %}{% endblock %}" data-tooltip="Dashboard">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="/darklab/supply-chain" class="darklab-nav-item {% block nav_supply_chain %}{% endblock %}" data-tooltip="Supply Chain">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        <span>Supply Chain</span>
+                    </a>
+
+                    <a href="/darklab/toolkit" class="darklab-nav-item {% block nav_toolkit %}{% endblock %}" data-tooltip="Hacker Toolkit">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                        <span>Hacker Toolkit</span>
+                    </a>
+                </div>
+
+                <!-- Portal Links -->
+                <div class="mt-8 px-6 sidebar-collapsible-section">
+                    <div class="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">Other Portals</div>
+                    <div class="space-y-1">
+                        <a href="/vendor/dashboard" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-text-secondary hover:text-darklab-accent transition-colors py-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Vendor Portal
+                        </a>
+                        <a href="/admin" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-text-secondary hover:text-darklab-accent transition-colors py-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Admin Portal
+                        </a>
+                        <a href="/ctf" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-text-secondary hover:text-darklab-accent transition-colors py-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            CTF Portal
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- User Section -->
+            <div class="sidebar-user-section p-6 border-t border-darklab-primary/20">
+                {% if session_context and session_context.email %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="sidebar-user-avatar w-10 h-10 rounded-full bg-gradient-to-r from-darklab-primary to-darklab-secondary flex items-center justify-center text-sm font-bold text-portal-bg-primary">
+                            {{ session_context.email[0]|upper }}
+                        </div>
+                        <div class="sidebar-user-details min-w-0 flex-1">
+                            <div class="text-sm font-medium text-text-bright truncate">{{ session_context.email }}</div>
+                            <div class="text-xs text-darklab-accent">Signed In</div>
+                        </div>
+                    </div>
+                    <a href="/auth/logout" class="sidebar-user-actions text-text-secondary hover:text-text-bright transition-colors p-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </a>
+                </div>
+                {% else %}
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="sidebar-user-avatar w-10 h-10 rounded-full bg-gradient-to-r from-darklab-primary to-darklab-secondary flex items-center justify-center text-sm font-bold text-text-bright">?</div>
+                    <div class="sidebar-user-details">
+                        <div class="text-sm font-medium text-text-bright">Guest Session</div>
+                        <div class="text-xs text-darklab-primary">Temporary</div>
+                    </div>
+                </div>
+                <div class="sidebar-user-extra p-3 bg-darklab-primary/10 border border-darklab-primary/30 rounded-lg">
+                    <div class="text-xs font-medium text-darklab-primary mb-2">Save your progress</div>
+                    <form action="/auth/magic-link" method="POST" class="space-y-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="email" name="email" placeholder="your@email.com" required
+                            class="w-full bg-portal-bg-primary border border-darklab-primary/30 rounded px-3 py-2 text-sm text-text-bright placeholder-text-secondary focus:outline-none focus:border-darklab-primary transition-colors">
+                        <button type="submit" class="w-full text-xs py-2 rounded-lg bg-darklab-primary/20 text-darklab-primary border border-darklab-primary/30 hover:bg-darklab-primary/30 transition-colors font-medium flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Send Magic Link
+                        </button>
+                    </form>
+                    <p class="text-xs text-text-secondary mt-2">No password needed</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Collapse Toggle -->
+            <button class="sidebar-collapse-toggle-bar" onclick="sidebar.toggleCollapse()" title="Collapse sidebar">
+                <svg class="sidebar-collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+                <span class="sidebar-collapsible-text">Collapse</span>
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-portal-bg-secondary/80 backdrop-blur-md border-b border-darklab-primary/20 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-text-bright">{% block page_title %}Dashboard{% endblock %}</h1>
+                        <p class="text-sm text-text-secondary mt-1">{% block page_subtitle %}Adversary threat surface{% endblock %}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        {% block header_actions %}{% endblock %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-auto p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- CTF Footer -->
+    <div class="flex-shrink-0">{% include 'components/ctf_footer.html' %}</div>
+
+    <script>
+        window.CTF_NAMESPACE = "{{ session_context.namespace if session_context else 'default' }}";
+    </script>
+
+    <script src="{{ url_for('static', path='js/common/agreement-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof sidebar !== 'undefined' && sidebar.init) {
+                sidebar.init('#sidebar');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

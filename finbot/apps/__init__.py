@@ -5,5 +5,6 @@
 - Web: CineFlow Productions demo tenant (hidden, under /demo/cineflow/)
 - Vendor: Vendor Portal
 - Admin: Admin Portal
+- Dark Lab: Adversary threat surface -- supply chain attacks & exfiltration (/darklab)
 - CTF: CTF Portal
 """

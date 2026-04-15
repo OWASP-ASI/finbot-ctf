@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Dark Lab{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Dark Lab{% endblock %}
+{% block page_subtitle %}Adversary threat surface -- supply chain attacks and exfiltration channels{% endblock %}
+
+{% block content %}
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Poisoned Tools -->
+    <div class="bg-portal-bg-secondary border border-darklab-primary/20 rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-darklab-primary/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-darklab-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-text-secondary">Poisoned Tools</h3>
+                <p class="text-2xl font-bold font-mono text-darklab-primary" id="stat-poisoned">--</p>
+            </div>
+        </div>
+        <a href="/darklab/supply-chain" class="text-xs text-darklab-accent hover:text-darklab-primary transition-colors">View Supply Chain &rarr;</a>
+    </div>
+
+    <!-- Dead Drop -->
+    <div class="bg-portal-bg-secondary border border-darklab-primary/20 rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-text-secondary">Dead Drop</h3>
+                <p class="text-2xl font-bold font-mono text-blue-400" id="stat-dead-drop">--</p>
+            </div>
+        </div>
+        <a href="/darklab/toolkit" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">View Intercepted Emails &rarr;</a>
+    </div>
+
+    <!-- Exfil Data -->
+    <div class="bg-portal-bg-secondary border border-darklab-primary/20 rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-text-secondary">Exfil Captures</h3>
+                <p class="text-2xl font-bold font-mono text-purple-400" id="stat-exfil">--</p>
+            </div>
+        </div>
+        <a href="/darklab/toolkit" class="text-xs text-purple-400 hover:text-purple-300 transition-colors">View Captured Requests &rarr;</a>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Supply Chain -->
+    <a href="/darklab/supply-chain" class="group bg-portal-bg-secondary border border-darklab-primary/20 rounded-xl p-6 hover:border-darklab-primary/40 transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-darklab-primary/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6 text-darklab-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-text-bright group-hover:text-darklab-accent transition-colors mb-1">Supply Chain</h3>
+                <p class="text-sm text-text-secondary">Poison MCP server tool definitions to manipulate how the LLM interprets and uses each tool. Simulates a compromised supply chain where attacker-modified descriptions alter agent behavior.</p>
+            </div>
+        </div>
+    </a>
+
+    <!-- Hacker Toolkit -->
+    <a href="/darklab/toolkit" class="group bg-portal-bg-secondary border border-darklab-primary/20 rounded-xl p-6 hover:border-darklab-primary/40 transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-darklab-primary/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <svg class="w-6 h-6 text-darklab-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-text-bright group-hover:text-darklab-accent transition-colors mb-1">Hacker Toolkit</h3>
+                <p class="text-sm text-text-secondary">Monitor exfiltration channels: intercepted emails (Dead Drop), captured HTTP requests (Exfil Data), and intercepted payments (Wire Tap).</p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const headers = { 'Content-Type': 'application/json', ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}) };
+
+    try {
+        const [scRes, ddRes, exRes] = await Promise.all([
+            fetch('/darklab/api/v1/supply-chain/stats', { headers }),
+            fetch('/darklab/api/v1/toolkit/dead-drop/stats', { headers }),
+            fetch('/darklab/api/v1/toolkit/exfil-data/stats', { headers }),
+        ]);
+        if (scRes.ok) {
+            const sc = await scRes.json();
+            document.getElementById('stat-poisoned').textContent = sc.poisoned_tools;
+        }
+        if (ddRes.ok) {
+            const dd = await ddRes.json();
+            document.getElementById('stat-dead-drop').textContent = dd.total;
+        }
+        if (exRes.ok) {
+            const ex = await exRes.json();
+            document.getElementById('stat-exfil').textContent = ex.total;
+        }
+    } catch (e) {
+        console.error('Failed to load dashboard stats:', e);
+    }
+});
+</script>
+{% endblock %}

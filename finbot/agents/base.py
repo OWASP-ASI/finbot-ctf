@@ -14,6 +14,8 @@ from finbot.core.auth.session import SessionContext
 from finbot.core.data.models import LLMRequest
 from finbot.core.llm import ContextualLLMClient
 from finbot.core.messaging import event_bus
+from finbot.guardrails.schemas import HookKind
+from finbot.guardrails.service import GuardrailHookService
 from finbot.mcp.provider import MCPToolProvider
 
 logger = logging.getLogger(__name__)
@@ -42,6 +44,10 @@ class BaseAgent(ABC):
             workflow_id=self.workflow_id,
         )
         self._mcp_provider: MCPToolProvider | None = None
+        self._guardrail_service = GuardrailHookService(
+            session_context=session_context,
+            workflow_id=self.workflow_id,
+        )
 
         logger.info(
             "Initialized %s for user=%s, namespace=%s",
@@ -136,6 +142,19 @@ class BaseAgent(ABC):
                             tool_call_name = tool_call["name"]
                             callable_fn = callables.get(tool_call_name, None)
                             if callable_fn:
+                                tool_source = (
+                                    "mcp"
+                                    if self._mcp_provider
+                                    and tool_call_name
+                                    in self._mcp_provider.get_callables()
+                                    else "native"
+                                )
+                                await self._guardrail_service.invoke(
+                                    HookKind.before_tool,
+                                    tool_name=tool_call_name,
+                                    tool_source=tool_source,
+                                    tool_arguments=tool_call.get("arguments"),
+                                )
                                 try:
                                     logger.debug(
                                         "Calling callable %s with arguments %s",
@@ -161,6 +180,13 @@ class BaseAgent(ABC):
                                         "error": f"Tool call {tool_call['name']} \
                                             failed: {str(e)}. Please try again.",
                                     }
+                                await self._guardrail_service.invoke(
+                                    HookKind.after_tool,
+                                    tool_name=tool_call_name,
+                                    tool_source=tool_source,
+                                    tool_arguments=tool_call.get("arguments"),
+                                    tool_result=str(function_output),
+                                )
                             else:
                                 # Emit invalid tool call event
                                 await event_bus.emit_agent_event(
