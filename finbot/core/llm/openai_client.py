@@ -1,7 +1,8 @@
-"""OpenAI Client with configurable model
+"""OpenAI-compatible LLM client.
 
-TODO: for reasoning capabilities, we need to use Responses API
-
+Supports both the OpenAI Responses API (when LLM_PROVIDER=openai and no
+OPENAI_BASE_URL override) and the Chat Completions API used by Ollama and
+other OpenAI-compatible backends.
 """
 
 import json
@@ -16,25 +17,112 @@ from finbot.core.data.models import LLMRequest, LLMResponse
 logger = logging.getLogger(__name__)
 
 
+def _normalize_messages(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert Responses API / mixed message formats to Chat Completions format.
+
+    Handles:
+    - ``type: function_call``        → assistant message with tool_calls
+    - ``type: function_call_output`` → tool message with tool_call_id
+    - ``role: developer``            → system message
+    - Already-normalised assistant messages with tool_calls pass through intact.
+    """
+    out = []
+    for m in raw:
+        if not isinstance(m, dict):
+            out.append(m)
+            continue
+        msg_type = m.get("type")
+        role = m.get("role", "")
+
+        if msg_type == "function_call":
+            out.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [{
+                    "id": m.get("call_id", ""),
+                    "type": "function",
+                    "function": {
+                        "name": m.get("name", ""),
+                        "arguments": m.get("arguments", "{}"),
+                    },
+                }],
+            })
+            continue
+
+        if msg_type == "function_call_output":
+            out.append({
+                "role": "tool",
+                "tool_call_id": m.get("call_id", ""),
+                "content": m.get("output", ""),
+            })
+            continue
+
+        if role == "developer":
+            out.append({"role": "system", "content": m.get("content", "")})
+            continue
+
+        if role in ("system", "user", "assistant", "tool"):
+            if role == "assistant" and m.get("tool_calls"):
+                out.append(m)  # already in Chat Completions format
+            elif role == "tool" and "tool_call_id" in m:
+                out.append(m)  # already in Chat Completions format
+            else:
+                out.append({"role": role, "content": m.get("content", "")})
+
+    return out
+
+
+def _normalize_tools(
+    tools: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]] | None:
+    """Ensure tools are in Chat Completions ``{"type": "function", "function": {...}}`` format."""
+    if not tools:
+        return None
+    out = []
+    for t in tools:
+        if not isinstance(t, dict):
+            continue
+        if t.get("type") == "function" and "function" in t:
+            out.append(t)  # already wrapped
+        elif "name" in t:
+            out.append({
+                "type": "function",
+                "function": {
+                    "name": t["name"],
+                    "description": t.get("description", ""),
+                    "parameters": t.get("parameters", {}),
+                },
+            })
+    return out or None
+
+
 class OpenAIClient:
-    """OpenAI Client with configurable model"""
+    """OpenAI-compatible client.
+
+    Uses Chat Completions (``chat.completions.create``) so that it works with
+    both OpenAI and Ollama/other compatible backends.
+    """
 
     def __init__(self):
         self.default_model = settings.LLM_DEFAULT_MODEL
         self.default_temperature = settings.LLM_DEFAULT_TEMPERATURE
         self._client = self._get_client()
 
-    def _get_client(self):
-        """Get the OpenAI client"""
-        return AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    def _get_client(self) -> AsyncOpenAI:
+        import os
 
-    async def chat(
-        self,
-        request: LLMRequest,
-    ) -> LLMResponse:
-        """
-        Chat with OpenAI
-        """
+        # Precedence: explicit OPENAI_BASE_URL env var → ollama provider default → None (OpenAI)
+        base_url = os.environ.get("OPENAI_BASE_URL") or (
+            settings.OLLAMA_BASE_URL.rstrip("/") + "/v1"
+            if settings.LLM_PROVIDER == "ollama"
+            else None
+        )
+        return AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY or "ollama",
+            base_url=base_url,
+        )
+
+    async def chat(self, request: LLMRequest) -> LLMResponse:
         try:
             model = request.model or self.default_model
             temperature = (
@@ -42,133 +130,71 @@ class OpenAIClient:
                 if request.temperature is None
                 else request.temperature
             )
-            max_tokens = settings.LLM_MAX_TOKENS
 
-            input_list: list[dict[str, Any]] = (
+            messages = _normalize_messages(
                 list(request.messages) if request.messages else []
             )
+            tools = _normalize_tools(request.tools)
 
-            tool_calls: list[dict[str, Any]] = []
-
-            create_params = {
+            params: dict[str, Any] = {
                 "model": model,
-                "input": input_list,
-                "max_output_tokens": max_tokens,
+                "messages": messages,
+                "max_tokens": settings.LLM_MAX_TOKENS,
                 "timeout": settings.LLM_TIMEOUT,
+                "temperature": temperature,
             }
+            if tools:
+                params["tools"] = tools
+                params["tool_choice"] = "auto"
 
-            no_temperature = any(
-                model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5")
-            )
-            if not no_temperature:
-                create_params["temperature"] = temperature
+            response = await self._client.chat.completions.create(**params)
 
-            if request.output_json_schema:
-                create_params["text"] = {
-                    "format": {
-                        "type": "json_schema",
-                        "name": request.output_json_schema["name"],
-                        "schema": request.output_json_schema["schema"],
-                        "strict": True,
-                    }
-                }
-
-            if request.tools:
-                create_params["tools"] = request.tools
-
-            if request.previous_response_id:
-                create_params["previous_response_id"] = request.previous_response_id
-
-            response = await self._client.responses.create(**create_params)
-
-
-            # Guard against malformed or empty SDK responses.
-            # Prevents AttributeError when accessing response.message.content
-            # and ensures consistent failure handling.
-            if not response:
-                logger.warning("Invalid OpenAI response: response is None")
+            if not response or not response.choices:
                 return LLMResponse(
                     content="",
                     provider="openai",
                     success=False,
-                    messages=input_list,
+                    messages=messages,
                     tool_calls=[],
                 )
 
-            output = response.output if isinstance(response.output, list) else []
-            if not isinstance(response.output, list) and response.output:
-                logger.warning(
-                    "Unexpected response.output type from OpenAI: %s — ignoring",
-                    type(response.output),
-                )
+            msg = response.choices[0].message
+            content = msg.content or ""
+            tool_calls: list[dict[str, Any]] = []
+            new_messages = messages + [{"role": "assistant", "content": content}]
 
-            new_entries: list[dict[str, Any]] = []
-
-            # Extract tool calls and messages for future calls
-            # (TODO): take care of refusals
-            for item in output:
-
-                if item.type == "message":
-                    texts = []
-
-                    for content in item.content:
-                        # Handle content whether it arrives as a raw dictionary
-                        # or an SDK object (TypedDict vs Pydantic)
-                        content_type = (
-                            content.get("type")
-                            if isinstance(content, dict)
-                            else getattr(content, "type", None)
-                        )
-                        content_text = (
-                            content.get("text")
-                            if isinstance(content, dict)
-                            else getattr(content, "text", None)
-                        )
-
-                        if content_type == "output_text" and content_text:
-                            texts.append(content_text)
-
-                    new_entries.append(
-                        {
-                            "role": item.role,
-                            "content": "".join(texts),
-                        }
-                    )
-                elif item.type == "function_call":
-                    # Safe JSON parsing (avoid crash if malformed)
-                    raw_args = item.arguments
-                    parsed_args = json.loads(raw_args)
-                    
-                    tool_call = {
-                        "name": item.name,
-                        "call_id": item.call_id,
-                        "arguments": parsed_args,
-                    }
-                    tool_calls.append(tool_call)
-                    # Add the function call to the conversation history
-                    new_entries.append(
-                        {
-                            "type": "function_call",
-                            "name": item.name,
-                            "call_id": item.call_id,
-                            "arguments": raw_args,
-                        }
-                    )
-
-            input_list = input_list + new_entries
-
-            metadata = {
-                "response_id": response.id,
-            }
+            if msg.tool_calls:
+                tc_list = []
+                for tc in msg.tool_calls:
+                    parsed = json.loads(tc.function.arguments or "{}")
+                    tool_calls.append({
+                        "name": tc.function.name,
+                        "call_id": tc.id,
+                        "arguments": parsed,
+                    })
+                    tc_list.append({
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.function.name,
+                            "arguments": tc.function.arguments,
+                        },
+                    })
+                new_messages[-1] = {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": tc_list,
+                }
 
             return LLMResponse(
-                content=response.output_text,
+                content=content,
                 provider="openai",
                 success=True,
-                metadata=metadata,
-                messages=input_list,
+                metadata={"response_id": response.id},
+                messages=new_messages,
                 tool_calls=tool_calls,
             )
+
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("OpenAI chat failed: %s", e)
             raise Exception(f"OpenAI chat failed: {e}") from e  # pylint: disable=broad-exception-raised
