@@ -74,7 +74,7 @@ def _register_all_detectors():
     - This is called at module load time.
     """
     # pylint: disable=import-outside-toplevel,unused-import
-    from finbot.ctf.detectors.implementations import prompt_leak
+    from finbot.ctf.detectors.implementations import system_prompt_leak
     from finbot.ctf.detectors.implementations import mcp_registry_switch
     from finbot.ctf.detectors import implementations, primitives
 
