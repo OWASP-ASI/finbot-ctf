@@ -22,6 +22,10 @@ wheels/
 *.egg
 MANIFEST
 
+# Node.js
+node_modules/
+package-lock.json
+
 # Virtual environments
 .env
 .venv
@@ -74,8 +78,6 @@ coverage.xml
 google-credentials.json
 SECURITY_BUGS_REPORT.md
 
-
-.node_modules/
 
 # SQLite databases
 *.db

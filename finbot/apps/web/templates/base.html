@@ -14,38 +14,8 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'cine-gold': '#D4AF37',
-                        'cine-dark': '#0F0F0F',
-                        'cine-gray': '#1A1A1A',
-                        'cine-light': '#F8F8F8',
-                        'ctf-green': '#10B981',
-                        'ctf-dark': '#111827',
-                        'ctf-gray': '#374151',
-                    },
-                    fontFamily: {
-                        'display': ['Playfair Display', 'serif'],
-                        'sans': ['Inter', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',
-                        'slide-up': 'slideUp 0.6s ease-out',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                    },
-                    zIndex: {
-                        '60': '60',
-                        '70': '70',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (Compiled) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.css') }}">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">

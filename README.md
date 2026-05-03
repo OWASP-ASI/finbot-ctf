@@ -116,6 +116,12 @@ python scripts/check_prerequisites.py
 # Install dependencies
 uv sync
 
+# Install Node dependencies for CSS build
+npm install
+
+# Build Tailwind CSS (required for styling)
+npm run build:css
+
 # Configure environment
 cp .env.example .env
 # Edit .env: add your OPENAI_API_KEY
@@ -132,6 +138,20 @@ Platform runs at [http://localhost:8000](http://localhost:8000)
 > An LLM API key (OpenAI or Ollama) is needed for AI agent challenges.
 > Redis is needed for event-driven challenge detection.
 > Without them, you can still explore the UI and codebase.
+
+### Development Workflow
+
+**CSS Development**: When modifying Tailwind classes in templates, rebuild CSS:
+
+```bash
+# One-time build (production, minified)
+npm run build:css
+
+# Watch mode (rebuilds automatically on template changes)
+npm run watch:css
+```
+
+**Customizing Styles**: Edit `tailwind.config.js` to customize theme colors, fonts, animations, etc. All custom colors from the various portals (admin, vendor, CTF) are already configured.
 
 ## Configuration
 

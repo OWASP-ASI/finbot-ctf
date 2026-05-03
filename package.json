@@ -1,0 +1,21 @@
+{
+  "name": "finbot-ctf",
+  "version": "1.0.0",
+  "description": "OWASP FinBot CTF - Agentic AI Security Training",
+  "scripts": {
+    "build:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i finbot/static/css/tailwind.input.css -o finbot/static/css/tailwind.css --watch --minify"
+  },
+  "keywords": [
+    "owasp",
+    "security",
+    "ctf",
+    "ai",
+    "llm"
+  ],
+  "author": "OWASP ASI",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}

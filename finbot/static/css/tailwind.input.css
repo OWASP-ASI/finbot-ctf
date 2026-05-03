@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .quantum-primary {
+    @apply bg-vendor-primary text-portal-bg-primary;
+  }
+  
+  .admin-nav-item {
+    @apply flex items-center gap-3 px-6 py-3 text-text-secondary text-sm font-medium transition-all border-l-2 border-transparent;
+  }
+  
+  .admin-nav-item:hover {
+    @apply text-admin-accent bg-admin-primary/5 border-admin-primary/30;
+  }
+  
+  .admin-nav-item.active {
+    @apply text-admin-accent bg-admin-primary/10 border-admin-primary;
+  }
+  
+  .ai-sidebar {
+    @apply bg-portal-bg-secondary border-r border-vendor-primary/10;
+  }
+}
+
+/* Additional utilities */
+@layer utilities {
+  .text-shadow-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+}

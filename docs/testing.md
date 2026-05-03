@@ -2,6 +2,20 @@
 
 Follow these steps to run and record your test results for the Isolation Testing Framework.
 
+## Prerequisites
+
+Before running tests, ensure the CSS is built:
+
+```bash
+# Install Node dependencies (first time only)
+npm install
+
+# Build Tailwind CSS (required for visual components)
+npm run build:css
+```
+
+The application uses compiled Tailwind CSS instead of the CDN. If you're modifying templates or styles, use `npm run watch:css` in a separate terminal to automatically rebuild CSS on changes.
+
 ## 1. Access the Test Cases
 
 Open the test case spreadsheet:

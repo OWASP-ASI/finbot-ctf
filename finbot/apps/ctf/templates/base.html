@@ -18,43 +18,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // CTF Portal Colors
-                        'ctf-primary': '#00d4ff',
-                        'ctf-secondary': '#7c3aed',
-                        'ctf-accent': '#06ffa5',
-                        'ctf-warning': '#ffb800',
-                        'ctf-danger': '#ff3366',
-
-                        // Interface Colors
-                        'portal-bg-primary': '#0a0a0f',
-                        'portal-bg-secondary': '#151520',
-                        'portal-bg-tertiary': '#1a1a2e',
-
-                        // Text Colors
-                        'text-primary': '#e2e8f0',
-                        'text-secondary': '#94a3b8',
-                        'text-bright': '#ffffff',
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'mono': ['JetBrains Mono', 'monospace'],
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.6s ease-out',
-                        'slide-up': 'slideUp 0.6s ease-out',
-                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
-                    },
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (Compiled) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.css') }}">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">

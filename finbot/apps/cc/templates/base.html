@@ -11,32 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'cc-bg': '#0c0c14',
-                        'cc-surface': '#12121e',
-                        'cc-border': 'rgba(255,255,255,0.06)',
-                        'cyan': '#00d4ff',
-                        'purple': '#7c3aed',
-                        'green': '#06ffa5',
-                        'amber': '#ffb800',
-                        'danger': '#ff3366',
-                        'text-1': '#e2e8f0',
-                        'text-2': '#94a3b8',
-                        'text-3': '#64748b',
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'mono': ['JetBrains Mono', 'monospace'],
-                    },
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (Compiled) -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/tailwind.css') }}">
 
     <style>
         body { background: #0c0c14; }
