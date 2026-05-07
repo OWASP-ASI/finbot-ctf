@@ -103,9 +103,35 @@
                     <span class="hidden sm:inline">GitHub</span>
                 </a>
                 {% endblock %}
+                <button id="mobile-menu-button" class="sm:hidden ml-2 p-2 text-text-3 hover:text-cyan transition-colors" aria-label="Toggle Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+                </button>
             </nav>
         </div>
     </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-bg-primary/95 backdrop-blur-2xl transition-all duration-300 transform translate-x-full sm:hidden">
+        <div class="flex flex-col h-full p-8">
+            <div class="flex justify-between items-center mb-12">
+                <span class="text-text-1 font-bold text-xl tracking-tight">MENU</span>
+                <button id="mobile-menu-close" class="p-2 text-text-3 hover:text-danger transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <nav class="flex flex-col space-y-6">
+                {% block mobile_nav %}
+                <a href="/" class="text-lg font-semibold text-text-2 hover:text-cyan transition-colors">Home</a>
+                <a href="/how-it-works" class="text-lg font-semibold text-text-2 hover:text-cyan transition-colors">How It Works</a>
+                <a href="/portals" class="text-lg font-semibold text-text-2 hover:text-cyan transition-colors">Portals</a>
+                <a href="/about" class="text-lg font-semibold text-text-2 hover:text-cyan transition-colors">About</a>
+                {% endblock %}
+            </nav>
+            <div class="mt-auto pt-8 border-t border-border-dim">
+                <p class="text-text-3 text-xs">Part of the <a href="https://genai.owasp.org/" class="text-cyan">OWASP GenAI Security Project</a></p>
+            </div>
+        </div>
+    </div>
 
     <main class="relative z-10">
         {% block content %}{% endblock %}
@@ -125,6 +151,33 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenuClose = document.getElementById('mobile-menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuButton && mobileMenu && mobileMenuClose) {
+                const toggleMenu = (show) => {
+                    if (show) {
+                        mobileMenu.classList.remove('translate-x-full');
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        mobileMenu.classList.add('translate-x-full');
+                        document.body.style.overflow = '';
+                    }
+                };
+
+                mobileMenuButton.addEventListener('click', () => toggleMenu(true));
+                mobileMenuClose.addEventListener('click', () => toggleMenu(false));
+
+                // Close menu on link clicks (for hash links)
+                mobileMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => toggleMenu(false));
+                });
+            }
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
