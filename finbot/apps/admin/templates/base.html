@@ -80,9 +80,9 @@
 <body class="bg-portal-bg-primary flex flex-col min-h-screen">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
 
-    <div class="flex flex-1 min-h-0 relative z-10 overflow-hidden bg-portal-bg-primary">
+    <div class="flex flex-1 min-h-0 bg-portal-bg-primary">
         <!-- Sidebar -->
-        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col overflow-y-auto border-r border-admin-primary/20 bg-portal-bg-secondary/50">
+        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col sticky top-0 h-screen overflow-y-auto border-r border-admin-primary/20 bg-portal-bg-secondary/50">
             <!-- Logo -->
             <div class="sidebar-logo-section p-6 border-b border-admin-primary/20">
                 <div class="flex items-center space-x-3">
@@ -259,10 +259,46 @@
     <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
     <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
     <script>
-        // Initialize mobile sidebar on all pages
+        // Initialize mobile sidebar + inline touch navigation (bypasses caching)
+        function _attachMobileSidebarNav() {
+            var sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            var links = sidebar.querySelectorAll('a[href]');
+            links.forEach(function(link) {
+                // touchend fires after finger lifts - direct nav, no CSS blocking
+                link.addEventListener('touchend', function(e) {
+                    var href = link.getAttribute('href');
+                    if (href && href !== '#' && href !== '') {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        window.location.href = href;
+                    }
+                }, true);
+                // Also handle click as fallback
+                link.addEventListener('click', function(e) {
+                    var href = link.getAttribute('href');
+                    if (href && href !== '#' && href !== '') {
+                        window.location.href = href;
+                    }
+                }, true);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof sidebar !== 'undefined' && sidebar.init) {
                 sidebar.init('#sidebar');
+            }
+            // Attach touch nav immediately
+            _attachMobileSidebarNav();
+            // Also attach when sidebar opens (in case it's re-rendered)
+            var hamburger = document.querySelector('.sidebar-toggle');
+            if (hamburger) {
+                hamburger.addEventListener('touchend', function() {
+                    setTimeout(_attachMobileSidebarNav, 100);
+                }, true);
+                hamburger.addEventListener('click', function() {
+                    setTimeout(_attachMobileSidebarNav, 100);
+                }, true);
             }
         });
     </script>
