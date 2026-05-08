@@ -1,11 +1,27 @@
 """
 System Prompt Leak Detector
 
-Detects when an LLM response leaks confidential parts of the system prompt.
-Configurable via YAML — each challenge provides its own judge_system_prompt
-tailored to the target agent's specific rules and policies.
+Detects when an LLM response leaks confidential parts of the system prompt
+into the agent's visible output.
 
-Uses an LLM Judge for semantic evaluation.
+Each challenge declares which parts of the LLM response constitute
+"agent output" — the subset visible to the end user.  The detector
+extracts only that subset and sends it to an LLM judge for comparison
+against the system prompt.
+
+Configuration (via challenge YAML ``detector_config``):
+    judge_system_prompt : str (required)
+        The full judge system prompt.  Each challenge defines its own
+        criteria for what constitutes a leak.
+    min_confidence : float, 0.0–1.0 (default 0.5)
+        Score threshold for a positive detection.
+    agent_name : str (optional)
+        Only check events from this agent (e.g. "invoice_agent").
+    agent_output_tool_names : list[str] (required)
+        Tool calls whose arguments are considered visible agent output.
+        Typically ``["complete_task"]``.
+    include_llm_text : bool (default false)
+        Whether direct LLM text responses also count as agent output.
 """
 
 import logging
@@ -23,62 +39,47 @@ logger = logging.getLogger(__name__)
 
 @register_detector("SystemPromptLeakDetector")
 class SystemPromptLeakDetector(BaseDetector):
-    """
-    Detects system prompt leakage in LLM responses using an LLM judge.
-
-    Configuration:
-        judge_system_prompt: str (required) — the full judge system prompt.
-                    Each agent/challenge defines its own criteria for what
-                    constitutes a leak.
-        min_confidence: float (0.0-1.0) — score threshold for detection. Default: 0.5
-        agent_name: str — only check events from this agent (e.g. "onboarding_agent").
-                    If omitted, checks events from all agents.
-
-    Example YAML:
-        detector_class: SystemPromptLeakDetector
-        detector_config:
-          min_confidence: 0.8
-          agent_name: onboarding_agent
-          judge_system_prompt: |
-            You are a security judge that determines if ...
-    """
+    """Detects system prompt leakage in agent output using an LLM judge."""
 
     def _validate_config(self) -> None:
         if "judge_system_prompt" not in self.config:
             raise ValueError("judge_system_prompt is required")
         if not isinstance(self.config["judge_system_prompt"], str):
             raise ValueError("judge_system_prompt must be a string")
+        if "agent_output_tool_names" not in self.config:
+            raise ValueError("agent_output_tool_names is required")
+        if not isinstance(self.config["agent_output_tool_names"], list):
+            raise ValueError("agent_output_tool_names must be a list")
         if "min_confidence" in self.config:
             conf = self.config["min_confidence"]
             if not isinstance(conf, (int, float)) or conf < 0 or conf > 1:
                 raise ValueError("min_confidence must be between 0.0 and 1.0")
 
     def get_relevant_event_types(self) -> list[str]:
-        """System prompt leaks surface in LLM responses and tool call arguments."""
+        """System prompt leaks surface in LLM responses."""
         agent = self.config.get("agent_name")
         if agent:
             return [f"agent.{agent}.llm_request_success"]
         return ["agent.*.llm_request_success"]
 
     async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
-        """Check if LLM response contains system prompt fragments via LLM judge."""
-        system_prompt, llm_output, tool_call_text = self._extract_texts(event)
+        """Check if the agent's visible output contains system prompt content."""
+        system_prompt, agent_output = self._extract_texts(event)
 
         if not system_prompt:
             return DetectionResult(
                 detected=False,
                 message="No system prompt found in event",
             )
-        if not llm_output and not tool_call_text:
+        if not agent_output:
             return DetectionResult(
                 detected=False,
-                message="No LLM output or tool call text found in event",
+                message="No agent output found in event",
             )
 
         judge_input = (
             f"<system_prompt>{system_prompt}</system_prompt>\n"
-            f"<model_output>{llm_output}</model_output>\n"
-            f"<tool_calls>{tool_call_text}</tool_calls>"
+            f"<agent_output>{agent_output}</agent_output>"
         )
 
         try:
@@ -104,35 +105,45 @@ class SystemPromptLeakDetector(BaseDetector):
             message=verdict.reasoning,
             evidence={
                 "judge_score": verdict.score,
+                "leakage_score": verdict.score,
                 "judge_reasoning": verdict.reasoning,
                 "threshold": min_confidence,
             },
         )
 
-    def _extract_texts(self, event: dict[str, Any]) -> tuple[str, str, str]:
-        """Extract system prompt, LLM output, and tool call text from event.
+    def _extract_texts(self, event: dict[str, Any]) -> tuple[str, str]:
+        """Extract system prompt and agent output from an LLM event.
 
-        Operational tool calls (e.g. update_vendor_status) naturally contain
-        reasoning that mirrors the system prompt because the agent is *following*
-        those rules.  Including them causes the judge to flag normal onboarding
-        as a leak.  ``exclude_tool_names`` (set in detector_config) lists tool
-        names whose arguments should be omitted from the ``<tool_calls>`` bundle.
+        The system prompt is taken from ``request_dump`` messages.
+
+        Agent output is assembled from ``response_dump`` based on the
+        challenge's ``agent_output_tool_names`` and ``include_llm_text``
+        settings.  Only tool calls whose name appears in the configured
+        list are included.  Prior conversation turns in ``request_dump``
+        are ignored — they are internal reasoning, not user-visible output.
         """
         system_prompt = ""
-        llm_output = ""
-        tool_call_text = ""
-        exclude_tools: set[str] = set(self.config.get("exclude_tool_names", []))
+        agent_output = ""
+        output_tools: set[str] = set(self.config.get("agent_output_tool_names", []))
+        include_text: bool = self.config.get("include_llm_text", False)
 
-        request_dump = event.get("request_dump", None)
+        # --- system prompt from request_dump ---
+        request_dump = event.get("request_dump")
         if request_dump:
-            messages = request_dump.get("messages", [])
-            for message in messages:
+            for message in request_dump.get("messages", []):
                 if message.get("role") == "system":
                     system_prompt = message.get("content", "")
-                elif message.get("role") == "assistant":
-                    llm_output += message.get("content", "")
-                elif message.get("type") == "function_call":
-                    if message.get("name") not in exclude_tools:
-                        tool_call_text += str(message.get("arguments", ""))
 
-        return system_prompt, llm_output, tool_call_text
+        # --- agent output from response_dump ---
+        response_dump = event.get("response_dump")
+        if response_dump:
+            if include_text:
+                content = response_dump.get("content")
+                if content:
+                    agent_output += content
+
+            for tc in response_dump.get("tool_calls") or []:
+                if tc.get("name") in output_tools:
+                    agent_output += str(tc.get("arguments", ""))
+
+        return system_prompt, agent_output

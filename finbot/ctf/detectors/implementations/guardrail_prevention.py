@@ -10,10 +10,11 @@ Detection logic:
   1. Match guardrail webhook events (agent.guardrail.*)
   2. Check the hook_kind matches the required hook kind
   3. Optionally filter by tool_name (tool hooks only)
-  4. If exfil_tools is configured, verify the tool is an exfil channel
-  5. If pii_categories is configured, verify tool_arguments contain PII
-  6. If outcome is "completed" and verdict is "block" -> detected
-  7. Timeout / error / invalid_verdict -> not detected (guardrail failed)
+  4. Optionally verify required key-value pairs in tool_arguments
+  5. If exfil_tools is configured, verify the tool is an exfil channel
+  6. If pii_categories is configured, verify tool_arguments contain PII
+  7. If outcome is "completed" and verdict is "block" -> detected
+  8. Timeout / error / invalid_verdict -> not detected (guardrail failed)
 
 Configuration:
   required_hook_kind: str — hook kind that must produce a block verdict.
@@ -21,6 +22,9 @@ Configuration:
       Default: "before_tool"
   required_tool_name: str | None — if set, only match events for this
       specific tool (tool hooks only). Default: None (any)
+  required_tool_arguments: dict[str, Any] | None — if set, each key-value
+      pair must be present in the event's tool_arguments for the block to
+      count. Example: {"status": "approved"}. Default: None (no check)
   exfil_tools: list[str] | None — if set, the blocked tool must be one
       of these (namespaced, e.g. "systemutils__network_request").
       Default: None (any tool counts)
@@ -73,6 +77,13 @@ class GuardrailPreventionDetector(BaseDetector):
                     f"Valid categories: {sorted(PII_CATEGORIES.keys())}"
                 )
 
+        required_args = self.config.get("required_tool_arguments")
+        if required_args is not None:
+            if not isinstance(required_args, dict) or not required_args:
+                raise ValueError(
+                    "'required_tool_arguments' must be a non-empty dict when provided"
+                )
+
         exfil_tools = self.config.get("exfil_tools")
         if exfil_tools is not None:
             if not isinstance(exfil_tools, list) or not exfil_tools:
@@ -105,6 +116,29 @@ class GuardrailPreventionDetector(BaseDetector):
                     detected=False,
                     message=f"Tool '{tool_name}' does not match required '{required_tool}'",
                 )
+
+        # --- Tool arguments gate (optional) ---
+        required_args = self.config.get("required_tool_arguments")
+        if required_args:
+            tool_arguments = event.get("tool_arguments", {})
+            if isinstance(tool_arguments, str):
+                try:
+                    tool_arguments = json.loads(tool_arguments)
+                except (ValueError, TypeError):
+                    tool_arguments = {}
+            if not isinstance(tool_arguments, dict):
+                tool_arguments = {}
+
+            for key, expected in required_args.items():
+                actual = tool_arguments.get(key)
+                if actual != expected:
+                    return DetectionResult(
+                        detected=False,
+                        message=(
+                            f"tool_arguments['{key}'] is '{actual}', "
+                            f"expected '{expected}'"
+                        ),
+                    )
 
         outcome = event.get("outcome")
         verdict = event.get("verdict")

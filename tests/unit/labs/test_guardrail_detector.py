@@ -292,7 +292,7 @@ class TestGuardrailExfilValidation:
 
     @pytest.mark.asyncio
     async def test_without_exfil_gates_any_block_counts(self, db):
-        """Without exfil config, any block verdict counts (block_invoice_approval style)."""
+        """Without exfil config, any block verdict counts (guardrail_101 style)."""
         basic_detector = GuardrailPreventionDetector(
             challenge_id="test-basic",
             config={"required_hook_kind": "before_tool"},

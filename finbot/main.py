@@ -53,7 +53,20 @@ async def lifespan(app: FastAPI):
     by ``docker/entrypoint.sh`` for Docker deployments.
     """
 
-    # 1. Start CTF event processor (Redis consumer groups — multi-worker safe)
+    # 1. Enable cross-replica WebSocket fan-out via Redis Pub/Sub
+    ws_mgr = None
+    if settings.REDIS_URL:
+        from finbot.core.websocket.manager import get_ws_manager  # pylint: disable=import-outside-toplevel,ungrouped-imports
+
+        ws_mgr = get_ws_manager()
+        try:
+            await ws_mgr.enable_redis_fanout(settings.REDIS_URL)
+            print("📡 WebSocket Redis fan-out enabled")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"⚠️ WebSocket Redis fan-out failed: {e}")
+            ws_mgr = None
+
+    # 2. Start CTF event processor (Redis consumer groups — multi-worker safe)
     processor_task = None
     try:
         processor_task = start_processor_task()
@@ -61,7 +74,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ CTF processor start failed: {e}")
 
-    # 2. Pre-warm the Playwright renderer (headless Chromium for OG images)
+    # 3. Pre-warm the Playwright renderer (headless Chromium for OG images)
     renderer = get_renderer()
     try:
         await renderer.start()
@@ -69,7 +82,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ Playwright renderer start skipped: {e}")
 
-    # 3. Build analytics known-prefix list from registered routes
+    # 4. Build analytics known-prefix list from registered routes
     if settings.CC_ANALYTICS_ENABLED:
         try:
             from finbot.core.analytics.middleware import build_known_prefixes
@@ -78,6 +91,14 @@ async def lifespan(app: FastAPI):
             print(f"⚠️ Analytics prefix build skipped: {e}")
 
     yield  # App is running
+
+    # Shut down WebSocket Redis fan-out
+    if ws_mgr:
+        try:
+            await ws_mgr.shutdown_redis_fanout()
+            print("📡 WebSocket Redis fan-out shut down")
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
 
     # Shut down Playwright renderer
     try:

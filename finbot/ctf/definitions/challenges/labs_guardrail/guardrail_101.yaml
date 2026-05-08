@@ -1,0 +1,89 @@
+id: labs-guardrail-101
+title: "Guardrail 101"
+description: |
+  This is your introduction to **guardrail webhooks** — the real-time
+  interception layer that sits between an AI agent's decisions and the
+  tools it calls. Before you can defend against sophisticated attacks,
+  you need to understand the mechanics.
+
+  **What you'll learn:**
+
+  - How guardrail hooks fire at key points in the agent's tool-calling loop
+  - The structure of hook payloads (`tool_name`, `tool_arguments`, `tool_source`)
+  - How to deploy a webhook that receives these payloads and returns verdicts
+  - The `allow` / `block` verdict protocol
+
+  **Setup:**
+
+  1. Go to **FinBot Labs → Guardrails** and configure your webhook URL.
+  2. Enable the **Before Tool** hook.
+  3. Deploy a simple HTTP endpoint that receives POST requests.
+  4. Your webhook will receive a `before_tool` event every time the agent
+     is about to call a tool — including the tool name and its arguments.
+
+  **Your Task:**
+
+  Block invoice approvals. When the agent calls `update_invoice_status`
+  with `status: "approved"`, your webhook should return
+  `{"verdict": "block", "reason": "..."}`. Allow all other tool calls
+  through (or block them — only the approval block is checked).
+
+  **Success Criteria:**
+
+  - Your webhook receives a `before_tool` event for `update_invoice_status`.
+  - The `tool_arguments` contain `status: "approved"`.
+  - You return `{"verdict": "block"}` within the configured timeout.
+  - The platform records a successful prevention event.
+
+  **Note:** This is a **Labs** challenge. The guardrail is passive — it does
+  not actually stop the tool from executing. The challenge measures whether
+  your webhook *would have* prevented the action.
+
+category: labs_guardrail
+subcategory: prevention
+difficulty: beginner
+points: 150
+
+hints:
+  - cost: 10
+    text: "Every `before_tool` hook payload includes `tool_name` and
+      `tool_arguments`. Parse the JSON body to extract these fields.
+      The tool you are looking for is `update_invoice_status`."
+  - cost: 25
+    text: "The `tool_arguments` object has a `status` field that is
+      `\"approved\"`, `\"rejected\"`, or `\"processing\"`. Block only when
+      `status` is `\"approved\"`. Return exactly
+      {\"verdict\": \"block\", \"reason\": \"...\"} with HTTP 200."
+  - cost: 50
+    text: "Make sure your webhook responds within 5 seconds (the default
+      timeout). Use a simple HTTP server — even a serverless function
+      works. Test with the 'Send Test Hook' button in Labs first."
+
+labels:
+  owasp_llm:
+    - LLM06:Excessive Agency
+  cwe:
+    - CWE-285:Improper Authorization
+  owasp_agentic:
+    - ASI-02:Tool Misuse and Exploitation
+
+prerequisites: []
+
+resources:
+  - title: "FinBot Labs — Guardrail Webhook Documentation"
+    url: "/labs/guardrails"
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: GuardrailPreventionDetector
+detector_config:
+  required_hook_kind: before_tool
+  required_tool_name: update_invoice_status
+  required_tool_arguments:
+    status: approved
+
+scoring:
+  modifiers: []
+
+is_active: true
+order_index: 0
