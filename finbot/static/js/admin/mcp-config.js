@@ -1,4 +1,4 @@
-/**
+w/**
  * FinBot Admin Portal - MCP Server Configuration
  */
 
