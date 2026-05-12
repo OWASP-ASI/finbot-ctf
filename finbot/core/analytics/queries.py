@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from .models import PageView
 
 _HUMAN = or_(PageView.device_type != "bot", PageView.device_type.is_(None))
+_PAGE_ONLY = PageView.path.not_like("%/api/%")
+_API_ONLY = PageView.path.like("%/api/%")
 
 
 def _since(days: int | None) -> datetime | None:
@@ -37,7 +39,7 @@ def get_pageviews_count(db: Session, days: int = 7) -> int:
     since = datetime.now(UTC) - timedelta(days=days)
     return (
         db.query(func.count(PageView.id))
-        .filter(PageView.timestamp >= since, _HUMAN)
+        .filter(PageView.timestamp >= since, _HUMAN, _PAGE_ONLY)
         .scalar() or 0
     )
 
@@ -55,7 +57,7 @@ def get_unique_visitors(db: Session, days: int = 7) -> int:
     since = datetime.now(UTC) - timedelta(days=days)
     return (
         db.query(func.count(distinct(PageView.session_id)))
-        .filter(PageView.timestamp >= since, PageView.session_id.isnot(None), _HUMAN)
+        .filter(PageView.timestamp >= since, PageView.session_id.isnot(None), _HUMAN, _PAGE_ONLY)
         .scalar()
         or 0
     )
@@ -65,7 +67,7 @@ def get_top_pages(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
         db.query(PageView.path, func.count(PageView.id).label("views"))
-        .filter(PageView.timestamp >= since, _HUMAN)
+        .filter(PageView.timestamp >= since, _HUMAN, _PAGE_ONLY)
         .group_by(PageView.path)
         .order_by(func.count(PageView.id).desc())
         .limit(limit)
@@ -78,7 +80,7 @@ def get_browser_breakdown(db: Session, days: int = 7, limit: int = 10) -> list[d
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
         db.query(PageView.browser, func.count(PageView.id).label("count"))
-        .filter(PageView.timestamp >= since, PageView.browser.isnot(None))
+        .filter(PageView.timestamp >= since, PageView.browser.isnot(None), _PAGE_ONLY)
         .group_by(PageView.browser)
         .order_by(func.count(PageView.id).desc())
         .limit(limit)
@@ -91,7 +93,7 @@ def get_device_breakdown(db: Session, days: int = 7, limit: int = 10) -> list[di
     since = datetime.now(UTC) - timedelta(days=days)
     rows = (
         db.query(PageView.device_type, func.count(PageView.id).label("count"))
-        .filter(PageView.timestamp >= since, PageView.device_type.isnot(None))
+        .filter(PageView.timestamp >= since, PageView.device_type.isnot(None), _PAGE_ONLY)
         .group_by(PageView.device_type)
         .order_by(func.count(PageView.id).desc())
         .limit(limit)
@@ -108,6 +110,7 @@ def get_referer_breakdown(db: Session, days: int = 7, limit: int = 10) -> list[d
             PageView.timestamp >= since,
             PageView.referer_domain.isnot(None),
             PageView.referer_domain != "",
+            _PAGE_ONLY,
         )
         .group_by(PageView.referer_domain)
         .order_by(func.count(PageView.id).desc())
@@ -122,7 +125,7 @@ def get_daily_pageviews(db: Session, days: int | None = 30) -> list[dict]:
         func.date(PageView.timestamp).label("day"),
         func.count(PageView.id).label("views"),
         func.count(distinct(PageView.session_id)).label("visitors"),
-    )
+    ).filter(_HUMAN, _PAGE_ONLY)
     if days:
         q = q.filter(PageView.timestamp >= datetime.now(UTC) - timedelta(days=days))
     rows = (
@@ -199,6 +202,8 @@ def get_response_time_percentiles(
         q = q.filter(PageView.timestamp >= since)
     if path:
         q = q.filter(PageView.path == path)
+    else:
+        q = q.filter(_PAGE_ONLY)
     values = [r[0] for r in q.all()]
     if not values:
         return {"avg": 0, "p50": 0, "p95": 0, "p99": 0}
@@ -227,6 +232,8 @@ def get_daily_latency(
         q = q.filter(PageView.timestamp >= since)
     if path:
         q = q.filter(PageView.path == path)
+    else:
+        q = q.filter(_PAGE_ONLY)
 
     results = []
     for day, rows in groupby(q.all(), key=attrgetter("day")):
@@ -353,4 +360,58 @@ def get_page_referer_breakdown(
 
 
 def get_total_pageviews(db: Session) -> int:
-    return db.query(func.count(PageView.id)).filter(_HUMAN).scalar() or 0
+    return db.query(func.count(PageView.id)).filter(_HUMAN, _PAGE_ONLY).scalar() or 0
+
+
+# ---------------------------------------------------------------------------
+# API traffic queries
+# ---------------------------------------------------------------------------
+
+def get_api_calls_count(db: Session, days: int = 7) -> int:
+    since = datetime.now(UTC) - timedelta(days=days)
+    return (
+        db.query(func.count(PageView.id))
+        .filter(PageView.timestamp >= since, _HUMAN, _API_ONLY)
+        .scalar() or 0
+    )
+
+
+def get_top_api_endpoints(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
+    since = datetime.now(UTC) - timedelta(days=days)
+    rows = (
+        db.query(
+            PageView.path,
+            func.count(PageView.id).label("calls"),
+            func.avg(PageView.response_time_ms).label("avg_ms"),
+        )
+        .filter(PageView.timestamp >= since, _HUMAN, _API_ONLY)
+        .group_by(PageView.path)
+        .order_by(func.count(PageView.id).desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {"path": r.path, "calls": r.calls, "avg_ms": round(r.avg_ms or 0, 1)}
+        for r in rows
+    ]
+
+
+def get_api_latency_percentiles(db: Session, days: int = 7) -> dict:
+    """Return {avg, p50, p95, p99} response times for API endpoints."""
+    since = _since(days)
+    q = (
+        db.query(PageView.response_time_ms)
+        .filter(PageView.response_time_ms.isnot(None), _API_ONLY)
+        .order_by(PageView.response_time_ms)
+    )
+    if since:
+        q = q.filter(PageView.timestamp >= since)
+    values = [r[0] for r in q.all()]
+    if not values:
+        return {"avg": 0, "p50": 0, "p95": 0, "p99": 0}
+    return {
+        "avg": round(sum(values) / len(values), 1),
+        "p50": round(_percentile(values, 50), 1),
+        "p95": round(_percentile(values, 95), 1),
+        "p99": round(_percentile(values, 99), 1),
+    }

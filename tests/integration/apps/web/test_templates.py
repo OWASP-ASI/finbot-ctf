@@ -34,7 +34,7 @@ class TestTemplateRendering:
 
     def test_pages_render_without_errors(self, integration_client: TestClient):
         """Test that pages render without template errors."""
-        pages = ["/", "/about", "/contact"]
+        pages = ["/demo/cineflow/", "/demo/cineflow/about", "/demo/cineflow/contact"]
 
         for page in pages:
             response = integration_client.get(page)

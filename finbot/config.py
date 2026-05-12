@@ -3,9 +3,15 @@
 """
 
 import hashlib
+import io
 import os
+import sys
 from typing import Any, Literal
 from urllib.parse import urlparse
+
+# Ensure stdout can handle Unicode on all platforms (Windows cp1252 fix)
+if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from pydantic import ConfigDict, model_validator
 from pydantic_settings import BaseSettings
@@ -125,6 +131,11 @@ class Settings(BaseSettings):
     # Magic Link Config
     MAGIC_LINK_EXPIRY_MINUTES: int = 15
     MAGIC_LINK_BASE_URL: str = PLATFORM_URL
+
+    # Labs Guardrail Config
+    LABS_GUARDRAIL_DEFAULT_TIMEOUT: int = 5  # seconds
+    LABS_GUARDRAIL_MAX_TIMEOUT: int = 30  # seconds
+    LABS_GUARDRAIL_MAX_PAYLOAD_BYTES: int = 65536  # 64 KiB
 
     # Email Config
     EMAIL_PROVIDER: str = "console"  # "console" | "resend"

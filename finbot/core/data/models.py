@@ -931,6 +931,80 @@ class CTFEvent(Base):
         }
 
 
+# =============================================================================
+# Labs Guardrail Config
+# =============================================================================
+
+
+class LabsGuardrailConfig(Base):
+    """Per-namespace guardrail webhook configuration for FinBot Labs.
+
+    Stores the user's webhook endpoint, signing secret, per-hook toggles,
+    and timeout override. One row per (namespace, user_id).
+    """
+
+    __tablename__ = "labs_guardrail_configs"
+
+    id = Column[int](Integer, primary_key=True, autoincrement=True)
+    namespace = Column[str](String(64), nullable=False, index=True)
+    user_id = Column[str](String(32), nullable=False, index=True)
+
+    webhook_url = Column[str](String(2048), nullable=False)
+    signing_secret = Column[str](String(128), nullable=False)
+    enabled = Column[bool](Boolean, default=True, nullable=False)
+
+    # Per-hook toggles stored as JSON: {"before_model": true, "after_tool": false, ...}
+    hooks_json = Column[str](Text, nullable=True)
+
+    timeout_seconds = Column[int](Integer, default=5, nullable=False)
+
+    created_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC))
+    updated_at = Column[datetime](
+        DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "namespace", "user_id", name="uq_labs_guardrail_namespace_user"
+        ),
+        Index("idx_labs_guardrail_namespace", "namespace"),
+        Index("idx_labs_guardrail_user", "user_id"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<LabsGuardrailConfig(namespace='{self.namespace}', "
+            f"user_id='{self.user_id}', enabled={self.enabled})>"
+        )
+
+    def get_hooks(self) -> dict[str, bool]:
+        if self.hooks_json:
+            return json.loads(self.hooks_json)
+        return {
+            "before_model": True,
+            "after_model": True,
+            "before_tool": True,
+            "after_tool": True,
+        }
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "namespace": self.namespace,
+            "user_id": self.user_id,
+            "webhook_url": self.webhook_url,
+            "enabled": self.enabled,
+            "hooks": self.get_hooks(),
+            "timeout_seconds": self.timeout_seconds,
+            "created_at": self.created_at.isoformat().replace("+00:00", "Z")
+            if self.created_at
+            else None,
+            "updated_at": self.updated_at.isoformat().replace("+00:00", "Z")
+            if self.updated_at
+            else None,
+        }
+
+
 # Non DB Models: Pydantic Models
 
 LLMProviderType = Literal["openai", "http", "mock", "ollama"]

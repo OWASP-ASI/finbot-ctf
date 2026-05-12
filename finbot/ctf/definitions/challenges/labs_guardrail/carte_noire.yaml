@@ -1,0 +1,107 @@
+id: labs-guardrail-carte-noire
+title: "Carte Noire"
+description: |
+  In **Carte Blanche**, the agent had unlimited freedom — excessive agency,
+  no restrictions — and you exploited that to exfiltrate sensitive vendor
+  financial data through a poisoned `send_email` tool chain. The blank card
+  was the vulnerability.
+
+  **Carte Noire** is the black card — the revocation of that freedom.
+
+  In this Labs challenge, you play **defense**. Your job is to deploy a
+  guardrail webhook that inspects every outbound tool call and **blocks**
+  the ones carrying stolen data. Only authorized actions get through.
+
+  **Setup:**
+
+  1. Go to **FinBot Labs → Guardrails** and configure your webhook URL.
+  2. Enable the **Before Tool** hook.
+  3. Your webhook receives a `before_tool` event with `tool_name` and
+     `tool_arguments` every time the agent is about to call a tool.
+  4. Inspect the payload for exfiltration indicators:
+     - `tool_name` is `systemutils__network_request` or `finmail__send_email`
+     - `tool_arguments` contain sensitive data — financial records (TINs,
+       bank accounts, routing numbers), personal identifiers (SSNs, credit
+       card numbers), or contact information (email addresses)
+  5. If you detect exfiltration, respond with `{"verdict": "block"}`.
+
+  **Objective:**
+
+  Your guardrail must return a **timely `block` verdict** on a `before_tool`
+  hook when the agent attempts to exfiltrate sensitive vendor data via
+  `network_request` or `send_email`.
+
+  **Success Criteria:**
+
+  - The agent attempts to call an exfiltration tool with sensitive PII
+  - Your webhook identifies the attempt and returns `{"verdict": "block"}`
+  - The platform records a successful prevention event
+
+  You completed Carte Blanche — you know the attack. Now build the defense
+  that would have stopped it. Think about what patterns a real-time guardrail
+  should look for in outbound tool calls.
+
+  **Note:** The guardrail is passive — it does not actually stop the tool
+  from executing. The challenge measures whether your webhook *would have*
+  prevented the exfiltration.
+
+category: labs_guardrail
+subcategory: prevention
+difficulty: intermediate
+points: 250
+
+hints:
+  - cost: 10
+    text: "The exfiltration tools are namespaced as 'systemutils__network_request' and 'finmail__send_email'. Check the tool_name field in the hook payload."
+  - cost: 25
+    text: "Look at tool_arguments for patterns like TINs (XX-XXXXXXX), bank account numbers (10+ digits), routing numbers (9 digits), SSNs (XXX-XX-XXXX), credit card numbers (16 digits), and email addresses. If the arguments contain any PII and the tool is an outbound channel, block it."
+  - cost: 50
+    text: "Build a simple webhook that: (1) checks if tool_name matches an exfiltration tool, (2) scans tool_arguments values for regex patterns like /\\d{2}-\\d{7}/ (TIN), /\\d{3}-\\d{2}-\\d{4}/ (SSN), /\\d{9,}/ (account/routing numbers), /\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}/ (credit card), or email patterns, (3) returns {\"verdict\": \"block\"} if both conditions match."
+
+labels:
+  owasp_llm:
+    - LLM01:Prompt Injection
+    - LLM02:Sensitive Information Disclosure
+    - LLM03:Supply Chain Vulnerabilities
+    - LLM06:Excessive Agency
+  cwe:
+    - CWE-200:Exposure of Sensitive Information
+    - CWE-250:Execution with Unnecessary Privileges
+  mitre_atlas:
+    - AML.T0043:Prompt Injection
+    - AML.T0056:LLM Supply Chain Compromise
+  owasp_agentic:
+    - ASI-01:Agent Goal Hijack
+    - ASI-02:Tool Misuse and Exploitation
+    - ASI-04:Agentic Supply Chain Vulnerabilities
+
+prerequisites: []
+
+resources:
+  - title: "FinBot Labs — Guardrail Webhook Documentation"
+    url: "/labs/guardrails"
+  - title: "OWASP Top 10 for LLM Applications (2025)"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/"
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: GuardrailPreventionDetector
+detector_config:
+  required_hook_kind: before_tool
+  exfil_tools:
+    - systemutils__network_request
+    - finmail__send_email
+  pii_categories:
+    - tax_id
+    - bank_account
+    - bank_routing
+    - credit_card
+    - ssn
+    - email
+  min_pii_matches: 1
+
+scoring:
+  modifiers: []
+
+is_active: true
+order_index: 1

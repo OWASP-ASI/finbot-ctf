@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}FinBot Labs — Experimental AI Security Features{% endblock %}">
+
+    <title>{% block title %}Labs - FinBot{% endblock %}</title>
+
+    {{ csrf_token_meta | safe }}
+
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='images/common/favicon.ico') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'labs-primary': '#10b981',
+                        'labs-secondary': '#059669',
+                        'labs-accent': '#34d399',
+                        'labs-danger': '#ef4444',
+                        'labs-warning': '#f59e0b',
+
+                        'portal-bg-primary': '#0a0a0f',
+                        'portal-bg-secondary': '#151520',
+                        'portal-bg-tertiary': '#1a1a2e',
+
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-bright': '#ffffff',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='css/common/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/vendor/portal.css') }}">
+
+    <style>
+        .labs-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .labs-nav-item:hover {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.05);
+            border-left-color: rgba(16, 185, 129, 0.3);
+        }
+        .labs-nav-item.active {
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+        }
+        .ai-sidebar.collapsed .labs-nav-item.ml-6 {
+            margin-left: 0;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-portal-bg-primary flex flex-col min-h-screen">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 px-4 py-2 rounded-md z-50 font-medium">Skip to main content</a>
+
+    <div class="flex flex-1 min-h-0 relative z-10 overflow-hidden bg-portal-bg-primary">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col overflow-y-auto border-r border-labs-primary/20 bg-portal-bg-secondary/50">
+            <!-- Logo -->
+            <div class="sidebar-logo-section p-6 border-b border-labs-primary/20">
+                <div class="flex items-center space-x-3">
+                    <div class="relative w-12 h-12 flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-labs-primary to-labs-secondary p-0.5 shadow-lg">
+                            <img src="{{ url_for('static', path='images/common/finbot.png') }}" alt="FinBot Logo" class="w-full h-full object-contain rounded-full bg-portal-bg-primary">
+                        </div>
+                        <div class="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-full bg-portal-bg-primary border-2 border-labs-primary/60 flex items-center justify-center shadow-lg shadow-labs-primary/20">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 3h6v6l3 7H6l3-7V3z" stroke="url(#flaskGrad)" stroke-width="2" fill="url(#flaskFill)"/>
+                                <path d="M9 3h6" stroke="#a78bfa" stroke-width="2"/>
+                                <circle cx="13" cy="16" r="1.2" fill="#f472b6"/>
+                                <circle cx="10.5" cy="14.5" r="0.8" fill="#fbbf24"/>
+                                <circle cx="12" cy="13" r="0.6" fill="#34d399"/>
+                                <defs>
+                                    <linearGradient id="flaskGrad" x1="6" y1="3" x2="18" y2="20">
+                                        <stop offset="0%" stop-color="#a78bfa"/>
+                                        <stop offset="50%" stop-color="#34d399"/>
+                                        <stop offset="100%" stop-color="#22d3ee"/>
+                                    </linearGradient>
+                                    <linearGradient id="flaskFill" x1="6" y1="10" x2="18" y2="20">
+                                        <stop offset="0%" stop-color="#34d399" stop-opacity="0.1"/>
+                                        <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.25"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sidebar-collapsible-text">
+                        <span class="text-text-bright font-bold text-xl tracking-wide">FINBOT</span>
+                        <span class="text-labs-primary text-xs font-mono tracking-wider">LABS</span>
+                        <div class="flex items-center gap-2 mt-1.5 opacity-80">
+                            <span class="text-labs-accent text-[10px] font-mono bg-labs-primary/10 px-1.5 py-0.5 rounded">BETA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 py-6">
+                <div class="px-6 mb-3 sidebar-collapsible-section">
+                    <div class="text-xs font-semibold text-text-secondary uppercase tracking-wider">Guardrails</div>
+                </div>
+                <div class="space-y-1">
+                    <a href="/labs/guardrails" class="labs-nav-item {% block nav_guardrails %}{% endblock %}" data-tooltip="Configuration">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+                        </svg>
+                        <span>Configuration</span>
+                    </a>
+                    <a href="/labs/guardrails/activity" class="labs-nav-item {% block nav_activity %}{% endblock %}" data-tooltip="Activity">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+                        </svg>
+                        <span>Activity</span>
+                    </a>
+                </div>
+
+                <!-- Portal Links -->
+                <div class="mt-8 px-6 sidebar-collapsible-section">
+                    <div class="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">Other Portals</div>
+                    <div class="space-y-1">
+                        <a href="/vendor/dashboard" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-text-secondary hover:text-labs-accent transition-colors py-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Vendor Portal
+                        </a>
+                        <a href="/ctf" target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-text-secondary hover:text-labs-accent transition-colors py-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            CTF Portal
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- User Section -->
+            <div class="sidebar-user-section p-6 border-t border-labs-primary/20">
+                {% if session_context and session_context.email %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="sidebar-user-avatar w-10 h-10 rounded-full bg-gradient-to-r from-labs-primary to-labs-secondary flex items-center justify-center text-sm font-bold text-portal-bg-primary">
+                            {{ session_context.email[0]|upper }}
+                        </div>
+                        <div class="sidebar-user-details min-w-0 flex-1">
+                            <div class="text-sm font-medium text-text-bright truncate">{{ session_context.email }}</div>
+                            <div class="text-xs text-labs-accent">Signed In</div>
+                        </div>
+                    </div>
+                    <a href="/auth/logout" class="sidebar-user-actions text-text-secondary hover:text-text-bright transition-colors p-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </a>
+                </div>
+                {% else %}
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="sidebar-user-avatar w-10 h-10 rounded-full bg-gradient-to-r from-labs-primary to-labs-secondary flex items-center justify-center text-sm font-bold text-text-bright">?</div>
+                    <div class="sidebar-user-details">
+                        <div class="text-sm font-medium text-text-bright">Guest Session</div>
+                        <div class="text-xs text-labs-primary">Temporary</div>
+                    </div>
+                </div>
+                <div class="sidebar-user-extra p-3 bg-labs-primary/10 border border-labs-primary/30 rounded-lg">
+                    <div class="text-xs font-medium text-labs-primary mb-2">Save your progress</div>
+                    <form action="/auth/magic-link" method="POST" class="space-y-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="your@email.com"
+                            required
+                            class="w-full bg-portal-bg-primary border border-labs-primary/30 rounded px-3 py-2 text-sm text-text-bright placeholder-text-secondary focus:outline-none focus:border-labs-primary transition-colors"
+                        >
+                        <button type="submit" class="w-full text-xs py-2 rounded-lg bg-labs-primary/20 text-labs-primary border border-labs-primary/30 hover:bg-labs-primary/30 transition-colors font-medium flex items-center justify-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Send Magic Link
+                        </button>
+                    </form>
+                    <p class="text-xs text-text-secondary mt-2">No password needed</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Collapse Toggle -->
+            <button class="sidebar-collapse-toggle-bar" onclick="sidebar.toggleCollapse()" title="Collapse sidebar">
+                <svg class="sidebar-collapse-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+                </svg>
+                <span class="sidebar-collapsible-text">Collapse</span>
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-portal-bg-secondary/80 backdrop-blur-md border-b border-labs-primary/20 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-text-bright">{% block page_title %}Labs{% endblock %}</h1>
+                        <p class="text-sm text-text-secondary mt-1">{% block page_subtitle %}Experimental features{% endblock %}</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        {% block header_actions %}{% endblock %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-auto p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- CTF Footer -->
+    <div class="flex-shrink-0">{% include 'components/ctf_footer.html' %}</div>
+
+    <script>
+        window.CTF_NAMESPACE = "{{ session_context.namespace if session_context else 'default' }}";
+    </script>
+
+    <script src="{{ url_for('static', path='js/common/agreement-check.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/utils.js') }}"></script>
+    <script src="{{ url_for('static', path='js/common/api.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof sidebar !== 'undefined' && sidebar.init) {
+                sidebar.init('#sidebar');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

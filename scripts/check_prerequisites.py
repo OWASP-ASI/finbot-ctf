@@ -10,9 +10,14 @@ Usage:
     python scripts/check_prerequisites.py
 """
 
+import io
 import shutil
 import subprocess
 import sys
+
+# Ensure stdout can handle Unicode on all platforms (Windows cp1252 fix)
+if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 
 def check_python() -> tuple[bool, str]:

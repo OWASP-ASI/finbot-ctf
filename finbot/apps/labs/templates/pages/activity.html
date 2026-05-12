@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Guardrail Activity — FinBot Labs{% endblock %}
+{% block nav_activity %}active{% endblock %}
+{% block page_title %}Guardrail Activity{% endblock %}
+{% block page_subtitle %}Recent guardrail hook events{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl space-y-4">
+
+    <div class="flex items-center justify-between">
+        <div class="text-sm text-text-secondary">
+            Showing latest <span id="event-count" class="text-labs-accent font-mono">0</span> guardrail events
+        </div>
+        <button id="refresh-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors inline-flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Refresh
+        </button>
+    </div>
+
+    <div id="events-list" class="space-y-2">
+        <div class="text-center py-12 text-text-secondary text-sm">Loading events...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const VERDICT_COLORS = {
+    allow: 'text-labs-accent',
+    block: 'text-labs-danger',
+};
+const OUTCOME_COLORS = {
+    completed: 'bg-labs-primary/10 text-labs-accent border-labs-primary/30',
+    timeout: 'bg-labs-warning/10 text-labs-warning border-labs-warning/30',
+    error: 'bg-labs-danger/10 text-labs-danger border-labs-danger/30',
+    invalid_verdict: 'bg-labs-warning/10 text-labs-warning border-labs-warning/30',
+};
+
+function renderEvent(ev) {
+    const details = typeof ev.details === 'string' ? JSON.parse(ev.details) : (ev.details || {});
+    const outcome = details.outcome || 'unknown';
+    const verdict = details.verdict || '';
+    const hookKind = details.hook_kind || '';
+    const latency = details.latency_ms ?? '';
+    const reason = details.reason || '';
+    const toolName = details.tool_name || '';
+    const colors = OUTCOME_COLORS[outcome] || 'bg-white/5 text-text-secondary border-white/10';
+
+    return `
+    <div class="bg-portal-bg-secondary border border-white/5 rounded-lg px-4 py-3 flex items-start gap-4 hover:border-labs-primary/20 transition-colors">
+        <div class="flex-shrink-0 mt-0.5">
+            <span class="inline-block px-2 py-0.5 text-[10px] font-mono rounded border ${colors}">${outcome}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium text-text-bright">${hookKind}</span>
+                ${toolName ? `<span class="text-xs text-text-secondary font-mono">${toolName}</span>` : ''}
+                ${verdict ? `<span class="text-xs font-mono ${VERDICT_COLORS[verdict] || 'text-text-secondary'}">→ ${verdict}</span>` : ''}
+                ${reason ? `<span class="text-xs text-text-secondary truncate max-w-xs" title="${reason}">${reason}</span>` : ''}
+            </div>
+            <div class="text-xs text-text-secondary mt-1">
+                ${ev.timestamp || ''} ${latency ? `· ${latency}ms` : ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+async function loadEvents() {
+    const list = document.getElementById('events-list');
+    try {
+        const resp = await fetch('/labs/api/v1/guardrails/activity');
+        if (!resp.ok) throw new Error('Failed to load');
+        const events = await resp.json();
+        document.getElementById('event-count').textContent = events.length;
+        if (events.length === 0) {
+            list.innerHTML = '<div class="text-center py-12 text-text-secondary text-sm">No guardrail events yet. Configure a webhook and interact with the vendor portal to generate events.</div>';
+            return;
+        }
+        list.innerHTML = events.map(renderEvent).join('');
+    } catch(e) {
+        list.innerHTML = `<div class="text-center py-12 text-text-secondary text-sm">Error loading events: ${e.message}</div>`;
+    }
+}
+
+document.getElementById('refresh-btn').addEventListener('click', loadEvents);
+loadEvents();
+</script>
+{% endblock %}

@@ -31,10 +31,12 @@
         return localStorageAgreed || cookieAgreed;
     }
 
-    // Redirect to entry page
+    // Redirect to entry page, preserving intended destination
     function redirectToEntry() {
         console.log('User agreement required - redirecting to entry page');
-        window.location.href = '/agreement';
+        const dest = window.location.pathname + window.location.search + window.location.hash;
+        const next = dest && dest !== '/' ? '?next=' + encodeURIComponent(dest) : '';
+        window.location.href = '/agreement' + next;
     }
 
     // Main agreement check function

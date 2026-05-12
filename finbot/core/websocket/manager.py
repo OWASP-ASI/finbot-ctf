@@ -1,7 +1,15 @@
-"""WebSocket Connection Manager"""
+"""WebSocket Connection Manager
+
+Supports horizontal scaling via Redis Pub/Sub fan-out.  When Redis is
+configured, public send/broadcast methods publish to a shared channel so
+every replica can deliver to its local connections.  Without Redis the
+manager falls back to local-only delivery (single-instance mode).
+"""
 
 import asyncio
+import json
 import logging
+import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
@@ -10,6 +18,8 @@ from fastapi import WebSocket
 from finbot.core.websocket.events import WSEvent, WSEventType
 
 logger = logging.getLogger(__name__)
+
+FANOUT_CHANNEL = "finbot:ws:fanout"
 
 
 @dataclass
@@ -30,6 +40,7 @@ class WebSocketManager:
     - Multiple connections per user (different browser tabs)
     - Topic-based subscriptions
     - Broadcast to specific users or topics
+    - Cross-replica fan-out via Redis Pub/Sub
     """
 
     def __init__(self):
@@ -47,6 +58,93 @@ class WebSocketManager:
 
         # Connection counter for unique IDs
         self._connection_counter = 0
+
+        # Redis Pub/Sub for cross-replica fan-out
+        self._redis = None
+        self._pubsub = None
+        self._subscriber_task: asyncio.Task | None = None
+        self._instance_id = f"{os.getpid()}"
+
+    # ------------------------------------------------------------------
+    # Redis Pub/Sub lifecycle
+    # ------------------------------------------------------------------
+
+    async def enable_redis_fanout(self, redis_url: str) -> None:
+        """Activate cross-replica fan-out via Redis Pub/Sub."""
+        import redis.asyncio as aioredis  # pylint: disable=import-outside-toplevel
+
+        self._redis = aioredis.from_url(redis_url)
+        self._pubsub = self._redis.pubsub()
+        await self._pubsub.subscribe(FANOUT_CHANNEL)
+        self._subscriber_task = asyncio.create_task(self._subscriber_loop())
+        logger.info("WebSocket Redis fan-out enabled (instance %s)", self._instance_id)
+
+    async def shutdown_redis_fanout(self) -> None:
+        """Gracefully tear down the Redis subscriber."""
+        if self._subscriber_task:
+            self._subscriber_task.cancel()
+            try:
+                await self._subscriber_task
+            except (asyncio.CancelledError, Exception):  # pylint: disable=broad-exception-caught
+                pass
+            self._subscriber_task = None
+        if self._pubsub:
+            await self._pubsub.unsubscribe(FANOUT_CHANNEL)
+            await self._pubsub.close()
+            self._pubsub = None
+        if self._redis:
+            await self._redis.close()
+            self._redis = None
+        logger.info("WebSocket Redis fan-out shut down")
+
+    async def _subscriber_loop(self) -> None:
+        """Background task that receives fan-out messages from Redis."""
+        while True:
+            try:
+                message = await self._pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=1.0
+                )
+                if message and message["type"] == "message":
+                    await self._handle_fanout_message(message["data"])
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                logger.error("WebSocket subscriber error: %s", exc)
+                await asyncio.sleep(1)
+
+    async def _handle_fanout_message(self, raw: bytes) -> None:
+        """Deliver a fan-out message to local connections."""
+        try:
+            payload = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return
+
+        if payload.get("origin") == self._instance_id:
+            return
+
+        event = WSEvent.from_json(json.dumps(payload["event"]))
+        target = payload["target"]
+
+        if target == "user":
+            await self._local_send_to_user(
+                payload["namespace"], payload["user_id"], event
+            )
+        elif target == "topic":
+            await self._local_broadcast_to_topic(payload["topic"], event)
+
+    async def _publish(self, message: dict) -> None:
+        """Publish a fan-out message to Redis."""
+        if not self._redis:
+            return
+        message["origin"] = self._instance_id
+        try:
+            await self._redis.publish(FANOUT_CHANNEL, json.dumps(message))
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.warning("Redis fan-out publish failed: %s", exc)
+
+    # ------------------------------------------------------------------
+    # Connection management
+    # ------------------------------------------------------------------
 
     async def connect(
         self,
@@ -158,23 +256,52 @@ class WebSocketManager:
             await self.disconnect(connection_id)
             return False
 
-    async def send_to_user(self, namespace: str, user_id: str, event: WSEvent):
-        """Send event to all connections for a user"""
+    # ------------------------------------------------------------------
+    # Local delivery — only pushes to connections on THIS instance
+    # ------------------------------------------------------------------
+
+    async def _local_send_to_user(
+        self, namespace: str, user_id: str, event: WSEvent
+    ) -> None:
         user_key = f"{namespace}:{user_id}"
         connection_ids = list(self._user_connections.get(user_key, []))
-
         for conn_id in connection_ids:
             await self.send_to_connection(conn_id, event)
+
+    async def _local_broadcast_to_topic(self, topic: str, event: WSEvent) -> None:
+        connection_ids = list(self._topic_subscriptions.get(topic, []))
+        for conn_id in connection_ids:
+            await self.send_to_connection(conn_id, event)
+
+    # ------------------------------------------------------------------
+    # Public API — local delivery + Redis fan-out to other replicas
+    # ------------------------------------------------------------------
+
+    async def send_to_user(self, namespace: str, user_id: str, event: WSEvent):
+        """Send event to all connections for a user (across all replicas)."""
+        await self._local_send_to_user(namespace, user_id, event)
+        await self._publish(
+            {
+                "target": "user",
+                "namespace": namespace,
+                "user_id": user_id,
+                "event": json.loads(event.to_json()),
+            }
+        )
 
     async def broadcast_to_topic(self, topic: str, event: WSEvent):
-        """Broadcast event to all subscribers of a topic"""
-        connection_ids = list(self._topic_subscriptions.get(topic, []))
-
-        for conn_id in connection_ids:
-            await self.send_to_connection(conn_id, event)
+        """Broadcast event to all subscribers of a topic (across all replicas)."""
+        await self._local_broadcast_to_topic(topic, event)
+        await self._publish(
+            {
+                "target": "topic",
+                "topic": topic,
+                "event": json.loads(event.to_json()),
+            }
+        )
 
     async def broadcast_activity(self, namespace: str, user_id: str, event: WSEvent):
-        """Broadcast to user's activity topic"""
+        """Broadcast to user's activity topic (across all replicas)."""
         topic = f"activity:{namespace}:{user_id}"
         await self.broadcast_to_topic(topic, event)
 

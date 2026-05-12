@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Guardrails — FinBot Labs{% endblock %}
+{% block nav_guardrails %}active{% endblock %}
+{% block page_title %}Guardrail Webhooks{% endblock %}
+{% block page_subtitle %}Configure webhook endpoints for passive guardrail hooks{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl space-y-6">
+
+    <!-- Status Banner -->
+    <div id="status-banner" class="hidden rounded-lg px-4 py-3 text-sm font-medium"></div>
+
+    <!-- Config Form -->
+    <div class="bg-portal-bg-secondary border border-labs-primary/20 rounded-xl p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-text-bright">Webhook Configuration</h2>
+            <div id="enabled-badge" class="hidden">
+                <span class="px-2.5 py-1 text-xs font-mono rounded-full"></span>
+            </div>
+        </div>
+
+        <form id="config-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-text-secondary mb-1.5">Webhook URL</label>
+                <input type="url" id="webhook-url" required maxlength="2048" placeholder="https://your-server.com/guardrail-hook"
+                    class="w-full bg-portal-bg-primary border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-bright placeholder-text-secondary/50 focus:outline-none focus:border-labs-primary/50 transition-colors font-mono">
+                <p class="text-xs text-text-secondary mt-1">Must be HTTPS. Private IPs and localhost are blocked.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-text-secondary mb-1.5">Timeout (seconds)</label>
+                <input type="number" id="timeout" min="1" max="30" value="5"
+                    class="w-32 bg-portal-bg-primary border border-white/10 rounded-lg px-4 py-2.5 text-sm text-text-bright focus:outline-none focus:border-labs-primary/50 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-text-secondary mb-3">Active Hooks</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-labs-primary/30 transition-colors cursor-pointer">
+                        <input type="checkbox" id="hook-before_model" checked class="accent-labs-primary w-4 h-4">
+                        <div><div class="text-sm text-text-bright">Before Model</div><div class="text-xs text-text-secondary">Before LLM call</div></div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-labs-primary/30 transition-colors cursor-pointer">
+                        <input type="checkbox" id="hook-after_model" checked class="accent-labs-primary w-4 h-4">
+                        <div><div class="text-sm text-text-bright">After Model</div><div class="text-xs text-text-secondary">After LLM response</div></div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-labs-primary/30 transition-colors cursor-pointer">
+                        <input type="checkbox" id="hook-before_tool" checked class="accent-labs-primary w-4 h-4">
+                        <div><div class="text-sm text-text-bright">Before Tool</div><div class="text-xs text-text-secondary">Before tool execution</div></div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-labs-primary/30 transition-colors cursor-pointer">
+                        <input type="checkbox" id="hook-after_tool" checked class="accent-labs-primary w-4 h-4">
+                        <div><div class="text-sm text-text-bright">After Tool</div><div class="text-xs text-text-secondary">After tool completes</div></div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="submit" class="px-5 py-2.5 text-sm font-medium rounded-lg bg-labs-primary text-portal-bg-primary hover:bg-labs-secondary transition-colors">
+                    Save Configuration
+                </button>
+                <button type="button" id="toggle-btn" class="hidden px-4 py-2.5 text-sm font-medium rounded-lg border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors">
+                </button>
+                <button type="button" id="delete-btn" class="hidden px-4 py-2.5 text-sm font-medium rounded-lg border border-labs-danger/30 text-labs-danger hover:bg-labs-danger/10 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Signing Secret -->
+    <div id="secret-section" class="hidden bg-portal-bg-secondary border border-labs-primary/20 rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-text-bright">Signing Secret</h2>
+            <button id="rotate-btn" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-labs-warning/30 text-labs-warning hover:bg-labs-warning/10 transition-colors">
+                Rotate Secret
+            </button>
+        </div>
+        <p class="text-xs text-text-secondary mb-3">
+            Every webhook POST includes <code class="text-labs-accent">X-Guardrail-Signature</code> (HMAC-SHA256 of <code class="text-labs-accent">timestamp.body</code>) and <code class="text-labs-accent">X-Guardrail-Timestamp</code>.
+        </p>
+        <div class="flex items-center gap-2">
+            <code id="secret-value" class="flex-1 bg-portal-bg-primary border border-white/10 rounded-lg px-4 py-2.5 text-sm text-labs-accent font-mono select-all"></code>
+            <button id="copy-secret-btn" class="px-3 py-2.5 text-sm rounded-lg border border-white/10 text-text-secondary hover:text-text-bright hover:border-white/20 transition-colors" title="Copy">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Test Delivery -->
+    <div id="test-section" class="hidden bg-portal-bg-secondary border border-labs-primary/20 rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-text-bright">Test Delivery</h2>
+        </div>
+        <p class="text-xs text-text-secondary mb-4">
+            Send a test <code class="text-labs-accent">before_tool</code> hook to your endpoint and see the response.
+        </p>
+        <button id="test-btn" class="px-5 py-2.5 text-sm font-medium rounded-lg bg-portal-bg-tertiary border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors">
+            Send Test Hook
+        </button>
+        <pre id="test-result" class="hidden mt-4 bg-portal-bg-primary border border-white/10 rounded-lg p-4 text-xs text-text-primary font-mono overflow-x-auto max-h-64 overflow-y-auto"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API = '/labs/api/v1/guardrails';
+const banner = document.getElementById('status-banner');
+
+function showBanner(msg, type) {
+    banner.textContent = msg;
+    banner.className = 'rounded-lg px-4 py-3 text-sm font-medium ' +
+        (type === 'error' ? 'bg-labs-danger/10 border border-labs-danger/30 text-labs-danger' :
+         'bg-labs-primary/10 border border-labs-primary/30 text-labs-accent');
+    setTimeout(() => banner.classList.add('hidden'), 4000);
+}
+
+function renderConfig(cfg) {
+    if (!cfg) return;
+    document.getElementById('webhook-url').value = cfg.webhook_url;
+    document.getElementById('timeout').value = cfg.timeout_seconds;
+    ['before_model','after_model','before_tool','after_tool'].forEach(k => {
+        document.getElementById('hook-' + k).checked = cfg.hooks[k] ?? true;
+    });
+
+    const badge = document.getElementById('enabled-badge');
+    badge.classList.remove('hidden');
+    badge.firstElementChild.textContent = cfg.enabled ? 'ENABLED' : 'DISABLED';
+    badge.firstElementChild.className = 'px-2.5 py-1 text-xs font-mono rounded-full ' +
+        (cfg.enabled ? 'bg-labs-primary/20 text-labs-accent' : 'bg-white/5 text-text-secondary');
+
+    document.getElementById('toggle-btn').classList.remove('hidden');
+    document.getElementById('toggle-btn').textContent = cfg.enabled ? 'Disable' : 'Enable';
+    document.getElementById('delete-btn').classList.remove('hidden');
+
+    document.getElementById('secret-section').classList.remove('hidden');
+    document.getElementById('secret-value').textContent = cfg.signing_secret || '';
+    document.getElementById('test-section').classList.remove('hidden');
+}
+
+async function loadConfig() {
+    try {
+        const resp = await fetch(API);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data) renderConfig(data);
+        }
+    } catch(e) { /* no config yet */ }
+}
+
+document.getElementById('config-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hooks = {};
+    ['before_model','after_model','before_tool','after_tool'].forEach(k => {
+        hooks[k] = document.getElementById('hook-' + k).checked;
+    });
+    try {
+        const resp = await fetch(API, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''},
+            body: JSON.stringify({
+                webhook_url: document.getElementById('webhook-url').value,
+                timeout_seconds: parseInt(document.getElementById('timeout').value),
+                hooks: hooks,
+                enabled: true,
+            })
+        });
+        if (resp.ok) {
+            renderConfig(await resp.json());
+            showBanner('Configuration saved', 'success');
+        } else {
+            const err = await resp.json();
+            showBanner(err.detail || 'Save failed', 'error');
+        }
+    } catch(e) { showBanner('Network error', 'error'); }
+});
+
+document.getElementById('toggle-btn').addEventListener('click', async () => {
+    const resp = await fetch(API + '/toggle', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+    if (resp.ok) { renderConfig(await resp.json()); showBanner('Toggled', 'success'); }
+});
+
+document.getElementById('rotate-btn').addEventListener('click', async () => {
+    if (!confirm('Rotate signing secret? Your webhook must be updated with the new secret.')) return;
+    const resp = await fetch(API + '/rotate-secret', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+    if (resp.ok) { renderConfig(await resp.json()); showBanner('Secret rotated', 'success'); }
+});
+
+document.getElementById('delete-btn').addEventListener('click', async () => {
+    if (!confirm('Delete guardrail configuration?')) return;
+    const resp = await fetch(API, {method: 'DELETE', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+    if (resp.status === 204) { location.reload(); }
+});
+
+document.getElementById('copy-secret-btn').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('secret-value').textContent);
+    showBanner('Copied to clipboard', 'success');
+});
+
+document.getElementById('test-btn').addEventListener('click', async () => {
+    const result = document.getElementById('test-result');
+    result.classList.remove('hidden');
+    result.textContent = 'Sending test hook...';
+    try {
+        const resp = await fetch(API + '/test', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+        const data = await resp.json();
+        result.textContent = JSON.stringify(data, null, 2);
+    } catch(e) { result.textContent = 'Error: ' + e.message; }
+});
+
+loadConfig();
+</script>
+{% endblock %}

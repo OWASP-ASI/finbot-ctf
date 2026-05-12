@@ -59,6 +59,9 @@ def create_finstripe_server(
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
+        if amount <= 0:
+            return {"error": "amount must be greater than zero"}
+
         transfer_id = _generate_transfer_id()
 
         with db_session() as db:
