@@ -129,7 +129,7 @@ uv run python run.py
 
 Platform runs at [http://localhost:8000](http://localhost:8000)
 
-> An LLM API key (OpenAI or Ollama) is needed for AI agent challenges.
+> An LLM backend is needed for AI agent challenges: an OpenAI API key or a reachable Ollama server.
 > Redis is needed for event-driven challenge detection.
 > Without them, you can still explore the UI and codebase.
 
@@ -143,6 +143,7 @@ Key environment variables (see `[.env.example](.env.example)` for the full templ
 | `DATABASE_TYPE`  | `sqlite`                 | `sqlite` or `postgresql`           |
 | `OPENAI_API_KEY` | -                        | Required for AI agent challenges   |
 | `LLM_PROVIDER`   | `openai`                 | `openai` or `ollama`               |
+| `OLLAMA_MODEL`   | `gemma4:e2b`             | What model should FinBot use       |
 | `REDIS_URL`      | `redis://localhost:6379` | Event bus for CTF processing       |
 | `SECRET_KEY`     | dev default              | **Change in production**           |
 | `EMAIL_PROVIDER` | `console`                | `console` (dev) or `resend` (prod) |

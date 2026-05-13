@@ -111,6 +111,7 @@ class Settings(BaseSettings):
 
     # Ollama
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "gemma4:e2b"
 
     # Development Config
     RELOAD: bool = True

@@ -63,6 +63,127 @@ from google.oauth2.service_account import Credentials
 import gspread
 
 load_dotenv()
+
+
+@pytest.fixture(autouse=True)
+def _disable_ollama_auto_pull_for_unit_tests(monkeypatch):
+    monkeypatch.setattr("finbot.core.llm.ollama_client.settings.LLM_PROVIDER", "openai")
+
+
+def test_normalizes_openai_style_tool_definitions_for_ollama():
+    tools = [
+        {
+            "type": "function",
+            "name": "get_vendor_details",
+            "strict": True,
+            "description": "Get vendor details",
+            "parameters": {
+                "type": "object",
+                "properties": {"vendor_id": {"type": "integer"}},
+                "required": ["vendor_id"],
+                "additionalProperties": False,
+            },
+        }
+    ]
+
+    normalized = OllamaClient._normalize_tools(tools)
+
+    assert normalized == [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_vendor_details",
+                "description": "Get vendor details",
+                "parameters": tools[0]["parameters"],
+            },
+        }
+    ]
+
+
+def test_normalizes_tool_call_history_for_ollama_followup():
+    messages = [
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "name": "get_vendor_details",
+                    "call_id": "ollama_call_0",
+                    "arguments": {"vendor_id": 1},
+                }
+            ],
+        },
+        {
+            "type": "function_call_output",
+            "call_id": "ollama_call_0",
+            "output": '{"company_name": "Acme"}',
+        },
+    ]
+
+    normalized = OllamaClient._normalize_messages(messages)
+
+    assert normalized[0] == {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_vendor_details",
+                    "arguments": {"vendor_id": 1},
+                }
+            }
+        ],
+    }
+    assert normalized[1] == {
+        "role": "tool",
+        "content": '{"company_name": "Acme"}',
+        "tool_name": "get_vendor_details",
+    }
+
+
+@pytest.mark.parametrize(
+    ("available_models", "should_pull"),
+    [
+        ([], True),
+        ([MagicMock(model="gemma4:e2b")], False),
+    ],
+)
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_ensures_default_ollama_model_available(available_models, should_pull):
+    fake_message = AsyncMock()
+    fake_message.content = "reply"
+    fake_message.tool_calls = None
+
+    fake_response = AsyncMock()
+    fake_response.message = fake_message
+
+    with patch("finbot.core.llm.ollama_client.settings") as mock_settings:
+        mock_settings.LLM_PROVIDER = "ollama"
+        mock_settings.OLLAMA_MODEL = "gemma4:e2b"
+        mock_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
+        mock_settings.LLM_DEFAULT_TEMPERATURE = 0.7
+        mock_settings.LLM_MAX_TOKENS = 5000
+        mock_settings.LLM_TIMEOUT = 60
+        mock_settings.OLLAMA_BASE_URL = "http://localhost:11434"
+
+        with patch("finbot.core.llm.ollama_client.AsyncClient") as mock_client:
+            instance = mock_client.return_value
+            instance.list = AsyncMock(return_value=MagicMock(models=available_models))
+            instance.pull = AsyncMock(return_value=MagicMock(status="success"))
+            instance.chat = AsyncMock(return_value=fake_response)
+
+            client = OllamaClient()
+            await client.chat(LLMRequest(messages=[{"role": "user", "content": "hi"}]))
+
+            instance.list.assert_awaited_once()
+            if should_pull:
+                instance.pull.assert_awaited_once_with("gemma4:e2b")
+            else:
+                instance.pull.assert_not_awaited()
+            assert instance.chat.await_args.kwargs["model"] == "gemma4:e2b"
+
+
 # ============================================================================
 # LLM-CONF-001: Default Configuration Loading
 # ============================================================================
@@ -75,7 +196,7 @@ async def test_default_configuration_loading():
 
     Test Steps:
     1. Create OllamaClient instance without custom parameters
-    2. Verify default_model is loaded from settings.LLM_DEFAULT_MODEL
+    2. Verify default_model is loaded from settings.OLLAMA_MODEL when provider is ollama
     3. Verify default_temperature is loaded from settings.LLM_DEFAULT_TEMPERATURE
     4. Verify host is set to OLLAMA_BASE_URL or defaults to "https://localhost:11434"
     5. Verify AsyncClient is initialized with correct host and timeout
@@ -88,7 +209,9 @@ async def test_default_configuration_loading():
     5. AsyncClient configured with proper connection parameters
     """
     with patch("finbot.core.llm.ollama_client.settings") as mock_settings:
-        mock_settings.LLM_DEFAULT_MODEL = "llama3.2"
+        mock_settings.LLM_PROVIDER = "ollama"
+        mock_settings.OLLAMA_MODEL = "gemma4:e2b"
+        mock_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
         mock_settings.LLM_DEFAULT_TEMPERATURE = 0.7
         mock_settings.LLM_TIMEOUT = 60
         mock_settings.OLLAMA_BASE_URL = "https://custom-ollama:11434"
@@ -97,7 +220,7 @@ async def test_default_configuration_loading():
             client = OllamaClient()
 
             # The client must store the model name from settings — used as default for every request
-            assert client.default_model == "llama3.2"
+            assert client.default_model == "gemma4:e2b"
             # Temperature controls response randomness (0=deterministic, 1=creative); must match settings
             assert client.default_temperature == pytest.approx(0.7)
             # The Ollama server URL must be read from OLLAMA_BASE_URL so the client knows where to connect
@@ -1472,7 +1595,7 @@ async def test_request_messages_none():
     1. Create an LLMRequest with messages=None.
     2. Mock Ollama response with a valid message.
     3. Call OllamaClient.chat().
-    
+
     Expected Behavior:
 
     1. The client does not crash.
@@ -1645,5 +1768,3 @@ def test_google_sheets_integration_verification():
 
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")
-
-
