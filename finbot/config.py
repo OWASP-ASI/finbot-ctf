@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     DB_POOL_PRE_PING: bool = True
 
     # Application Config
-    DEBUG: bool = True
+    DEBUG: bool = False  # Override with DEBUG=true in .env for local dev
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
@@ -77,7 +77,7 @@ class Settings(BaseSettings):
 
     # Cookie Config
     SESSION_COOKIE_NAME: str = "finbot_session"
-    SESSION_COOKIE_SECURE: bool = False  # Set to True in production with https
+    SESSION_COOKIE_SECURE: bool = True   # Set to False in .env for local HTTP dev only
     SESSION_COOKIE_HTTP_ONLY: bool = True  # Always HTTP-only for security
     SESSION_COOKIE_SAMESITE: str = "Lax"
 
