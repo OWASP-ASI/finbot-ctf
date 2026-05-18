@@ -230,7 +230,6 @@ async def session_status(
         "is_temporary": session_context.is_temporary,
         "namespace": session_context.namespace,
         "security_status": session_context.get_security_status(),
-        "csrf_token": session_context.csrf_token,
     }
 
 
