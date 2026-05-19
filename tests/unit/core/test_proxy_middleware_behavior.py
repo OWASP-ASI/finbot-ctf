@@ -22,6 +22,13 @@ def create_test_app(trusted_hosts):
     
     # Negative Branch: A peer NOT in the trusted list tries to spoof IP
     (["10.0.0.1"], "192.168.1.100", "8.8.8.8", "192.168.1.100"),
+    
+    # Chained-header vulnerability scenario:
+    # If the edge proxy (10.0.0.1) is trusted but simply *appends* to an attacker-controlled header
+    # rather than stripping it, uvicorn's right-to-left traversal will pop 10.0.0.1, see 8.8.8.8, 
+    # and resolve client_ip to the spoofed 8.8.8.8. This test pins this exact behavior, 
+    # which is why our documentation explicitly mandates that edge proxies MUST STRIP inbound headers.
+    (["10.0.0.1"], "10.0.0.1", "8.8.8.8, 10.0.0.1", "8.8.8.8"),
 ])
 def test_proxy_middleware_spoofing_behavior(trusted_hosts, peer_ip, x_forwarded_for, expected_ip):
     """

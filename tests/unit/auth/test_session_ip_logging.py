@@ -39,4 +39,4 @@ def test_session_ip_change_logging(
             # Check log records
             log_records = [r for r in caplog.records if "IP change" in r.getMessage()]
             assert len(log_records) == 1
-            assert getattr(log_records[0], "trusted_source") == expected_trusted_source
+            assert getattr(log_records[0], "app.trusted_source") == expected_trusted_source
