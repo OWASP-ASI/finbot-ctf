@@ -456,8 +456,8 @@ class SessionManager:
                             current_ip,
                         )
                     else:
-                        logger.debug(
-                            "Untrusted IP change detected for session %s (TRUSTED_PROXY_IPS unset): %s -> %s",
+                        logger.info(
+                            "IP change observed (trusted_source=false) for session %s: %s -> %s",
                             session_id[:8],
                             session_context.original_ip,
                             current_ip,
