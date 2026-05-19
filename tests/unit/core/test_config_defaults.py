@@ -17,4 +17,8 @@ def test_session_cookie_secure_default_when_env_missing(monkeypatch, tmp_path):
     # Pass _env_file=None to ensure Pydantic doesn't read a stray .env file in the test dir.
     test_settings = Settings(_env_file=None)
     
+    # 1. Assert that without a loaded environment, the class-level default evaluates to True
+    assert Settings().SESSION_COOKIE_SECURE is True
+    
+    # 2. Assert that explicitly bypassing the .env file loading yields the same safe default
     assert test_settings.SESSION_COOKIE_SECURE is True
