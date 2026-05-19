@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     DB_POOL_PRE_PING: bool = True
 
     # Application Config
-    DEBUG: bool = False  # Override with DEBUG=true in .env for local dev
+    DEBUG: bool = True
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
