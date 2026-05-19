@@ -454,13 +454,15 @@ class SessionManager:
                             session_id[:8],
                             session_context.original_ip,
                             current_ip,
+                            extra={"trusted_source": True}
                         )
                     else:
                         logger.info(
-                            "IP change observed (trusted_source=false) for session %s: %s -> %s",
+                            "IP change observed for session %s: %s -> %s",
                             session_id[:8],
                             session_context.original_ip,
                             current_ip,
+                            extra={"trusted_source": False}
                         )
 
             # Tiered fingerprint validation
