@@ -149,7 +149,16 @@ from uvicorn.middleware.proxy_headers import (
     ProxyHeadersMiddleware,  # pylint: disable=ungrouped-imports
 )
 
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+if settings.TRUSTED_PROXY_IPS:
+    _trusted_proxies = [h.strip() for h in settings.TRUSTED_PROXY_IPS.split(",")]
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=_trusted_proxies)
+else:
+    import logging
+    logging.getLogger("uvicorn").warning(
+        "TRUSTED_PROXY_IPS is unset. Client IPs are untrusted and IP-based hijack detection is disabled. "
+        "Ensure your edge proxy strips inbound X-Forwarded-For headers."
+    )
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 # Register error handlers
 register_error_handlers(app)

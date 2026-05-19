@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     # Security Config
     SECRET_KEY: str = DEFAULT_SECRET_KEY
     SESSION_SIGNING_KEY: str | None = None  # Derived from SECRET_KEY
+    TRUSTED_PROXY_IPS: str | None = None
 
     # Session Config
     TEMP_SESSION_TIMEOUT: int = 86400 * 7  # 7 days
