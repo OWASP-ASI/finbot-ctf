@@ -339,9 +339,16 @@ async def update_profile(
         if error:
             raise HTTPException(status_code=400, detail=error)
 
-    # Validate avatar_url if switching to url type
-    if request.avatar_type == "url" and request.avatar_url:
-        if not request.avatar_url.startswith("https://"):
+    # Fetch current profile to validate the state transition securely
+    profile = profile_repo.get_by_user_id(session_context.user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Validate avatar_url if switching to/retaining url type
+    effective_avatar_type = request.avatar_type if request.avatar_type is not None else profile.avatar_type
+    effective_avatar_url = request.avatar_url if request.avatar_url is not None else profile.avatar_url
+    if effective_avatar_type == "url" and effective_avatar_url:
+        if not effective_avatar_url.startswith("https://"):
             raise HTTPException(status_code=400, detail="Avatar URL must use HTTPS")
 
     # Update other fields
