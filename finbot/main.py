@@ -145,15 +145,11 @@ app.add_middleware(SessionMiddleware)
 
 # Trust X-Forwarded-Proto/For from reverse proxies (Railway, etc.)
 # so url_for() generates https:// URLs and client IPs are correct.
-import os  # noqa: E402 — placed here to stay near usage
 from uvicorn.middleware.proxy_headers import (
     ProxyHeadersMiddleware,  # pylint: disable=ungrouped-imports
 )
 
-# Trust X-Forwarded-For only from known reverse proxy IPs.
-# Use TRUSTED_PROXY_IPS env var (comma-separated) for production deployments.
-_trusted_proxies = [h.strip() for h in os.getenv("TRUSTED_PROXY_IPS", "127.0.0.1").split(",")]
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=_trusted_proxies)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 # Register error handlers
 register_error_handlers(app)
