@@ -286,8 +286,10 @@ async def get_profile_card(
 
     cache_data = (
         f"{username}:{total_points}:{len(earned_badges)}:{len(completed_progress)}"
+        f":{profile.avatar_type or ''}:{profile.avatar_url or ''}:{profile.avatar_emoji or ''}"
+        f":{profile.bio or ''}"
     )
-    cache_key = hashlib.md5(cache_data.encode()).hexdigest()
+    cache_key = hashlib.sha256(cache_data.encode()).hexdigest()
     cache_path = get_cache_path(cache_key)
 
     if cache_path.exists():
