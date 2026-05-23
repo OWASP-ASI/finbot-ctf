@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from finbot.core.utils import to_utc_iso
 from sqlalchemy.orm import Session
 
-from finbot.core.auth.middleware import get_session_context
+from finbot.core.auth.middleware import get_authenticated_session_context
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
 from finbot.core.data.repositories import (
@@ -28,7 +28,7 @@ def _format_utc_timestamp(dt: datetime | None) -> str | None:
 
 @router.get("/sidecar")
 async def get_sidecar_data(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
     db: Session = Depends(get_db),
 ):
     """Get CTF data for the sidecar widget"""
