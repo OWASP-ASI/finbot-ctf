@@ -236,10 +236,22 @@
 
         agreementRow.addEventListener('click', toggleCheckbox);
 
+        function getRedirectTarget() {
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next');
+            if (next) {
+                try {
+                    const url = new URL(next, window.location.origin);
+                    if (url.origin === window.location.origin) return url.pathname + url.search + url.hash;
+                } catch { /* invalid URL, fall through */ }
+            }
+            return '/';
+        }
+
         enterButton.addEventListener('click', async function() {
             if (!enterButton.disabled) {
                 await logAgreement();
-                window.location.href = '/';
+                window.location.href = getRedirectTarget();
             }
         });
 

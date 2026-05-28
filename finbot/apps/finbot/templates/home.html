@@ -47,6 +47,9 @@
             font-size: 0.65rem; letter-spacing: 0.05em; padding: 2px 8px;
             border-radius: 4px; text-transform: uppercase; font-weight: 600;
         }
+
+        .scenario-dot { cursor: pointer; border: none; padding: 0; transition: all 0.2s; }
+        .scenario-dot:hover { opacity: 0.8 !important; transform: scale(1.4); }
 {% endblock %}
 
 {% block nav %}
@@ -231,13 +234,21 @@
                         <div class="px-5 py-3 font-mono text-xs space-y-1" id="meshTerminal" style="min-height: 72px;"></div>
                     </div>
 
-                    <!-- Scenario dots -->
-                    <div class="flex justify-center gap-1.5 py-3 relative z-10">
-                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-0"></div>
-                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-1"></div>
-                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-2"></div>
-                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-3"></div>
-                        <div class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-4"></div>
+                    <!-- Scenario controls -->
+                    <div class="flex items-center justify-center gap-3 py-3 relative z-10">
+                        <button id="mesh-prev" class="w-5 h-5 flex items-center justify-center text-text-3 hover:text-text-1 transition-colors" aria-label="Previous scenario">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <div class="flex gap-1.5">
+                            <button class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-0" aria-label="Scenario 1"></button>
+                            <button class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-1" aria-label="Scenario 2"></button>
+                            <button class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-2" aria-label="Scenario 3"></button>
+                            <button class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-3" aria-label="Scenario 4"></button>
+                            <button class="w-1.5 h-1.5 rounded-full bg-text-3/30 scenario-dot" id="dot-4" aria-label="Scenario 5"></button>
+                        </div>
+                        <button id="mesh-next" class="w-5 h-5 flex items-center justify-center text-text-3 hover:text-text-1 transition-colors" aria-label="Next scenario">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -504,7 +515,7 @@
             ]},
         ];
 
-        let si = 0, sti = 0, paused = false;
+        let si = 0, sti = 0, paused = false, timer = null;
         const trail = document.getElementById('trailLayer');
         const titleEl = document.getElementById('meshTitle');
         const terminal = document.getElementById('meshTerminal');
@@ -532,7 +543,7 @@
                 const isActive = i === si;
                 const color = scenarios[i].steps.some(s => s.fail) ? rd : gn;
                 dot.style.backgroundColor = isActive ? color : 'rgba(100,116,139,0.3)';
-                dot.style.width = dot.style.height = isActive ? '6px' : '6px';
+                dot.style.width = dot.style.height = '6px';
                 dot.style.opacity = isActive ? '1' : '0.5';
             }
         }
@@ -566,8 +577,15 @@
             requestAnimationFrame(() => { line.style.opacity = '1'; });
         }
 
+        function playScenario(index) {
+            clearTimeout(timer);
+            si = index;
+            sti = 0;
+            tick();
+        }
+
         function tick() {
-            if (paused) { setTimeout(tick, 500); return; }
+            if (paused) { timer = setTimeout(tick, 500); return; }
 
             const sc = scenarios[si], st = sc.steps[sti];
             const color = st.fail ? rd : gn;
@@ -594,14 +612,28 @@
             sti++;
             if (sti >= sc.steps.length) {
                 sti = 0; si = (si + 1) % scenarios.length;
-                setTimeout(tick, 3000);
+                timer = setTimeout(tick, 3000);
             } else {
-                setTimeout(tick, 1500);
+                timer = setTimeout(tick, 1500);
             }
         }
 
+        // Dot clicks — jump to scenario
+        for (let i = 0; i < scenarios.length; i++) {
+            const dot = document.getElementById('dot-' + i);
+            if (dot) dot.addEventListener('click', () => playScenario(i));
+        }
+
+        // Prev / Next buttons
+        document.getElementById('mesh-prev').addEventListener('click', () => {
+            playScenario((si - 1 + scenarios.length) % scenarios.length);
+        });
+        document.getElementById('mesh-next').addEventListener('click', () => {
+            playScenario((si + 1) % scenarios.length);
+        });
+
         updateDots();
-        setTimeout(tick, 1200);
+        timer = setTimeout(tick, 1200);
     })();
 
     // Community pulse — fetch from /stats API

@@ -35,6 +35,8 @@ from finbot.core.analytics.ctf_queries import (
     get_share_link_stats,
 )
 from finbot.core.analytics.queries import (
+    get_api_calls_count,
+    get_api_latency_percentiles,
     get_auth_funnel,
     get_bot_pageviews_count,
     get_browser_breakdown,
@@ -51,6 +53,7 @@ from finbot.core.analytics.queries import (
     get_referer_breakdown,
     get_response_time_percentiles,
     get_session_type_breakdown,
+    get_top_api_endpoints,
     get_top_pages,
     get_total_pageviews,
     get_unique_visitors,
@@ -92,6 +95,10 @@ async def analytics_dashboard(request: Request):
             "funnel": get_auth_funnel(db, days=7),
             "latency": latency,
             "sessions": get_session_type_breakdown(db, days=7),
+            "api_calls_7d": get_api_calls_count(db, days=7),
+            "api_calls_30d": get_api_calls_count(db, days=30),
+            "api_latency": get_api_latency_percentiles(db, days=7),
+            "top_api_endpoints": get_top_api_endpoints(db, days=7, limit=10),
         }
     finally:
         db.close()

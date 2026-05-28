@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Supply Chain - Dark Lab{% endblock %}
+{% block nav_supply_chain %}active{% endblock %}
+{% block page_title %}Supply Chain{% endblock %}
+{% block page_subtitle %}Compromise tool definitions to alter agent behavior{% endblock %}
+
+{% block content %}
+<div id="supply-chain-container">
+    <div class="flex items-center justify-center py-16">
+        <svg class="animate-spin h-6 w-6 text-darklab-primary" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="ml-3 text-text-secondary">Loading MCP servers...</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tool-card {
+    background: rgba(239, 68, 68, 0.03);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 0.75rem;
+    transition: border-color 0.2s;
+}
+.tool-card:hover {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+.tool-card.modified {
+    border-color: rgba(248, 113, 113, 0.5);
+    background: rgba(248, 113, 113, 0.05);
+}
+.tool-textarea {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    width: 100%;
+    resize: vertical;
+    min-height: 4rem;
+    transition: border-color 0.2s;
+}
+.tool-textarea:focus {
+    outline: none;
+    border-color: #ef4444;
+}
+.server-section {
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+.server-header {
+    background: rgba(239, 68, 68, 0.05);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.server-header:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/darklab/supply-chain.js') }}"></script>
+{% endblock %}

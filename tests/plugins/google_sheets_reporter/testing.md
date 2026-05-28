@@ -15,7 +15,7 @@ You may execute the test in one of three ways:
 
 ### Option A — Deployed Instance
 Use the hosted instance here:
-https://owasp-finbot-ctf-module2.onrender.com/
+https://owasp-finbot-ctf.org/
 
 ### Option B — Local Environment
 Run it locally. See setup instructions in this recording:

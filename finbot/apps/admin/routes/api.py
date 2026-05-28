@@ -56,7 +56,7 @@ MCP_SERVER_DEFAULTS = {
     },
     "systemutils": {
         "display_name": "SystemUtils",
-        "enabled": False,
+        "enabled": True,
         "config": {
             **SYSTEMUTILS_DEFAULTS,
         },
@@ -75,10 +75,6 @@ MCP_SERVER_DEFAULTS = {
 
 class ServerConfigUpdate(BaseModel):
     config: dict
-
-
-class ToolOverridesUpdate(BaseModel):
-    tool_overrides: dict
 
 
 # =============================================================================
@@ -175,44 +171,7 @@ async def update_mcp_server_config(
         return {"success": True, "server": config.to_dict()}
 
 
-@router.put("/mcp/servers/{server_type}/tools")
-async def update_tool_overrides(
-    server_type: str,
-    update: ToolOverridesUpdate,
-    session_context: SessionContext = Depends(get_session_context),
-):
-    """Update tool definition overrides (the CTF supply chain attack surface)."""
-    with db_session() as db:
-        repo = MCPServerConfigRepository(db, session_context)
-
-        config = repo.update_tool_overrides(server_type, json.dumps(update.tool_overrides))
-        if not config:
-            raise HTTPException(status_code=404, detail="MCP server not found")
-
-        logger.info(
-            "Tool overrides updated for '%s' in namespace '%s': %d tools modified",
-            server_type,
-            session_context.namespace,
-            len(update.tool_overrides),
-        )
-
-        return {"success": True, "server": config.to_dict()}
-
-
-@router.post("/mcp/servers/{server_type}/reset-tools")
-async def reset_tool_overrides(
-    server_type: str,
-    session_context: SessionContext = Depends(get_session_context),
-):
-    """Reset tool overrides to defaults (remove all user modifications)."""
-    with db_session() as db:
-        repo = MCPServerConfigRepository(db, session_context)
-
-        config = repo.reset_tool_overrides(server_type)
-        if not config:
-            raise HTTPException(status_code=404, detail="MCP server not found")
-
-        return {"success": True, "server": config.to_dict()}
+    # Tool definition overrides have moved to Dark Lab (/darklab/supply-chain)
 
 
 @router.put("/mcp/servers/{server_type}/toggle")

@@ -215,7 +215,7 @@
                 </div>
                 <div class="relative">
                     <input type="checkbox" id="is-public" class="sr-only peer">
-                    <div class="w-11 h-6 bg-portal-bg-tertiary rounded-full peer peer-checked:bg-ctf-primary transition-colors"></div>
+                    <div class="w-11 h-6 bg-portal-bg-tertiary rounded-full border border-ctf-primary/40 peer peer-checked:bg-ctf-primary peer-checked:border-ctf-primary transition-colors"></div>
                     <div class="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"></div>
                 </div>
             </label>
@@ -226,7 +226,7 @@
                 </div>
                 <div class="relative">
                     <input type="checkbox" id="show-activity" class="sr-only peer">
-                    <div class="w-11 h-6 bg-portal-bg-tertiary rounded-full peer peer-checked:bg-ctf-primary transition-colors"></div>
+                    <div class="w-11 h-6 bg-portal-bg-tertiary rounded-full border border-ctf-primary/40 peer peer-checked:bg-ctf-primary peer-checked:border-ctf-primary transition-colors"></div>
                     <div class="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"></div>
                 </div>
             </label>
@@ -259,11 +259,6 @@
         </button>
     </div>
 
-    <!-- Save Status -->
-    <div id="save-status" class="hidden fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg">
-        <span id="save-success" class="hidden text-ctf-accent">✓ Changes saved</span>
-        <span id="save-error" class="hidden text-ctf-danger">✗ Failed to save</span>
-    </div>
 </div>
 {% endblock %}
 
@@ -673,6 +668,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileContent.classList.remove('hidden');
     }
     
+    function setUsernameStatus(type, message = '') {
+        usernameStatus.classList.remove('hidden');
+        usernameAvailable.classList.add('hidden');
+        usernameTaken.classList.add('hidden');
+        usernameInvalid.classList.add('hidden');
+
+        if (type === 'available') {
+            usernameAvailable.classList.remove('hidden');
+            usernameValid = true;
+            return;
+        }
+
+        if (type === 'taken') {
+            usernameTaken.classList.remove('hidden');
+            usernameValid = false;
+            return;
+        }
+
+        usernameInvalid.textContent = `⚠ ${message || 'Invalid username'}`;
+        usernameInvalid.classList.remove('hidden');
+        usernameValid = false;
+    }
+
+    function focusUsernameInput() {
+        usernameInput.focus();
+        usernameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     // Check username availability
     async function checkUsername() {
         const username = usernameInput.value.trim();
@@ -689,18 +712,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const data = await CTF.fetch(`/profile/check-username/${encodeURIComponent(username)}`);
             
-            usernameStatus.classList.remove('hidden');
-            
             if (data.available) {
-                usernameAvailable.classList.remove('hidden');
-                usernameValid = true;
+                setUsernameStatus('available');
             } else if (data.error && data.error.includes('taken')) {
-                usernameTaken.classList.remove('hidden');
-                usernameValid = false;
+                setUsernameStatus('taken');
             } else {
-                usernameInvalid.textContent = `⚠ ${data.error}`;
-                usernameInvalid.classList.remove('hidden');
-                usernameValid = false;
+                setUsernameStatus('invalid', data.error);
             }
         } catch (error) {
             console.error('Failed to check username:', error);
@@ -716,10 +733,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Update main profile
             const socialLinks = {};
             const platforms = ['github', 'hackerone', 'bugcrowd', 'twitter', 'linkedin', 'website'];
-            platforms.forEach(p => {
-                const v = document.getElementById(`social-${p}`).value.trim();
-                socialLinks[p] = v || null;
-            });
+            clearSocialLinkErrors(platforms);
+            const invalidSocialInputs = [];
+
+            for (const platform of platforms) {
+                const input = document.getElementById(`social-${platform}`);
+                const value = input.value.trim();
+                const socialUrlError = getSocialUrlErrorMessage(value);
+
+                if (socialUrlError) {
+                    setSocialLinkError(input, socialUrlError);
+                    invalidSocialInputs.push(input);
+                }
+
+                socialLinks[platform] = value || null;
+            }
+
+            if (invalidSocialInputs.length > 0) {
+                const firstInvalidInput = invalidSocialInputs[0];
+                firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidInput.focus();
+                showSaveStatus('error', 'Please fill valid URL for social account');
+                return;
+            }
 
             const profileData = {
                 bio: bioInput.value || null,
@@ -734,6 +770,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Include username if changed
             const newUsername = usernameInput.value.trim();
             if (newUsername && newUsername !== profile?.username) {
+                const usernameCheck = await CTF.fetch(`/profile/check-username/${encodeURIComponent(newUsername)}`);
+                if (!usernameCheck.available) {
+                    if (usernameCheck.error && usernameCheck.error.toLowerCase().includes('taken')) {
+                        setUsernameStatus('taken');
+                        showSaveStatus('error', 'Username is already taken');
+                    } else {
+                        setUsernameStatus('invalid', usernameCheck.error);
+                        showSaveStatus('error', usernameCheck.error || 'Invalid username');
+                    }
+                    focusUsernameInput();
+                    return;
+                }
+                setUsernameStatus('available');
                 profileData.username = newUsername;
             }
             
@@ -754,9 +803,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             updatePublicProfileLink();
             showSaveStatus('success');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (error) {
             console.error('Failed to save:', error);
-            showSaveStatus('error', error.message);
+            const errorMessage = error?.message || 'Failed to save';
+            const normalizedError = errorMessage.toLowerCase();
+            if (normalizedError.includes('username') && normalizedError.includes('taken')) {
+                setUsernameStatus('taken');
+                focusUsernameInput();
+            } else if (normalizedError.includes('username')) {
+                setUsernameStatus('invalid', errorMessage);
+                focusUsernameInput();
+            }
+            showSaveStatus('error', errorMessage);
         } finally {
             saveBtn.disabled = false;
             saveBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Save Changes';
@@ -765,28 +824,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Show save status
     function showSaveStatus(status, message) {
-        const statusEl = document.getElementById('save-status');
-        const successEl = document.getElementById('save-success');
-        const errorEl = document.getElementById('save-error');
-        
-        successEl.classList.add('hidden');
-        errorEl.classList.add('hidden');
-        
+        if (typeof showToast !== 'function') return;
+
         if (status === 'success') {
-            successEl.classList.remove('hidden');
+            showToast('Profile changes saved', 'success');
         } else {
-            errorEl.textContent = `✗ ${message || 'Failed to save'}`;
-            errorEl.classList.remove('hidden');
+            showToast(message || 'Failed to save', 'error');
         }
-        
-        statusEl.classList.remove('hidden');
-        
-        setTimeout(() => {
-            statusEl.classList.add('hidden');
-        }, 3000);
     }
     
     // Helper functions
+    function getSocialUrlErrorMessage(url) {
+        if (!url) return '';
+        if (!url.startsWith('https://')) {
+            return 'URL must start with https://';
+        }
+
+        try {
+            new URL(url);
+            return '';
+        } catch (error) {
+            return 'Please enter a valid URL';
+        }
+    }
+
+    function setSocialLinkError(input, message) {
+        const errorId = `${input.id}-error`;
+        let errorEl = document.getElementById(errorId);
+
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = errorId;
+            errorEl.className = 'text-ctf-danger text-sm mt-2';
+            input.insertAdjacentElement('afterend', errorEl);
+        }
+
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+    }
+
+    function clearSocialLinkError(input) {
+        const errorEl = document.getElementById(`${input.id}-error`);
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.add('hidden');
+        }
+    }
+
+    function clearSocialLinkErrors(platforms) {
+        platforms.forEach(platform => {
+            const input = document.getElementById(`social-${platform}`);
+            if (input) clearSocialLinkError(input);
+        });
+    }
+
     function getIconEmoji(iconUrl) {
         if (!iconUrl) return '🏅';
         return `<img src="/static/images/ctf/badges/${iconUrl}" alt="" class="w-full h-full object-contain"
@@ -815,6 +906,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     bioInput.addEventListener('input', () => {
         bioCount.textContent = `${bioInput.value.length}/300`;
         updatePreview();
+    });
+
+    ['github', 'hackerone', 'bugcrowd', 'twitter', 'linkedin', 'website'].forEach(platform => {
+        const input = document.getElementById(`social-${platform}`);
+        if (!input) return;
+        input.addEventListener('input', () => {
+            const value = input.value.trim();
+            const socialUrlError = getSocialUrlErrorMessage(value);
+            if (socialUrlError) {
+                setSocialLinkError(input, socialUrlError);
+            } else {
+                clearSocialLinkError(input);
+            }
+        });
     });
     
     saveBtn.addEventListener('click', saveProfile);

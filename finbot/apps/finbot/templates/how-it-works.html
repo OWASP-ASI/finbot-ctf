@@ -3,7 +3,7 @@
 {% block title %}How It Works - OWASP FinBot CTF{% endblock %}
 
 {% block meta %}
-    <meta name="description" content="Learn how OWASP FinBot CTF works. Wear the vendor hat and the admin hat to interact with AI agents, then use the CTF portal as your mission control to track exploits, observe agent behavior, and learn.">
+    <meta name="description" content="Learn how OWASP FinBot CTF works. Three hats: vendor, admin, and attacker. One mission control. Interact with AI agents, simulate supply chain attacks, and track your exploits.">
 {% endblock %}
 
 {% block extra_css %}
@@ -76,11 +76,11 @@
             <div class="max-w-4xl mx-auto text-center relative">
                 <p class="font-mono text-cyan text-xs tracking-widest uppercase mb-4">How It Works</p>
                 <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-text-1 tracking-tight mb-6 leading-[1.1]">
-                    Two hats.<br>
+                    Three hats.<br>
                     <span class="gradient-text">One mission control.</span>
                 </h1>
                 <p class="text-lg sm:text-xl text-text-2 max-w-2xl mx-auto leading-relaxed">
-                    Step into a simulated vendor management platform powered by AI agents. Wear the vendor hat to interact with the system. Wear the admin hat to oversee it. Use the CTF portal as your mission control to track exploits, observe agent behavior, and learn. The hacking happens in the portals. The learning happens everywhere.
+                    Step into a simulated vendor management platform powered by AI agents. Wear the vendor hat to interact with the system. Wear the admin hat to oversee it. Wear the attacker hat to poison tools and watch data exfiltrate. Use the CTF portal as your mission control to track exploits, observe agent behavior, and learn.
                 </p>
             </div>
         </section>
@@ -178,28 +178,71 @@
                                 </div>
 
                                 <p class="text-text-2 leading-relaxed mb-5">
-                                    Now flip the script. You're the platform administrator. You see the Finance Co-Pilot, the AI that helps manage the vendor ecosystem. You configure MCP tool servers that the agents rely on. You review activity. You're the defender.
+                                    Now flip the script. You're the platform administrator. You see the Finance Co-Pilot, the AI that helps manage the vendor ecosystem. You configure MCP tool servers that the agents rely on. You review activity, manage messages, and oversee FinDrive documents. You're the defender.
                                 </p>
 
                                 <p class="text-text-2 leading-relaxed mb-5">
-                                    But you didn't write every tool the agent uses. Some come from <strong class="text-text-1">external MCP servers</strong>, and those descriptions, those capabilities, <em class="text-purple">can be poisoned</em>. A compromised tool server doesn't need to break in. It just needs the agent to trust it. This is where supply chain attacks become real.
+                                    But remember those vendors from the other portal? Their data flows into the admin-side AI too. A malicious vendor can embed <strong class="text-text-1">indirect prompt injections</strong> in their company name, invoice descriptions, or uploaded documents. The Finance Co-Pilot processes that data in good faith, and suddenly your trusted assistant is acting on an attacker's instructions.
                                 </p>
 
                                 <p class="text-text-2 leading-relaxed">
-                                    And it's not just the tools. Remember those vendors from the other portal? Their data flows into the admin-side AI too. A malicious vendor can embed <strong class="text-text-1">indirect prompt injections</strong> in their company name, invoice descriptions, or messages. The Finance Co-Pilot processes that data in good faith, and suddenly your trusted assistant is acting on an attacker's instructions. You configured everything correctly. You still got compromised.
+                                    You configured everything correctly. You still got compromised. That's the lesson: in agentic AI, the threat isn't just who's talking to the agent. It's <em class="text-purple">what the agent reads</em>.
                                 </p>
                             </div>
 
                             <div class="md:w-80 flex-shrink-0 bg-purple/[0.04] md:border-l border-t md:border-t-0 border-purple/10 p-8 sm:p-10 flex flex-col">
                                 <p class="text-text-3 text-xs font-mono uppercase tracking-wider mb-4">What you'll explore</p>
                                 <div class="space-y-2.5 text-sm flex-1">
-                                    <p class="threat-line text-text-2">What happens when an MCP tool description is tampered with?</p>
-                                    <p class="threat-line text-text-2">Can a poisoned tool trick the agent into executing arbitrary code?</p>
                                     <p class="threat-line text-text-2">Can vendor-submitted data hijack the admin's Co-Pilot?</p>
-                                    <p class="threat-line text-text-2">How does the admin's configuration surface become an attack vector?</p>
+                                    <p class="threat-line text-text-2">Can a poisoned invoice or document trick the agent into unauthorized actions?</p>
+                                    <p class="threat-line text-text-2">What happens when the Co-Pilot reads a malicious company name?</p>
+                                    <p class="threat-line text-text-2">How do you defend a system when the input data itself is weaponized?</p>
                                 </div>
                                 <a href="/admin" class="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-purple/10 border border-purple/20 text-purple font-semibold text-sm hover:bg-purple/20 hover:border-purple/40 transition-all group">
                                     Enter Admin Portal
+                                    <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dark Lab -->
+                    <div class="hat-card glass rounded-2xl border border-danger/15 overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="flex-1 p-8 sm:p-10">
+                                <div class="flex items-center gap-3 mb-5">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-danger/20 to-danger/5 flex items-center justify-center">
+                                        <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-text-1">The Attacker</h3>
+                                        <p class="text-danger text-xs font-mono tracking-wide">DARK LAB</p>
+                                    </div>
+                                </div>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    Now put on the attacker hat. You're an <strong class="text-text-1">external threat actor</strong> targeting the platform's supply chain. The Dark Lab surfaces attack vectors that don't come from chatting with the AI directly. They come from the <em class="text-danger">supply chain</em> and the <em class="text-danger">tools themselves</em>.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed mb-5">
+                                    In the Supply Chain section, you see every MCP tool server that agents rely on. You can <strong class="text-text-1">poison tool descriptions</strong> to change what the LLM sees when deciding how to use each tool. A compromised tool server doesn't need to break in. It just needs the agent to trust its modified description. This is a supply chain attack made tangible.
+                                </p>
+
+                                <p class="text-text-2 leading-relaxed">
+                                    The Hacker Toolkit is your observation deck: <strong class="text-text-1">Dead Drop</strong> shows emails intercepted when agents are tricked into sending data to external addresses. <strong class="text-text-1">Exfil Data</strong> captures HTTP requests the agent makes when manipulated into POSTing sensitive data. You plant the attack upstream, then watch the results flow in here.
+                                </p>
+                            </div>
+
+                            <div class="md:w-80 flex-shrink-0 bg-danger/[0.04] md:border-l border-t md:border-t-0 border-danger/10 p-8 sm:p-10 flex flex-col">
+                                <p class="text-text-3 text-xs font-mono uppercase tracking-wider mb-4">What you'll explore</p>
+                                <div class="space-y-2.5 text-sm flex-1">
+                                    <p class="threat-line text-text-2">What happens when an MCP tool description is tampered with?</p>
+                                    <p class="threat-line text-text-2">Can a poisoned tool trick the agent into executing arbitrary code?</p>
+                                    <p class="threat-line text-text-2">Where does exfiltrated data actually end up?</p>
+                                    <p class="threat-line text-text-2">How does a supply chain compromise propagate through an agent ecosystem?</p>
+                                </div>
+                                <a href="/darklab" class="inline-flex items-center justify-center mt-6 px-6 py-3 rounded-xl bg-danger/10 border border-danger/20 text-danger font-semibold text-sm hover:bg-danger/20 hover:border-danger/40 transition-all group">
+                                    Enter Dark Lab
                                     <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                                 </a>
                             </div>
@@ -221,7 +264,7 @@
                                 </div>
 
                                 <p class="text-text-2 leading-relaxed mb-5">
-                                    This isn't a hat you wear. It's where you <strong class="text-text-1">observe, learn, and track your progress</strong>. The hacking happens in the vendor and admin portals. The CTF portal is your map, your field guide, and your scorecard all in one.
+                                    This isn't a hat you wear. It's where you <strong class="text-text-1">observe, learn, and track your progress</strong>. The hacking happens in the other portals. The CTF portal is your map, your field guide, and your scorecard all in one.
                                 </p>
 
                                 <p class="text-text-2 leading-relaxed">
@@ -322,7 +365,7 @@
                     <div class="text-center">
                         <div class="step-num bg-cyan/10 border border-cyan/20 text-cyan mx-auto mb-5">1</div>
                         <h3 class="text-text-1 font-semibold mb-2">Interact with agents</h3>
-                        <p class="text-text-3 text-sm leading-relaxed">Use the Vendor or Admin portal. Chat with FinBot, explore workflows, try things that shouldn't work.</p>
+                        <p class="text-text-3 text-sm leading-relaxed">Use the Vendor or Admin portal. Chat with FinBot, explore workflows. Use Dark Lab to poison tools and observe exfiltration.</p>
                     </div>
                     <div class="text-center">
                         <div class="step-num bg-purple/10 border border-purple/20 text-purple mx-auto mb-5">2</div>

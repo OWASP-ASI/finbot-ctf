@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Hacker Toolkit - Dark Lab{% endblock %}
+{% block nav_toolkit %}active{% endblock %}
+{% block page_title %}<span class="text-darklab-primary">Hacker</span> Toolkit{% endblock %}
+{% block page_subtitle %}Exfiltration results &amp; intercepted data{% endblock %}
+
+{% block content %}
+<!-- Module Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Dead Drop -->
+    <div class="toolkit-module active cursor-pointer" id="module-dead-drop" onclick="activateModule('dead-drop')">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-text-bright">Dead Drop</h3>
+                <p class="text-xs text-text-secondary">Intercepted emails</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span id="dead-drop-count" class="text-2xl font-bold font-mono text-blue-400">-</span>
+            <span class="text-xs text-blue-400/60 font-mono">ACTIVE</span>
+        </div>
+    </div>
+
+    <!-- Exfil Data -->
+    <div class="toolkit-module cursor-pointer" id="module-exfil-data" onclick="activateModule('exfil-data')">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-text-bright">Exfil Data</h3>
+                <p class="text-xs text-text-secondary">Captured network requests</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span id="exfil-data-count" class="text-2xl font-bold font-mono text-purple-400">-</span>
+            <span id="exfil-data-status" class="text-xs text-text-secondary/60 font-mono">READY</span>
+        </div>
+    </div>
+
+    <!-- Wire Tap - Coming Soon -->
+    <div class="toolkit-module locked">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                <svg class="w-4 h-4 text-text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-text-secondary/60">Wire Tap</h3>
+                <p class="text-xs text-text-secondary/40">Intercepted payments</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-2xl font-bold font-mono text-text-secondary/30">--</span>
+            <span class="text-xs text-text-secondary/30 font-mono">LOCKED</span>
+        </div>
+    </div>
+</div>
+
+<!-- Dead Drop Content -->
+<div id="dead-drop-section">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <h2 class="text-lg font-semibold text-text-bright">Dead Drop</h2>
+            <span class="text-xs font-mono text-text-secondary bg-white/5 px-2 py-0.5 rounded">INTERCEPTED EMAILS</span>
+        </div>
+        <button id="refresh-btn" onclick="loadDeadDrop()" class="p-2 rounded-lg bg-portal-bg-tertiary border border-blue-500/20 text-text-secondary hover:text-blue-400 hover:border-blue-500/40 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+        </button>
+    </div>
+    <div id="dead-drop-loading" class="space-y-3">
+        <div class="glass-card p-4"><div class="ctf-skeleton h-4 w-3/4"></div><div class="ctf-skeleton h-3 w-1/2 mt-2"></div></div>
+        <div class="glass-card p-4"><div class="ctf-skeleton h-4 w-2/3"></div><div class="ctf-skeleton h-3 w-1/3 mt-2"></div></div>
+    </div>
+    <div id="dead-drop-content" class="hidden">
+        <div class="flex gap-4" style="height: calc(100vh - 420px); min-height: 400px;">
+            <div class="w-2/5 flex flex-col glass-card overflow-hidden"><div id="dead-drop-list" class="flex-1 overflow-y-auto divide-y divide-white/5"></div></div>
+            <div class="w-3/5 flex flex-col glass-card overflow-hidden">
+                <div id="reading-pane" class="flex-1 overflow-y-auto p-6">
+                    <div id="reading-empty" class="flex flex-col items-center justify-center h-full text-center">
+                        <div class="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-blue-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </div>
+                        <p class="text-text-secondary text-sm">Select a message to view its contents</p>
+                    </div>
+                    <div id="reading-detail" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dead-drop-empty" class="hidden glass-card p-10 text-center">
+        <div class="w-20 h-20 mx-auto rounded-full bg-portal-bg-tertiary border border-blue-500/20 flex items-center justify-center mb-5">
+            <svg class="w-10 h-10 text-blue-400/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-text-bright mb-2">Dead Drop Empty</h3>
+        <p class="text-text-secondary text-sm max-w-md mx-auto mb-6">No intercepted emails yet. When FinBot's AI agents are tricked into sending data to external addresses, the messages will appear here.</p>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-portal-bg-tertiary border border-blue-500/10 text-xs text-text-secondary font-mono">
+            <svg class="w-3.5 h-3.5 text-blue-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Try convincing the AI to email sensitive data to an external address
+        </div>
+    </div>
+</div>
+
+<!-- Exfil Data Content -->
+<div id="exfil-data-section" class="hidden">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <h2 class="text-lg font-semibold text-text-bright">Exfil Data</h2>
+            <span class="text-xs font-mono text-text-secondary bg-white/5 px-2 py-0.5 rounded">CAPTURED REQUESTS</span>
+        </div>
+        <button onclick="loadExfilData()" class="p-2 rounded-lg bg-portal-bg-tertiary border border-purple-500/20 text-text-secondary hover:text-purple-400 hover:border-purple-500/40 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+    </div>
+    <div id="exfil-loading" class="space-y-3">
+        <div class="glass-card p-4"><div class="ctf-skeleton h-4 w-3/4"></div><div class="ctf-skeleton h-3 w-1/2 mt-2"></div></div>
+    </div>
+    <div id="exfil-content" class="hidden">
+        <div class="flex gap-4" style="height: calc(100vh - 420px); min-height: 400px;">
+            <div class="w-2/5 flex flex-col glass-card overflow-hidden"><div id="exfil-list" class="flex-1 overflow-y-auto divide-y divide-white/5"></div></div>
+            <div class="w-3/5 flex flex-col glass-card overflow-hidden">
+                <div id="exfil-pane" class="flex-1 overflow-y-auto p-6">
+                    <div id="exfil-pane-empty" class="flex flex-col items-center justify-center h-full text-center">
+                        <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-purple-400/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        </div>
+                        <p class="text-text-secondary text-sm">Select a capture to inspect</p>
+                    </div>
+                    <div id="exfil-pane-detail" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="exfil-empty" class="hidden glass-card p-10 text-center">
+        <div class="w-20 h-20 mx-auto rounded-full bg-portal-bg-tertiary border border-purple-500/20 flex items-center justify-center mb-5">
+            <svg class="w-10 h-10 text-purple-400/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </div>
+        <h3 class="text-lg font-semibold text-text-bright mb-2">No Captured Requests</h3>
+        <p class="text-text-secondary text-sm max-w-md mx-auto mb-6">No exfiltrated data yet. When AI agents are tricked into making network requests (via the <span class="font-mono text-purple-400">network_request</span> tool), captured data appears here.</p>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-portal-bg-tertiary border border-purple-500/10 text-xs text-text-secondary font-mono">
+            <svg class="w-3.5 h-3.5 text-purple-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Try getting the AI to POST sensitive data to any URL
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .toolkit-module {
+        background: linear-gradient(135deg, rgba(21, 21, 32, 0.8), rgba(26, 26, 46, 0.6));
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s;
+    }
+    .toolkit-module.active { border-color: rgba(96, 165, 250, 0.3); box-shadow: 0 0 20px rgba(96, 165, 250, 0.08); }
+    .toolkit-module.active:hover { border-color: rgba(96, 165, 250, 0.5); transform: translateY(-2px); }
+    .toolkit-module.locked { opacity: 0.5; cursor: not-allowed; }
+    .dd-msg-item { padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+    .dd-msg-item:hover { background: rgba(96, 165, 250, 0.05); }
+    .dd-msg-item.active { background: rgba(96, 165, 250, 0.1); border-left: 3px solid #60a5fa; }
+    .dd-msg-item.unread .dd-subject { color: #e2e8f0; font-weight: 600; }
+    .dd-msg-item .dd-subject { color: #94a3b8; font-weight: 400; }
+    .dd-header-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; min-width: 48px; }
+    .dd-body { white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; color: #e2e8f0; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 16px; }
+    .dd-addr-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+    .dd-addr-external { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .dd-addr-internal { background: rgba(96, 165, 250, 0.1); color: #93bbfd; border: 1px solid rgba(96, 165, 250, 0.15); }
+    .exfil-item { padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+    .exfil-item:hover { background: rgba(124, 58, 237, 0.05); }
+    .exfil-item.active { background: rgba(124, 58, 237, 0.1); border-left: 3px solid #7c3aed; }
+    .method-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; }
+    .method-get { background: rgba(6, 255, 165, 0.15); color: #06ffa5; }
+    .method-post { background: rgba(255, 184, 0, 0.15); color: #ffb800; }
+    .method-put { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+    .method-delete { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .method-default { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='js/darklab/toolkit.js') }}"></script>
+{% endblock %}

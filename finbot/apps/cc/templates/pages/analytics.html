@@ -196,6 +196,41 @@
         </div>
     </div>
 
+    <!-- API Traffic -->
+    <div class="bg-cc-surface border border-cc-border rounded-lg p-5 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-text-1 text-xs font-semibold uppercase tracking-wider">API Traffic</h3>
+            <div class="flex gap-4 text-xs">
+                <span class="text-text-3">7d: <span class="text-text-1 font-semibold tabular-nums">{{ api_calls_7d }}</span> calls</span>
+                <span class="text-text-3">30d: <span class="text-text-1 font-semibold tabular-nums">{{ api_calls_30d }}</span> calls</span>
+                <span class="text-text-3">P50: <span class="text-text-1 font-semibold tabular-nums">{{ api_latency.p50 }}ms</span></span>
+                <span class="text-text-3">P95: <span class="text-text-1 font-semibold tabular-nums">{{ api_latency.p95 }}ms</span></span>
+            </div>
+        </div>
+        {% if top_api_endpoints %}
+        <div class="space-y-1">
+            <div class="flex items-center justify-between text-[10px] text-text-3 uppercase tracking-wider px-2 pb-1">
+                <span>Endpoint</span>
+                <div class="flex gap-6">
+                    <span class="w-16 text-right">Calls</span>
+                    <span class="w-16 text-right">Avg</span>
+                </div>
+            </div>
+            {% for ep in top_api_endpoints %}
+            <a href="/cc/analytics/pages?path={{ ep.path | urlencode }}" class="flex items-center justify-between text-xs py-1 px-2 -mx-2 rounded hover:bg-white/[0.03] transition-colors group">
+                <span class="text-text-2 truncate mr-4 group-hover:text-cyan transition-colors">{{ ep.path }}</span>
+                <div class="flex gap-6 shrink-0">
+                    <span class="text-text-1 font-semibold tabular-nums w-16 text-right">{{ ep.calls }}</span>
+                    <span class="text-text-3 tabular-nums w-16 text-right">{{ ep.avg_ms }}ms</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-text-3 text-xs">No API traffic yet</p>
+        {% endif %}
+    </div>
+
     <div class="mt-6 text-center">
         <p class="text-text-3 text-xs">Total pageviews recorded: {{ total_pageviews }}</p>
     </div>

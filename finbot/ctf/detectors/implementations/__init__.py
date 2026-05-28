@@ -4,6 +4,12 @@
 from finbot.ctf.detectors.implementations.cross_vendor_deletion import (
     CrossVendorDeletionDetector,
 )
+from finbot.ctf.detectors.implementations.gradual_status_flip import (
+    GradualStatusFlipDetector,
+)
+from finbot.ctf.detectors.implementations.guardrail_prevention import (
+    GuardrailPreventionDetector,
+)
 from finbot.ctf.detectors.implementations.indirect_exfil import (
     IndirectExfilDetector,
 )
@@ -40,6 +46,8 @@ from finbot.ctf.detectors.implementations.vendor_status_flip import (
 
 __all__ = [
     "CrossVendorDeletionDetector",
+    "GradualStatusFlipDetector",
+    "GuardrailPreventionDetector",
     "IndirectExfilDetector",
     "InflatedPaymentDetector",
     "InvoiceThresholdBypassDetector",

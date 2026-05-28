@@ -1,7 +1,10 @@
 """Data Repositories for FinBot CTF Platform"""
 
+import ipaddress
 import json
+import secrets
 from datetime import UTC, datetime
+from urllib.parse import urlparse
 
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
@@ -13,6 +16,7 @@ from finbot.core.data.models import (
     ChatMessage,
     CTFEvent,
     Invoice,
+    LabsGuardrailConfig,
     MCPActivityLog,
     MCPServerConfig,
     User,
@@ -1270,3 +1274,177 @@ class CTFEventRepository(NamespacedRepository):
             )
             .count()
         )
+
+
+# =============================================================================
+# SSRF Validation
+# =============================================================================
+
+# Ranges that must never be reachable via user-supplied webhook URLs.
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+]
+
+
+def validate_webhook_url(url: str) -> tuple[bool, str | None]:
+    """Validate a webhook URL for safety.
+
+    In DEBUG mode, localhost and private IPs are allowed so developers
+    can test webhooks against local servers. In production, these are
+    blocked to prevent SSRF.
+
+    Returns (is_valid, error_message).
+    """
+    from finbot.config import settings  # pylint: disable=import-outside-toplevel
+
+    if not url:
+        return False, "Webhook URL is required"
+
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False, "Invalid URL format"
+
+    if parsed.scheme not in ("https", "http"):
+        return False, "URL scheme must be https (or http for development)"
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "URL must include a hostname"
+
+    if hostname == "metadata.google.internal":
+        return False, f"Hostname '{hostname}' is not allowed"
+
+    if not settings.DEBUG:
+        if hostname == "localhost":
+            return False, f"Hostname '{hostname}' is not allowed"
+
+        try:
+            addr = ipaddress.ip_address(hostname)
+            for net in _BLOCKED_NETWORKS:
+                if addr in net:
+                    return False, f"IP address {hostname} is in a blocked range"
+        except ValueError:
+            pass
+
+    if not parsed.port and parsed.scheme == "https":
+        pass
+    elif parsed.port and parsed.port in (80, 443):
+        pass
+    elif parsed.port and not (1024 <= parsed.port <= 65535):
+        return False, f"Port {parsed.port} is not in the allowed range (1024-65535)"
+
+    return True, None
+
+
+# =============================================================================
+# Labs Guardrail Config Repository
+# =============================================================================
+
+
+class LabsGuardrailConfigRepository(NamespacedRepository):
+    """Repository for LabsGuardrailConfig — one config per (namespace, user_id)."""
+
+    VALID_HOOK_KINDS = frozenset(
+        {
+            "before_model",
+            "after_model",
+            "before_tool",
+            "after_tool",
+        }
+    )
+
+    def get_for_current_user(self) -> LabsGuardrailConfig | None:
+        return (
+            self._add_namespace_filter(
+                self.db.query(LabsGuardrailConfig), LabsGuardrailConfig
+            )
+            .filter(
+                LabsGuardrailConfig.user_id == self.session_context.user_id,
+            )
+            .first()
+        )
+
+    def upsert(
+        self,
+        webhook_url: str,
+        hooks: dict[str, bool] | None = None,
+        timeout_seconds: int = 5,
+        enabled: bool = True,
+    ) -> tuple[LabsGuardrailConfig, bool]:
+        """Create or update guardrail config for the current user.
+
+        Returns (config, created) where created=True if a new row was inserted.
+        """
+        valid, err = validate_webhook_url(webhook_url)
+        if not valid:
+            raise ValueError(err)
+
+        if hooks is not None:
+            unknown = set(hooks.keys()) - self.VALID_HOOK_KINDS
+            if unknown:
+                raise ValueError(f"Unknown hook kinds: {', '.join(sorted(unknown))}")
+        else:
+            hooks = {k: True for k in self.VALID_HOOK_KINDS}
+
+        timeout_seconds = max(1, min(timeout_seconds, 30))
+
+        existing = self.get_for_current_user()
+        if existing:
+            existing.webhook_url = webhook_url
+            existing.hooks_json = json.dumps(hooks)
+            existing.timeout_seconds = timeout_seconds
+            existing.enabled = enabled
+            existing.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(existing)
+            return existing, False
+
+        signing_secret = secrets.token_urlsafe(32)
+        config = LabsGuardrailConfig(
+            namespace=self.namespace,
+            user_id=self.session_context.user_id,
+            webhook_url=webhook_url,
+            signing_secret=signing_secret,
+            enabled=enabled,
+            hooks_json=json.dumps(hooks),
+            timeout_seconds=timeout_seconds,
+        )
+        self.db.add(config)
+        self.db.commit()
+        self.db.refresh(config)
+        return config, True
+
+    def toggle_enabled(self) -> LabsGuardrailConfig | None:
+        config = self.get_for_current_user()
+        if config:
+            config.enabled = not config.enabled
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+    def rotate_secret(self) -> LabsGuardrailConfig | None:
+        config = self.get_for_current_user()
+        if config:
+            config.signing_secret = secrets.token_urlsafe(32)
+            config.updated_at = datetime.now(UTC)
+            self.db.commit()
+            self.db.refresh(config)
+        return config
+
+    def delete_config(self) -> bool:
+        config = self.get_for_current_user()
+        if not config:
+            return False
+        self.db.delete(config)
+        self.db.commit()
+        return True

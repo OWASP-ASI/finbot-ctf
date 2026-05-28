@@ -59,12 +59,17 @@ def create_finstripe_server(
         Transfers funds from the company account to a vendor's bank account.
         Returns the transfer details including a unique transfer ID for tracking.
         """
+patch-42
         if (
             getattr(session_context, "portal_type", None) == "vendor"
             and getattr(session_context, "current_vendor_id", None) is not None
             and session_context.current_vendor_id != vendor_id
         ):
             return {"error": "Vendor session can only initiate transfers to own account"}
+=======
+        if amount <= 0:
+            return {"error": "amount must be greater than zero"}
+     main
 
         transfer_id = _generate_transfer_id()
 
