@@ -9,11 +9,11 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
-from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
 from finbot.core.data.models import Badge, Challenge, UserBadge, UserChallengeProgress
 from finbot.core.data.repositories import CTFEventRepository
+from finbot.core.utils import to_utc_iso
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["activity"])
@@ -123,9 +123,7 @@ def get_activity(
     """Get paginated activity stream"""
     event_repo = CTFEventRepository(db, session_context)
 
-    total = event_repo.count_events(
-        category=category, workflow_id=workflow_id, vendor_id=vendor_id
-    )
+    total = event_repo.count_events(category=category, workflow_id=workflow_id, vendor_id=vendor_id)
 
     offset = (page - 1) * page_size
     events = event_repo.get_events(
@@ -167,9 +165,7 @@ def get_activity(
             )
         )
 
-    achievements = _build_achievements(
-        db, session_context.namespace, session_context.user_id
-    )
+    achievements = _build_achievements(db, session_context.namespace, session_context.user_id)
 
     return ActivityResponse(
         items=items,

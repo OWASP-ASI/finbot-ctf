@@ -57,7 +57,9 @@ def create_findrive_server(
         """
         max_size = config.get("max_file_size_kb", 500) * 1024
         if len(content.encode("utf-8")) > max_size:
-            return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
+            return {
+                "error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"
+            }
 
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)

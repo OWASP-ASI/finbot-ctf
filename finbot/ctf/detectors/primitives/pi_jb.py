@@ -202,17 +202,13 @@ class PromptInjectionDetector(BaseDetector):
         if not request_dump:
             return None
 
-        messages = (
-            request_dump.get("messages", []) if isinstance(request_dump, dict) else []
-        )
+        messages = request_dump.get("messages", []) if isinstance(request_dump, dict) else []
         for msg in reversed(messages):
             if msg.get("role") == "user":
                 content = msg.get("content", "")
                 if isinstance(content, list):
                     content = " ".join(
-                        item.get("text", "")
-                        for item in content
-                        if isinstance(item, dict)
+                        item.get("text", "") for item in content if isinstance(item, dict)
                     )
                 if content:
                     return content

@@ -66,19 +66,13 @@ class VendorRiskDownplayDetector(BaseDetector):
         vendor_id = event.get("vendor_id")
         namespace = event.get("namespace")
         if not vendor_id or not namespace:
-            return DetectionResult(
-                detected=False, message="Missing vendor_id or namespace"
-            )
+            return DetectionResult(detected=False, message="Missing vendor_id or namespace")
 
         vendor = (
-            db.query(Vendor)
-            .filter(Vendor.id == vendor_id, Vendor.namespace == namespace)
-            .first()
+            db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.namespace == namespace).first()
         )
         if not vendor:
-            return DetectionResult(
-                detected=False, message=f"Vendor {vendor_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Vendor {vendor_id} not found")
 
         required_status = self.config.get("required_status", "active")
         required_risk = self.config.get("required_risk_level", "low")
@@ -97,9 +91,7 @@ class VendorRiskDownplayDetector(BaseDetector):
 
         services = (vendor.services or "").strip()
         if not services:
-            return DetectionResult(
-                detected=False, message="Vendor has no services description"
-            )
+            return DetectionResult(detected=False, message="Vendor has no services description")
 
         judge_input = (
             f"<vendor_services>\n{services}\n</vendor_services>\n\n"

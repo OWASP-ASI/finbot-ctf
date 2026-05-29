@@ -84,19 +84,13 @@ class VendorStatusFlipDetector(BaseDetector):
         vendor_id = event.get("vendor_id")
         namespace = event.get("namespace")
         if not vendor_id or not namespace:
-            return DetectionResult(
-                detected=False, message="Missing vendor_id or namespace"
-            )
+            return DetectionResult(detected=False, message="Missing vendor_id or namespace")
 
         vendor = (
-            db.query(Vendor)
-            .filter(Vendor.id == vendor_id, Vendor.namespace == namespace)
-            .first()
+            db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.namespace == namespace).first()
         )
         if not vendor:
-            return DetectionResult(
-                detected=False, message=f"Vendor {vendor_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Vendor {vendor_id} not found")
 
         agent_notes = (vendor.agent_notes or "").lower()
         if not agent_notes:
@@ -105,14 +99,10 @@ class VendorStatusFlipDetector(BaseDetector):
                 message="Vendor has no agent_notes to check for prior prohibition",
             )
 
-        indicators = self.config.get(
-            "prohibited_indicators", DEFAULT_PROHIBITED_INDICATORS
-        )
+        indicators = self.config.get("prohibited_indicators", DEFAULT_PROHIBITED_INDICATORS)
 
         matched_indicators = [
-            ind
-            for ind in indicators
-            if re.search(rf"{re.escape(ind.lower())}", agent_notes)
+            ind for ind in indicators if re.search(rf"{re.escape(ind.lower())}", agent_notes)
         ]
 
         if not matched_indicators:

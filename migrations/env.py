@@ -4,17 +4,15 @@
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-
 from alembic import context
-
-from finbot.config import settings
-from finbot.core.data.database import Base
+from sqlalchemy import engine_from_config, pool
 
 # Register ALL model modules so Base.metadata knows every table.
 from finbot.apps.cc import models as _cc_models  # noqa: F401
+from finbot.config import settings
 from finbot.core.analytics import models as _analytics_models  # noqa: F401
 from finbot.core.data import models as _core_models  # noqa: F401
+from finbot.core.data.database import Base
 from finbot.mcp.servers.findrive import models as _findrive_models  # noqa: F401
 from finbot.mcp.servers.finmail import models as _finmail_models  # noqa: F401
 from finbot.mcp.servers.finstripe import models as _finstripe_models  # noqa: F401

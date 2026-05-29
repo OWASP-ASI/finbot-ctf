@@ -41,9 +41,7 @@ class ChallengeCompletionEvaluator(BaseEvaluator):
         namespace = event.get("namespace")
         user_id = event.get("user_id")
         if not namespace or not user_id:
-            return DetectionResult(
-                detected=False, message="Missing namespace or user_id"
-            )
+            return DetectionResult(detected=False, message="Missing namespace or user_id")
 
         min_count = self.config.get("min_count", 1)
         category = self.config.get("challenge_category")
@@ -82,9 +80,7 @@ class ChallengeCompletionEvaluator(BaseEvaluator):
         return {
             "current": count,
             "target": min_count,
-            "percentage": min(100, int((count / min_count) * 100))
-            if min_count > 0
-            else 100,
+            "percentage": min(100, int((count / min_count) * 100)) if min_count > 0 else 100,
             "category_filter": category,
         }
 

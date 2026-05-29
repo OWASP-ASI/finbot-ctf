@@ -85,13 +85,9 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         """Validate CSRF token from request"""
 
         # Get session context (should be set by SessionMiddleware)
-        session_context: SessionContext | None = getattr(
-            request.state, "session_context", None
-        )
+        session_context: SessionContext | None = getattr(request.state, "session_context", None)
         if not session_context:
-            raise HTTPException(
-                status_code=403, detail="No session found - CSRF validation failed"
-            )
+            raise HTTPException(status_code=403, detail="No session found - CSRF validation failed")
 
         # Get expected CSRF token from session
         expected_token = session_context.csrf_token
@@ -101,17 +97,13 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         # Get CSRF token from request
         request_token = self._extract_csrf_token(request)
         if not request_token:
-            raise HTTPException(
-                status_code=403, detail="CSRF token missing from request"
-            )
+            raise HTTPException(status_code=403, detail="CSRF token missing from request")
 
         # Validate token
         if not self._compare_tokens(expected_token, request_token):
             raise HTTPException(status_code=403, detail="CSRF token mismatch")
 
-        logger.debug(
-            "CSRF validation successful for %s %s", request.method, request.url.path
-        )
+        logger.debug("CSRF validation successful for %s %s", request.method, request.url.path)
 
     def _extract_csrf_token(self, request: Request) -> str | None:
         """Extract CSRF token from request headers or form data"""
@@ -142,9 +134,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         """Securely compare CSRF tokens using constant-time comparison"""
         return hmac.compare_digest(expected, actual)
 
-    def _create_csrf_error_response(
-        self, request: Request, exc: HTTPException
-    ) -> Response:
+    def _create_csrf_error_response(self, request: Request, exc: HTTPException) -> Response:
         """Create appropriate CSRF error response based on request type
         - Middleware error responses are not caught by FastAPI/Starlette default exception handlers
         - This is a workaround to handle CSRF errors in the middleware
@@ -181,9 +171,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
 def get_csrf_token(request: Request) -> str:
     """Helper function to get CSRF token for templates"""
-    session_context: SessionContext | None = getattr(
-        request.state, "session_context", None
-    )
+    session_context: SessionContext | None = getattr(request.state, "session_context", None)
     if session_context and session_context.csrf_token:
         return session_context.csrf_token
     return ""
@@ -193,9 +181,7 @@ def csrf_token_field(request: Request) -> str:
     """Generate HTML hidden field with CSRF token"""
     token = get_csrf_token(request)
     if token:
-        return (
-            f'<input type="hidden" name="{settings.CSRF_TOKEN_NAME}" value="{token}">'
-        )
+        return f'<input type="hidden" name="{settings.CSRF_TOKEN_NAME}" value="{token}">'
     return ""
 
 

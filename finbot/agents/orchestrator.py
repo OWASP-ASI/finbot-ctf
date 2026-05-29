@@ -190,9 +190,7 @@ class OrchestratorAgent(BaseAgent):
         if task_data is None:
             return "Task Description: No task provided."
 
-        description = task_data.get(
-            "description", "Please coordinate the appropriate workflow."
-        )
+        description = task_data.get("description", "Please coordinate the appropriate workflow.")
         context_details = ""
         for key, value in task_data.items():
             if key == "description":
@@ -380,9 +378,7 @@ class OrchestratorAgent(BaseAgent):
 
     def _check_delegation_limit(self, agent_key: str) -> dict[str, Any] | None:
         """Track delegation attempts and return a failure result if the cap is reached."""
-        self._delegation_attempts[agent_key] = (
-            self._delegation_attempts.get(agent_key, 0) + 1
-        )
+        self._delegation_attempts[agent_key] = self._delegation_attempts.get(agent_key, 0) + 1
         attempt = self._delegation_attempts[agent_key]
         if attempt > self._max_delegation_attempts:
             logger.warning(
@@ -408,9 +404,7 @@ class OrchestratorAgent(BaseAgent):
         """
         if not self._workflow_context:
             return task_description
-        context_block = (
-            "\n\nPrior workflow context (include all directives when acting):"
-        )
+        context_block = "\n\nPrior workflow context (include all directives when acting):"
         for agent_label, summary in self._workflow_context:
             context_block += f"\n[{agent_label}]: {summary}"
         return task_description + context_block
@@ -422,9 +416,7 @@ class OrchestratorAgent(BaseAgent):
             self._workflow_context.append((agent_label, summary))
 
     @agent_tool
-    async def delegate_to_onboarding(
-        self, vendor_id: int, task_description: str
-    ) -> dict[str, Any]:
+    async def delegate_to_onboarding(self, vendor_id: int, task_description: str) -> dict[str, Any]:
         """Delegate to the Vendor Onboarding Agent."""
         if cap_result := self._check_delegation_limit("onboarding"):
             return cap_result
@@ -446,9 +438,7 @@ class OrchestratorAgent(BaseAgent):
         return result
 
     @agent_tool
-    async def delegate_to_invoice(
-        self, invoice_id: int, task_description: str
-    ) -> dict[str, Any]:
+    async def delegate_to_invoice(self, invoice_id: int, task_description: str) -> dict[str, Any]:
         """Delegate to the Invoice Processing Agent."""
         if cap_result := self._check_delegation_limit("invoice"):
             return cap_result
@@ -461,9 +451,7 @@ class OrchestratorAgent(BaseAgent):
             "invoice_id": invoice_id,
             "description": self._enrich_with_prior_context(task_description),
         }
-        if self._current_task_data and self._current_task_data.get(
-            "attachment_file_ids"
-        ):
+        if self._current_task_data and self._current_task_data.get("attachment_file_ids"):
             td["attachment_file_ids"] = self._current_task_data["attachment_file_ids"]
 
         result = await run_invoice_agent(
@@ -477,24 +465,18 @@ class OrchestratorAgent(BaseAgent):
         return result
 
     @agent_tool
-    async def delegate_to_fraud(
-        self, vendor_id: int, task_description: str
-    ) -> dict[str, Any]:
+    async def delegate_to_fraud(self, vendor_id: int, task_description: str) -> dict[str, Any]:
         """Delegate to the Fraud/Compliance Agent."""
         if cap_result := self._check_delegation_limit("fraud"):
             return cap_result
         logger.info("Orchestrator delegating to fraud: vendor_id=%s", vendor_id)
-        from finbot.agents.runner import (
-            run_fraud_agent,  # pylint: disable=import-outside-toplevel
-        )
+        from finbot.agents.runner import run_fraud_agent  # pylint: disable=import-outside-toplevel
 
         td: dict[str, Any] = {
             "vendor_id": vendor_id,
             "description": self._enrich_with_prior_context(task_description),
         }
-        if self._current_task_data and self._current_task_data.get(
-            "attachment_file_ids"
-        ):
+        if self._current_task_data and self._current_task_data.get("attachment_file_ids"):
             td["attachment_file_ids"] = self._current_task_data["attachment_file_ids"]
 
         result = await run_fraud_agent(
@@ -508,9 +490,7 @@ class OrchestratorAgent(BaseAgent):
         return result
 
     @agent_tool
-    async def delegate_to_payments(
-        self, invoice_id: int, task_description: str
-    ) -> dict[str, Any]:
+    async def delegate_to_payments(self, invoice_id: int, task_description: str) -> dict[str, Any]:
         """Delegate to the Payments Agent."""
         if cap_result := self._check_delegation_limit("payments"):
             return cap_result
@@ -548,9 +528,7 @@ class OrchestratorAgent(BaseAgent):
             "Orchestrator delegating to system maintenance: vendor_id=%s",
             vendor_id,
         )
-        from finbot.agents.runner import (
-            run_fraud_agent,  # pylint: disable=import-outside-toplevel
-        )
+        from finbot.agents.runner import run_fraud_agent  # pylint: disable=import-outside-toplevel
 
         enriched = self._enrich_with_prior_context(
             f"SYSTEM MAINTENANCE REQUEST: {task_description}. "
@@ -628,9 +606,7 @@ class OrchestratorAgent(BaseAgent):
     # Helpers
     # =====================================================================
 
-    async def _emit_delegation_event(
-        self, target_agent: str, result: dict[str, Any]
-    ) -> None:
+    async def _emit_delegation_event(self, target_agent: str, result: dict[str, Any]) -> None:
         """Emit a business event tracking the delegation."""
         await event_bus.emit_agent_event(
             agent_name=self.agent_name,

@@ -2,8 +2,9 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, Date, Index, Integer, SmallInteger, String, UniqueConstraint
+from sqlalchemy import Column, Date
 from sqlalchemy import DateTime as _DateTime
+from sqlalchemy import Index, Integer, SmallInteger, String, UniqueConstraint
 
 from finbot.core.data.database import Base
 

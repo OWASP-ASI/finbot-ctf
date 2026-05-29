@@ -10,28 +10,29 @@ Tests for the CTF event processing pipeline mapped to acceptance criteria:
 """
 
 import json
-import pytest
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from finbot.ctf.processor.event_processor import CTFEventProcessor
-from finbot.ctf.processor.challenge_service import ChallengeService
-from finbot.ctf.processor.badge_service import BadgeService
-from finbot.ctf.detectors.base import BaseDetector
-from finbot.ctf.detectors.result import DetectionResult
-from finbot.ctf.detectors.registry import (
-    create_detector,
-    register_detector,
-    list_registered_detectors,
-)
+import pytest
+
+from finbot.core.data.models import Challenge, UserChallengeProgress
 from finbot.core.websocket.events import (
     WSEvent,
     WSEventType,
     create_activity_event,
-    create_challenge_completed_event,
     create_badge_earned_event,
+    create_challenge_completed_event,
 )
-from finbot.core.data.models import Challenge, UserChallengeProgress
+from finbot.ctf.detectors.base import BaseDetector
+from finbot.ctf.detectors.registry import (
+    create_detector,
+    list_registered_detectors,
+    register_detector,
+)
+from finbot.ctf.detectors.result import DetectionResult
+from finbot.ctf.processor.badge_service import BadgeService
+from finbot.ctf.processor.challenge_service import ChallengeService
+from finbot.ctf.processor.event_processor import CTFEventProcessor
 
 
 # ============================================================================
@@ -113,7 +114,11 @@ class PromptLeakDetector(BaseDetector):
         return DetectionResult(
             detected=detected,
             confidence=confidence,
-            message="System prompt leak detected" if detected else f"No leak detected (confidence {confidence:.2f})",
+            message=(
+                "System prompt leak detected"
+                if detected
+                else f"No leak detected (confidence {confidence:.2f})"
+            ),
             evidence={
                 "matches": matches,
                 "patterns_matched": patterns_matched,
@@ -152,24 +157,20 @@ def _make_event(
 def _cleanup_challenges(db, challenge_ids):
     """Delete challenges and related progress by ID list."""
     from finbot.core.data.models import Challenge, UserChallengeProgress
+
     db.query(UserChallengeProgress).filter(
         UserChallengeProgress.challenge_id.in_(challenge_ids)
     ).delete(synchronize_session=False)
-    db.query(Challenge).filter(
-        Challenge.id.in_(challenge_ids)
-    ).delete(synchronize_session=False)
+    db.query(Challenge).filter(Challenge.id.in_(challenge_ids)).delete(synchronize_session=False)
     db.commit()
 
 
 def _cleanup_badges(db, badge_ids):
     """Delete badges and related user_badges by ID list."""
     from finbot.core.data.models import Badge, UserBadge
-    db.query(UserBadge).filter(
-        UserBadge.badge_id.in_(badge_ids)
-    ).delete(synchronize_session=False)
-    db.query(Badge).filter(
-        Badge.id.in_(badge_ids)
-    ).delete(synchronize_session=False)
+
+    db.query(UserBadge).filter(UserBadge.badge_id.in_(badge_ids)).delete(synchronize_session=False)
+    db.query(Badge).filter(Badge.id.in_(badge_ids)).delete(synchronize_session=False)
     db.commit()
 
 
@@ -268,8 +269,10 @@ async def test_event_category_classification(db):
     processor.badge_service = MagicMock()
     processor.badge_service.check_event_for_badges = AsyncMock(return_value=[])
 
-    with patch.object(processor, "_store_ctf_event") as mock_store, \
-         patch.object(processor, "_push_to_websocket", new_callable=AsyncMock):
+    with (
+        patch.object(processor, "_store_ctf_event") as mock_store,
+        patch.object(processor, "_push_to_websocket", new_callable=AsyncMock),
+    ):
 
         await processor._process_single_event(event, db, "finbot:events:agents")
         mock_store.assert_called_with(event, "agent", db)
@@ -314,21 +317,17 @@ def test_idempotent_event_storage(db):
     event = _make_event(event_id="evt-idem-001")
 
     # FIX: Clean up from previous runs so first store is actually tested
-    db.query(CTFEvent).filter(
-        CTFEvent.external_event_id == "evt-idem-001"
-    ).delete(synchronize_session=False)
+    db.query(CTFEvent).filter(CTFEvent.external_event_id == "evt-idem-001").delete(
+        synchronize_session=False
+    )
     db.commit()
 
     processor._store_ctf_event(event, "agent", db)
-    count_1 = db.query(CTFEvent).filter(
-        CTFEvent.external_event_id == "evt-idem-001"
-    ).count()
+    count_1 = db.query(CTFEvent).filter(CTFEvent.external_event_id == "evt-idem-001").count()
     assert count_1 == 1, "First store should create exactly 1 record"
 
     processor._store_ctf_event(event, "agent", db)
-    count_2 = db.query(CTFEvent).filter(
-        CTFEvent.external_event_id == "evt-idem-001"
-    ).count()
+    count_2 = db.query(CTFEvent).filter(CTFEvent.external_event_id == "evt-idem-001").count()
     assert count_2 == 1, "Second store should not create a duplicate"
 
     db.close()
@@ -777,11 +776,15 @@ async def test_challenge_completion_and_progress_update(db):
     assert len(our_completed) == 1
     assert our_completed[0][1].detected is True
 
-    progress = db.query(UserChallengeProgress).filter(
-        UserChallengeProgress.challenge_id == "ch-flag-001",
-        UserChallengeProgress.namespace == "test-ns",
-        UserChallengeProgress.user_id == "user-1",
-    ).first()
+    progress = (
+        db.query(UserChallengeProgress)
+        .filter(
+            UserChallengeProgress.challenge_id == "ch-flag-001",
+            UserChallengeProgress.namespace == "test-ns",
+            UserChallengeProgress.user_id == "user-1",
+        )
+        .first()
+    )
 
     assert progress is not None
     assert progress.status == "completed"
@@ -849,11 +852,15 @@ async def test_challenge_progress_tracking_on_failed_attempt(db):
     assert our_completed == []
 
     # FIX #4: Add namespace + user_id filters to avoid finding stale records
-    progress = db.query(UserChallengeProgress).filter(
-        UserChallengeProgress.challenge_id == "ch-fail-001",
-        UserChallengeProgress.namespace == "test-ns",
-        UserChallengeProgress.user_id == "user-1",
-    ).first()
+    progress = (
+        db.query(UserChallengeProgress)
+        .filter(
+            UserChallengeProgress.challenge_id == "ch-fail-001",
+            UserChallengeProgress.namespace == "test-ns",
+            UserChallengeProgress.user_id == "user-1",
+        )
+        .first()
+    )
 
     assert progress is not None
     assert progress.status == "in_progress"
@@ -973,12 +980,14 @@ async def test_badge_auto_award_on_event(db):
 
     mock_evaluator = MagicMock()
     mock_evaluator.matches_event_type.return_value = True
-    mock_evaluator.check_event = AsyncMock(return_value=DetectionResult(
-        detected=True,
-        confidence=1.0,
-        message="Badge earned!",
-        evidence={"vendor_count": 5},
-    ))
+    mock_evaluator.check_event = AsyncMock(
+        return_value=DetectionResult(
+            detected=True,
+            confidence=1.0,
+            message="Badge earned!",
+            evidence={"vendor_count": 5},
+        )
+    )
 
     # Only mock the evaluator for OUR test badge, not YAML-seeded badges
     from finbot.ctf.evaluators import create_evaluator as real_create_evaluator
@@ -997,9 +1006,13 @@ async def test_badge_auto_award_on_event(db):
     assert len(our_awards) == 1
     assert our_awards[0][0] == "badge-auto-001"
 
-    user_badge = db.query(UserBadge).filter(
-        UserBadge.badge_id == "badge-auto-001",
-    ).first()
+    user_badge = (
+        db.query(UserBadge)
+        .filter(
+            UserBadge.badge_id == "badge-auto-001",
+        )
+        .first()
+    )
     assert user_badge is not None
     assert user_badge.namespace == "test-ns"
     assert user_badge.user_id == "user-1"
@@ -1158,12 +1171,16 @@ def test_points_calculated_from_completed_challenges(db):
 
     # Mark both as completed
     p1 = UserChallengeProgress(
-        namespace="test-ns", user_id="user-1",
-        challenge_id="ch-pts-001", status="completed",
+        namespace="test-ns",
+        user_id="user-1",
+        challenge_id="ch-pts-001",
+        status="completed",
     )
     p2 = UserChallengeProgress(
-        namespace="test-ns", user_id="user-1",
-        challenge_id="ch-pts-002", status="completed",
+        namespace="test-ns",
+        user_id="user-1",
+        challenge_id="ch-pts-002",
+        status="completed",
     )
     db.add_all([p1, p2])
     db.commit()
@@ -1208,26 +1225,46 @@ def test_category_progress_tracking(db):
     _cleanup_challenges(db, challenge_ids)
 
     ch1 = Challenge(
-        id="ch-cat-001", title="Sec 1", description="Security challenge 1", points=10,
-        category=cat_sec, difficulty="easy",
-        detector_class="FakeTestDetector", is_active=True, order_index=0,
+        id="ch-cat-001",
+        title="Sec 1",
+        description="Security challenge 1",
+        points=10,
+        category=cat_sec,
+        difficulty="easy",
+        detector_class="FakeTestDetector",
+        is_active=True,
+        order_index=0,
     )
     ch2 = Challenge(
-        id="ch-cat-002", title="Sec 2", description="Security challenge 2", points=20,
-        category=cat_sec, difficulty="medium",
-        detector_class="FakeTestDetector", is_active=True, order_index=1,
+        id="ch-cat-002",
+        title="Sec 2",
+        description="Security challenge 2",
+        points=20,
+        category=cat_sec,
+        difficulty="medium",
+        detector_class="FakeTestDetector",
+        is_active=True,
+        order_index=1,
     )
     ch3 = Challenge(
-        id="ch-cat-003", title="Recon 1", description="Recon challenge 1", points=15,
-        category=cat_recon, difficulty="easy",
-        detector_class="FakeTestDetector", is_active=True, order_index=0,
+        id="ch-cat-003",
+        title="Recon 1",
+        description="Recon challenge 1",
+        points=15,
+        category=cat_recon,
+        difficulty="easy",
+        detector_class="FakeTestDetector",
+        is_active=True,
+        order_index=0,
     )
     db.add_all([ch1, ch2, ch3])
 
     # Complete only 1 security challenge
     p1 = UserChallengeProgress(
-        namespace="test-ns", user_id="user-1",
-        challenge_id="ch-cat-001", status="completed",
+        namespace="test-ns",
+        user_id="user-1",
+        challenge_id="ch-cat-001",
+        status="completed",
     )
     db.add(p1)
     db.commit()
@@ -1301,9 +1338,7 @@ def test_badge_points_included_in_total(db):
 
     # Calculate badge points from earned badges
     earned_ids = ["badge-pts-001"]
-    badge_points = sum(
-        b.points for b in db.query(Badge).filter(Badge.id.in_(earned_ids)).all()
-    )
+    badge_points = sum(b.points for b in db.query(Badge).filter(Badge.id.in_(earned_ids)).all())
     assert badge_points == 100, f"Expected 100 badge points, got {badge_points}"
 
     db.close()
@@ -1339,9 +1374,14 @@ async def test_challenge_completed_websocket_event(db):
     _cleanup_challenges(db, ["ch-ws-001"])
 
     challenge = Challenge(
-        id="ch-ws-001", title="WS Challenge", description="Test",
-        category="prompt_injection", difficulty="beginner",
-        points=50, detector_class="FakeTestDetector", is_active=True,
+        id="ch-ws-001",
+        title="WS Challenge",
+        description="Test",
+        category="prompt_injection",
+        difficulty="beginner",
+        points=50,
+        detector_class="FakeTestDetector",
+        is_active=True,
         order_index=0,
     )
     db.add(challenge)
@@ -1353,9 +1393,15 @@ async def test_challenge_completed_websocket_event(db):
     mock_ws.broadcast_activity = AsyncMock()
     mock_ws.send_to_user = AsyncMock()
 
-    with patch("finbot.ctf.processor.event_processor.get_ws_manager", return_value=mock_ws), \
-         patch("finbot.ctf.processor.event_processor.create_activity_event", return_value=MagicMock()), \
-         patch("finbot.ctf.processor.event_processor.create_challenge_completed_event") as mock_create:
+    with (
+        patch("finbot.ctf.processor.event_processor.get_ws_manager", return_value=mock_ws),
+        patch(
+            "finbot.ctf.processor.event_processor.create_activity_event", return_value=MagicMock()
+        ),
+        patch(
+            "finbot.ctf.processor.event_processor.create_challenge_completed_event"
+        ) as mock_create,
+    ):
         mock_create.return_value = MagicMock()
 
         await processor._push_to_websocket(event, [("ch-ws-001", result)], [], db)
@@ -1363,8 +1409,12 @@ async def test_challenge_completed_websocket_event(db):
     mock_ws.broadcast_activity.assert_called_once()
     mock_ws.send_to_user.assert_called_once()
     mock_create.assert_called_once_with(
-        "ch-ws-001", "WS Challenge", 50,
-        effective_points=50, points_modifier=1.0, modifier_details=None,
+        "ch-ws-001",
+        "WS Challenge",
+        50,
+        effective_points=50,
+        points_modifier=1.0,
+        modifier_details=None,
     )
 
     db.close()
@@ -1398,9 +1448,14 @@ async def test_badge_earned_websocket_event(db):
     _cleanup_badges(db, ["badge-ws-001"])
 
     badge = Badge(
-        id="badge-ws-001", title="WS Badge", description="Test",
-        category="achievement", rarity="rare", points=10,
-        evaluator_class="VendorCountEvaluator", is_active=True,
+        id="badge-ws-001",
+        title="WS Badge",
+        description="Test",
+        category="achievement",
+        rarity="rare",
+        points=10,
+        evaluator_class="VendorCountEvaluator",
+        is_active=True,
     )
     db.add(badge)
     db.commit()
@@ -1411,9 +1466,13 @@ async def test_badge_earned_websocket_event(db):
     mock_ws.broadcast_activity = AsyncMock()
     mock_ws.send_to_user = AsyncMock()
 
-    with patch("finbot.ctf.processor.event_processor.get_ws_manager", return_value=mock_ws), \
-         patch("finbot.ctf.processor.event_processor.create_activity_event", return_value=MagicMock()), \
-         patch("finbot.ctf.processor.event_processor.create_badge_earned_event") as mock_create:
+    with (
+        patch("finbot.ctf.processor.event_processor.get_ws_manager", return_value=mock_ws),
+        patch(
+            "finbot.ctf.processor.event_processor.create_activity_event", return_value=MagicMock()
+        ),
+        patch("finbot.ctf.processor.event_processor.create_badge_earned_event") as mock_create,
+    ):
         mock_create.return_value = MagicMock()
 
         await processor._push_to_websocket(event, [], [("badge-ws-001", result)], db)
@@ -1518,13 +1577,15 @@ def test_websocket_event_factory_functions():
     2. Data payloads contain expected fields
     3. Timestamps auto-populated
     """
-    activity = create_activity_event({
-        "event_type": "agent.task_start",
-        "summary": "Task started",
-        "severity": "info",
-        "workflow_id": "wf-1",
-        "agent_name": "onboarding_agent",
-    })
+    activity = create_activity_event(
+        {
+            "event_type": "agent.task_start",
+            "summary": "Task started",
+            "severity": "info",
+            "workflow_id": "wf-1",
+            "agent_name": "onboarding_agent",
+        }
+    )
     assert activity.type == WSEventType.ACTIVITY
     assert activity.data["event_type"] == "agent.task_start"
     assert activity.data["summary"] == "Task started"
@@ -1561,9 +1622,10 @@ def test_google_sheets_integration_verification():
     4. Worksheet tab has automation_status updates
     """
     import os
+
+    import gspread
     from dotenv import load_dotenv
     from google.oauth2.service_account import Credentials
-    import gspread
 
     load_dotenv()
 
@@ -1575,27 +1637,26 @@ def test_google_sheets_integration_verification():
 
     try:
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         assert len(summary_data) > 1, "Summary sheet should have data"
 
         # Check Event Driven CTF sheet
-        ctf_sheet = sheet.worksheet('Event Driven CTF')
+        ctf_sheet = sheet.worksheet("Event Driven CTF")
         ctf_data = ctf_sheet.get_all_values()
 
         assert len(ctf_data) > 0, "Event Driven CTF should have data"
 
         # Verify automation_status column exists
         headers = ctf_data[0]
-        has_automation_status = any('automation' in h.lower() for h in headers)
+        has_automation_status = any("automation" in h.lower() for h in headers)
         assert has_automation_status, "Should have automation_status column"
 
         print("✓ Google Sheets integration verified successfully")

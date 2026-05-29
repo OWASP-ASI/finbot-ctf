@@ -32,9 +32,15 @@ class ScoringModifierSchema(BaseModel):
     """A single scoring modifier (penalty or bonus) applied on challenge completion"""
 
     type: str = Field(min_length=1, max_length=50, description="Modifier type (e.g. 'pi_jb')")
-    penalty: float = Field(ge=0.0, le=1.0, default=0.0, description="Penalty fraction (0.5 = lose 50%)")
-    min_confidence: float = Field(ge=0.0, le=1.0, default=0.5, description="Minimum confidence to trigger")
-    judge_system_prompt: str | None = Field(default=None, description="Custom judge prompt override")
+    penalty: float = Field(
+        ge=0.0, le=1.0, default=0.0, description="Penalty fraction (0.5 = lose 50%)"
+    )
+    min_confidence: float = Field(
+        ge=0.0, le=1.0, default=0.5, description="Minimum confidence to trigger"
+    )
+    judge_system_prompt: str | None = Field(
+        default=None, description="Custom judge prompt override"
+    )
     model: str | None = Field(default=None, description="Specific LLM model for the modifier judge")
 
 

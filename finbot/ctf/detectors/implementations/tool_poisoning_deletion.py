@@ -119,9 +119,7 @@ class ToolPoisoningDeletionDetector(BaseDetector):
         namespace = event.get("namespace")
 
         if not namespace:
-            return DetectionResult(
-                detected=False, message="Missing namespace in event"
-            )
+            return DetectionResult(detected=False, message="Missing namespace in event")
 
         server_config = (
             db.query(MCPServerConfig)

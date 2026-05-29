@@ -130,9 +130,7 @@ class EventBus:
         encoded_event = self._encode_event_data(enriched_event)
 
         stream_name = f"{self.event_prefix}:business"
-        await self.redis.xadd(
-            stream_name, encoded_event, maxlen=settings.EVENT_BUFFER_SIZE
-        )
+        await self.redis.xadd(stream_name, encoded_event, maxlen=settings.EVENT_BUFFER_SIZE)
         logger.debug("Emitted business event %s to stream %s", event_type, stream_name)
 
     async def emit_agent_event(
@@ -177,9 +175,7 @@ class EventBus:
         encoded_event = self._encode_event_data(agent_event)
 
         stream_name = f"{self.event_prefix}:agents"
-        await self.redis.xadd(
-            stream_name, encoded_event, maxlen=settings.EVENT_BUFFER_SIZE
-        )
+        await self.redis.xadd(stream_name, encoded_event, maxlen=settings.EVENT_BUFFER_SIZE)
         logger.debug(
             "Emitted agent event %s.%s to stream %s",
             agent_name,

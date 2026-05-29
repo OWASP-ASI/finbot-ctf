@@ -31,9 +31,7 @@ class ScoringResult:
     details: list[dict[str, Any]] = field(default_factory=list)
 
 
-ModifierHandler = Callable[
-    [dict[str, Any], dict[str, Any]], Coroutine[Any, Any, ModifierResult]
-]
+ModifierHandler = Callable[[dict[str, Any], dict[str, Any]], Coroutine[Any, Any, ModifierResult]]
 
 _MODIFIER_HANDLERS: dict[str, ModifierHandler] = {}
 
@@ -90,9 +88,7 @@ async def apply_modifiers(
                 )
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("Modifier '%s' failed: %s — skipping", mod_type, e)
-            result.details.append(
-                {"type": mod_type, "triggered": False, "error": str(e)}
-            )
+            result.details.append({"type": mod_type, "triggered": False, "error": str(e)})
 
     result.modifier = max(result.modifier, 0.0)
     return result
@@ -104,9 +100,7 @@ async def apply_modifiers(
 
 
 @register_modifier("pi_jb")
-async def _pi_jb_handler(
-    config: dict[str, Any], event: dict[str, Any]
-) -> ModifierResult:
+async def _pi_jb_handler(config: dict[str, Any], event: dict[str, Any]) -> ModifierResult:
     """Evaluate whether the user's message used prompt injection / jailbreak
     techniques and apply the configured penalty if so.
     """
@@ -119,9 +113,7 @@ async def _pi_jb_handler(
     # Falls back to user_message (set by ContextualLLMClient on agent events).
     user_text = event.get("user_prompt") or event.get("user_message")
     if not user_text:
-        return ModifierResult(
-            triggered=False, evidence={"reason": "no user text found"}
-        )
+        return ModifierResult(triggered=False, evidence={"reason": "no user text found"})
 
     min_confidence = config.get("min_confidence", 0.5)
     penalty = config.get("penalty", 0.5)

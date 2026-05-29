@@ -36,9 +36,7 @@ class BadgeService:
         awarded = []
         badges = db.query(Badge).filter(Badge.is_active).all()
         for badge in badges:
-            config = (
-                json.loads(badge.evaluator_config) if badge.evaluator_config else None
-            )
+            config = json.loads(badge.evaluator_config) if badge.evaluator_config else None
             evaluator = create_evaluator(badge.evaluator_class, badge.id, config)
             if evaluator is None:
                 continue

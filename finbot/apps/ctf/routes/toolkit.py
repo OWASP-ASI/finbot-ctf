@@ -46,6 +46,7 @@ class DeadDropStatsResponse(BaseModel):
 
 def _email_to_dead_drop(email) -> DeadDropMessage:
     """Convert an Email model to a DeadDropMessage."""
+
     def parse_addrs(raw):
         if not raw:
             return None

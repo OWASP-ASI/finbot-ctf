@@ -46,22 +46,24 @@ async def get_all_vendors_summary(
                 by_status[status]["count"] += 1
                 by_status[status]["amount"] += amount
 
-            result.append({
-                "vendor_id": vendor.id,
-                "company_name": vendor.company_name,
-                "vendor_category": vendor.vendor_category,
-                "status": vendor.status,
-                "trust_level": vendor.trust_level,
-                "risk_level": vendor.risk_level,
-                "services": vendor.services,
-                "agent_notes": vendor.agent_notes,
-                "email": vendor.email,
-                "invoice_summary": {
-                    "total_invoices": len(invoices),
-                    "total_amount": total_amount,
-                    "by_status": by_status,
-                },
-            })
+            result.append(
+                {
+                    "vendor_id": vendor.id,
+                    "company_name": vendor.company_name,
+                    "vendor_category": vendor.vendor_category,
+                    "status": vendor.status,
+                    "trust_level": vendor.trust_level,
+                    "risk_level": vendor.risk_level,
+                    "services": vendor.services,
+                    "agent_notes": vendor.agent_notes,
+                    "email": vendor.email,
+                    "invoice_summary": {
+                        "total_invoices": len(invoices),
+                        "total_amount": total_amount,
+                        "by_status": by_status,
+                    },
+                }
+            )
 
         return result
 
@@ -83,10 +85,12 @@ async def get_pending_actions_summary(
                 "company_name": v.company_name,
                 "services": v.services,
                 "agent_notes": v.agent_notes,
-                "created_at": v.created_at.isoformat().replace("+00:00", "Z")
-                if v.created_at else None,
+                "created_at": (
+                    v.created_at.isoformat().replace("+00:00", "Z") if v.created_at else None
+                ),
             }
-            for v in all_vendors if v.status == "pending"
+            for v in all_vendors
+            if v.status == "pending"
         ]
 
         pending_invoices = [
@@ -98,10 +102,12 @@ async def get_pending_actions_summary(
                 "description": inv.description,
                 "agent_notes": inv.agent_notes,
                 "status": inv.status,
-                "due_date": inv.due_date.isoformat().replace("+00:00", "Z")
-                if inv.due_date else None,
+                "due_date": (
+                    inv.due_date.isoformat().replace("+00:00", "Z") if inv.due_date else None
+                ),
             }
-            for inv in all_invoices if inv.status in ("submitted", "processing")
+            for inv in all_invoices
+            if inv.status in ("submitted", "processing")
         ]
 
         high_risk_vendors = [
@@ -113,7 +119,8 @@ async def get_pending_actions_summary(
                 "risk_level": v.risk_level,
                 "agent_notes": v.agent_notes,
             }
-            for v in all_vendors if v.risk_level == "high"
+            for v in all_vendors
+            if v.risk_level == "high"
         ]
 
         return {
@@ -159,8 +166,9 @@ async def get_vendor_compliance_docs(
                     "file_type": f.file_type,
                     "folder_path": f.folder_path,
                     "content_text": f.content_text,
-                    "created_at": f.created_at.isoformat().replace("+00:00", "Z")
-                    if f.created_at else None,
+                    "created_at": (
+                        f.created_at.isoformat().replace("+00:00", "Z") if f.created_at else None
+                    ),
                 }
                 for f in files
             ],
@@ -219,10 +227,14 @@ async def get_vendor_activity_report(
                     "status": inv.status,
                     "description": inv.description,
                     "agent_notes": inv.agent_notes,
-                    "invoice_date": inv.invoice_date.isoformat().replace("+00:00", "Z")
-                    if inv.invoice_date else None,
-                    "due_date": inv.due_date.isoformat().replace("+00:00", "Z")
-                    if inv.due_date else None,
+                    "invoice_date": (
+                        inv.invoice_date.isoformat().replace("+00:00", "Z")
+                        if inv.invoice_date
+                        else None
+                    ),
+                    "due_date": (
+                        inv.due_date.isoformat().replace("+00:00", "Z") if inv.due_date else None
+                    ),
                 }
                 for inv in invoices
             ],
@@ -239,8 +251,9 @@ async def get_vendor_activity_report(
                     "sender_name": e.sender_name,
                     "direction": e.direction,
                     "message_type": e.message_type,
-                    "created_at": e.created_at.isoformat().replace("+00:00", "Z")
-                    if e.created_at else None,
+                    "created_at": (
+                        e.created_at.isoformat().replace("+00:00", "Z") if e.created_at else None
+                    ),
                 }
                 for e in emails
             ],
@@ -251,8 +264,9 @@ async def get_vendor_activity_report(
                     "file_type": f.file_type,
                     "folder_path": f.folder_path,
                     "content_text": f.content_text,
-                    "created_at": f.created_at.isoformat().replace("+00:00", "Z")
-                    if f.created_at else None,
+                    "created_at": (
+                        f.created_at.isoformat().replace("+00:00", "Z") if f.created_at else None
+                    ),
                 }
                 for f in files
             ],
@@ -283,7 +297,9 @@ async def save_report(
 
         logger.info(
             "Co-Pilot report saved: id=%d, type=%s, title='%s'",
-            f.id, report_type, title,
+            f.id,
+            report_type,
+            title,
         )
 
         return {

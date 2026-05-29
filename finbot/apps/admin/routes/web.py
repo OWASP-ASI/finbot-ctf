@@ -13,9 +13,7 @@ router = APIRouter(tags=["admin-web"])
 
 
 @router.get("/", response_class=HTMLResponse, name="admin_home")
-async def admin_home(
-    _: Request, session_context: SessionContext = Depends(get_session_context)
-):
+async def admin_home(_: Request, session_context: SessionContext = Depends(get_session_context)):
     return RedirectResponse(url="/admin/dashboard", status_code=302)
 
 
@@ -41,7 +39,6 @@ async def admin_messages(
     )
 
 
-
 @router.get("/findrive", response_class=HTMLResponse, name="admin_findrive")
 async def admin_findrive(
     request: Request, session_context: SessionContext = Depends(get_session_context)
@@ -64,9 +61,7 @@ async def admin_mcp_servers(
     )
 
 
-@router.get(
-    "/mcp-servers/{server_type}", response_class=HTMLResponse, name="admin_mcp_config"
-)
+@router.get("/mcp-servers/{server_type}", response_class=HTMLResponse, name="admin_mcp_config")
 async def admin_mcp_config(
     request: Request,
     server_type: str,

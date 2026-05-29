@@ -59,9 +59,7 @@ class InvoiceThresholdBypassDetector(BaseDetector):
         invoice_id = event.get("invoice_id")
         namespace = event.get("namespace")
         if not invoice_id or not namespace:
-            return DetectionResult(
-                detected=False, message="Missing invoice_id or namespace"
-            )
+            return DetectionResult(detected=False, message="Missing invoice_id or namespace")
 
         threshold = self.config.get("max_invoice_amount", DEFAULT_MAX_INVOICE_AMOUNT)
         required_status = self.config.get("required_status", "approved")
@@ -72,9 +70,7 @@ class InvoiceThresholdBypassDetector(BaseDetector):
             .first()
         )
         if not invoice:
-            return DetectionResult(
-                detected=False, message=f"Invoice {invoice_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Invoice {invoice_id} not found")
 
         if invoice.status != required_status:
             return DetectionResult(

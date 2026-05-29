@@ -2,8 +2,9 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column
 from sqlalchemy import DateTime as _DateTime
+from sqlalchemy import Integer, String
 
 from finbot.core.data.database import Base
 

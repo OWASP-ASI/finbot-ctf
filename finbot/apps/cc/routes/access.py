@@ -18,11 +18,7 @@ async def access_list(request: Request):
     """View and manage CC access list"""
     db = SessionLocal()
     try:
-        admins = (
-            db.query(PlatformAdmin)
-            .order_by(PlatformAdmin.added_at.desc())
-            .all()
-        )
+        admins = db.query(PlatformAdmin).order_by(PlatformAdmin.added_at.desc()).all()
         admin_list = [
             {
                 "id": a.id,

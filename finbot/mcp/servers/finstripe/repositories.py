@@ -40,9 +40,7 @@ class PaymentTransactionRepository(NamespacedRepository):
 
     def get_by_transfer_id(self, transfer_id: str) -> PaymentTransaction | None:
         return (
-            self._add_namespace_filter(
-                self.db.query(PaymentTransaction), PaymentTransaction
-            )
+            self._add_namespace_filter(self.db.query(PaymentTransaction), PaymentTransaction)
             .filter(PaymentTransaction.transfer_id == transfer_id)
             .first()
         )
@@ -54,9 +52,7 @@ class PaymentTransactionRepository(NamespacedRepository):
         offset: int = 0,
     ) -> list[PaymentTransaction]:
         return (
-            self._add_namespace_filter(
-                self.db.query(PaymentTransaction), PaymentTransaction
-            )
+            self._add_namespace_filter(self.db.query(PaymentTransaction), PaymentTransaction)
             .filter(PaymentTransaction.vendor_id == vendor_id)
             .order_by(PaymentTransaction.created_at.desc())
             .offset(offset)
@@ -66,17 +62,13 @@ class PaymentTransactionRepository(NamespacedRepository):
 
     def list_for_invoice(self, invoice_id: int) -> list[PaymentTransaction]:
         return (
-            self._add_namespace_filter(
-                self.db.query(PaymentTransaction), PaymentTransaction
-            )
+            self._add_namespace_filter(self.db.query(PaymentTransaction), PaymentTransaction)
             .filter(PaymentTransaction.invoice_id == invoice_id)
             .order_by(PaymentTransaction.created_at.desc())
             .all()
         )
 
-    def update_status(
-        self, transfer_id: str, status: str
-    ) -> PaymentTransaction | None:
+    def update_status(self, transfer_id: str, status: str) -> PaymentTransaction | None:
         txn = self.get_by_transfer_id(transfer_id)
         if txn:
             txn.status = status

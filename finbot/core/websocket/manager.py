@@ -126,9 +126,7 @@ class WebSocketManager:
         target = payload["target"]
 
         if target == "user":
-            await self._local_send_to_user(
-                payload["namespace"], payload["user_id"], event
-            )
+            await self._local_send_to_user(payload["namespace"], payload["user_id"], event)
         elif target == "topic":
             await self._local_broadcast_to_topic(payload["topic"], event)
 
@@ -260,9 +258,7 @@ class WebSocketManager:
     # Local delivery — only pushes to connections on THIS instance
     # ------------------------------------------------------------------
 
-    async def _local_send_to_user(
-        self, namespace: str, user_id: str, event: WSEvent
-    ) -> None:
+    async def _local_send_to_user(self, namespace: str, user_id: str, event: WSEvent) -> None:
         user_key = f"{namespace}:{user_id}"
         connection_ids = list(self._user_connections.get(user_key, []))
         for conn_id in connection_ids:

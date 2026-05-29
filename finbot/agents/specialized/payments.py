@@ -416,9 +416,7 @@ class PaymentsAgent(BaseAgent):
             )
             previous_state = payment_result.pop("_previous_state", {})
             amount = payment_result.get("amount", 0)
-            amount_str = (
-                f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
-            )
+            amount_str = f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
 
             await event_bus.emit_business_event(
                 event_type="payment.processed",
@@ -488,6 +486,4 @@ class PaymentsAgent(BaseAgent):
         except ValueError as e:
             logger.error("Error updating payment agent notes: %s", e)
             return
-        logger.info(
-            "Payment agent notes updated successfully for invoice_id: %s", invoice_id
-        )
+        logger.info("Payment agent notes updated successfully for invoice_id: %s", invoice_id)

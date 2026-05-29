@@ -37,18 +37,17 @@
 #   LLM-OAPI-GSI-001: Google Sheets Integration Verification
 # ==============================================================================
 
-import sys
 import os
-import gspread
-import pytest
-
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from finbot.core.llm.openai_client import OpenAIClient
-from finbot.core.data.models import LLMRequest
-
+import gspread
+import pytest
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
+
+from finbot.core.data.models import LLMRequest
+from finbot.core.llm.openai_client import OpenAIClient
 
 load_dotenv()
 
@@ -73,6 +72,7 @@ def mock_openai_settings():
         ms.LLM_MAX_TOKENS = 4096
         ms.LLM_TIMEOUT = 60
         yield ms
+
 
 # ============================================================================
 # LLM-OAPI-001: Configuration Loading
@@ -171,9 +171,7 @@ async def test_successful_chat_completion(mock_openai_settings):
 
         client = OpenAIClient()
 
-        request = LLMRequest(
-            messages=[{"role": "user", "content": "Hi"}]
-        )
+        request = LLMRequest(messages=[{"role": "user", "content": "Hi"}])
 
         response = await client.chat(request)
 
@@ -240,16 +238,14 @@ async def test_json_schema_formatting(mock_openai_settings):
             "name": "user_info",
             "schema": {
                 "type": "object",
-                "properties": {
-                    "name": {"type": "string"}
-                },
-                "required": ["name"]
-            }
+                "properties": {"name": {"type": "string"}},
+                "required": ["name"],
+            },
         }
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Extract user info"}],
-            output_json_schema=json_schema
+            output_json_schema=json_schema,
         )
 
         response = await client.chat(request)
@@ -320,7 +316,7 @@ async def test_tool_calls_handling(mock_openai_settings):
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "What's the weather in NYC?"}],
-            tools=[{"type": "function", "function": {"name": "get_weather"}}]
+            tools=[{"type": "function", "function": {"name": "get_weather"}}],
         )
 
         response = await client.chat(request)
@@ -384,7 +380,7 @@ async def test_previous_response_id_chaining(mock_openai_settings):
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Follow up question"}],
-            previous_response_id="prev_123"
+            previous_response_id="prev_123",
         )
 
         response = await client.chat(request)
@@ -450,7 +446,7 @@ async def test_message_history_preservation(mock_openai_settings):
             messages=[
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi!"},
-                {"role": "user", "content": "How are you?"}
+                {"role": "user", "content": "How are you?"},
             ]
         )
 
@@ -465,6 +461,7 @@ async def test_message_history_preservation(mock_openai_settings):
         assert response.messages[0]["content"] == "Hello"
         # [-1] would also work here, but [3] makes the 4-message count explicit
         assert response.messages[3]["content"] == "I'm doing well!"
+
 
 # ============================================================================
 # LLM-OAPI-007: Zero Temperature Not Overridden
@@ -525,9 +522,9 @@ async def test_zero_temperature_not_overridden(mock_openai_settings):
 
         actual = mock_client_instance.responses.create.call_args.kwargs["temperature"]
         # 0.0 is falsy in Python — if `or` is used, the default 0.7 is sent instead
-        assert actual == pytest.approx(0.0), (
-            f"temperature=0.0 → expected 0.0 but API received {actual}"
-        )
+        assert actual == pytest.approx(
+            0.0
+        ), f"temperature=0.0 → expected 0.0 but API received {actual}"
 
 
 # ============================================================================
@@ -582,9 +579,9 @@ async def test_explicit_temperature_passed_through(mock_openai_settings):
 
         actual = mock_client_instance.responses.create.call_args.kwargs["temperature"]
         # An explicit value must be forwarded as-is — the client must not alter it
-        assert actual == pytest.approx(0.5), (
-            f"temperature=0.5 → expected 0.5 but API received {actual}"
-        )
+        assert actual == pytest.approx(
+            0.5
+        ), f"temperature=0.5 → expected 0.5 but API received {actual}"
 
 
 # ============================================================================
@@ -640,10 +637,9 @@ async def test_none_temperature_falls_back_to_default(mock_openai_settings):
 
         actual = mock_client_instance.responses.create.call_args.kwargs["temperature"]
         # None means "no preference" — the client's default_temperature must be used
-        assert actual == pytest.approx(0.7), (
-            f"temperature=None → expected 0.7 but API received {actual}"
-        )
-
+        assert actual == pytest.approx(
+            0.7
+        ), f"temperature=None → expected 0.7 but API received {actual}"
 
 
 # ============================================================================
@@ -671,7 +667,7 @@ async def test_malformed_json_in_function_arguments(mock_openai_settings):
     mock_function_call.type = "function_call"
     mock_function_call.name = "get_weather"
     mock_function_call.call_id = "call_invalid"
-    mock_function_call.arguments = '{invalid json'  # Malformed JSON
+    mock_function_call.arguments = "{invalid json"  # Malformed JSON
 
     mock_response = MagicMock()
     mock_response.id = "response_error"
@@ -687,7 +683,7 @@ async def test_malformed_json_in_function_arguments(mock_openai_settings):
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Test"}],
-            tools=[{"type": "function", "function": {"name": "get_weather"}}]
+            tools=[{"type": "function", "function": {"name": "get_weather"}}],
         )
 
         # Malformed JSON in function arguments → json.loads raises JSONDecodeError,
@@ -726,9 +722,7 @@ async def test_api_network_error_handling(mock_openai_settings):
 
         client = OpenAIClient()
 
-        request = LLMRequest(
-            messages=[{"role": "user", "content": "Test"}]
-        )
+        request = LLMRequest(messages=[{"role": "user", "content": "Test"}])
 
         # OpenAI client wraps ConnectionError in a new Exception("OpenAI chat failed: <original>")
         # match= narrows the broad Exception catch to the specific wrapper message
@@ -782,7 +776,7 @@ async def test_empty_tool_calls_list(mock_openai_settings):
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Just chat"}],
-            tools=[{"type": "function", "function": {"name": "get_weather"}}]
+            tools=[{"type": "function", "function": {"name": "get_weather"}}],
         )
 
         response = await client.chat(request)
@@ -793,6 +787,7 @@ async def test_empty_tool_calls_list(mock_openai_settings):
         assert (response.tool_calls is None) or (len(response.tool_calls) == 0)
         # The text reply must still be extracted normally even when there are no tool calls
         assert response.content == "No tools needed"
+
 
 # ============================================================================
 # LLM-OAPI-EDGE-002: OpenAIClient.chat() handles tool_calls with unexpected type
@@ -827,6 +822,7 @@ async def test_tool_calls_unexpected_type(mock_openai_settings):
         request = LLMRequest(messages=[{"role": "user", "content": "Hi"}])
         response = await client.chat(request)
         assert isinstance(response.tool_calls, list) or response.tool_calls is None
+
 
 # ============================================================================
 # LLM-OAPI-EDGE-003: OpenAIClient.chat() handles tool_call missing required fields
@@ -869,6 +865,7 @@ async def test_tool_call_missing_fields(mock_openai_settings):
         # json.loads(None) raises TypeError — client wraps it as "OpenAI chat failed"
         with pytest.raises(Exception, match="OpenAI chat failed"):
             await client.chat(request)
+
 
 # ============================================================================
 # LLM-OAPI-EDGE-004: OpenAIClient.chat() handles request with messages=None
@@ -913,6 +910,7 @@ async def test_request_messages_none(mock_openai_settings):
         assert response.success is True
         assert response.messages is not None
         assert len(response.messages) == 1
+
 
 # ============================================================================
 # LLM-OAPI-EDGE-005: OpenAIClient.chat() handles message.content as unexpected type
@@ -975,7 +973,9 @@ async def test_unexpected_content_type(mock_openai_settings):
         print()
         print("  STEP 2 — Our dict does NOT have a .type attribute:")
         print(f"           dict_content            = {dict_content}")
-        print(f"           dict_content['unexpected'] → '{dict_content['unexpected']}'  ✅  (key access works)")
+        print(
+            f"           dict_content['unexpected'] → '{dict_content['unexpected']}'  ✅  (key access works)"
+        )
         print("           dict_content.type       → AttributeError ❌  (no such attribute)")
         print()
         print("  STEP 3 — This is what gets passed to the client:")
@@ -1000,6 +1000,7 @@ async def test_unexpected_content_type(mock_openai_settings):
 
         assert isinstance(response.content, str)
 
+
 # ============================================================================
 # LLM-OAPI-EDGE-006: OpenAIClient.chat() does not retry on unexpected exceptions
 # ============================================================================
@@ -1020,7 +1021,9 @@ async def test_unexpected_exception_not_retried(mock_openai_settings):
     """
     with patch("finbot.core.llm.openai_client.AsyncOpenAI") as mock_async_openai:
         mock_client_instance = AsyncMock()
-        mock_client_instance.responses.create = AsyncMock(side_effect=RuntimeError("Unexpected error"))
+        mock_client_instance.responses.create = AsyncMock(
+            side_effect=RuntimeError("Unexpected error")
+        )
         mock_async_openai.return_value = mock_client_instance
 
         client = OpenAIClient()
@@ -1032,6 +1035,7 @@ async def test_unexpected_exception_not_retried(mock_openai_settings):
             await client.chat(request)
         # No retry logic in this client — responses.create must have been called exactly once
         assert mock_client_instance.responses.create.call_count == 1
+
 
 # ============================================================================
 # LLM-OAPI-EDGE-007: Messages List Not Mutated on Chat
@@ -1083,9 +1087,9 @@ async def test_messages_list_not_mutated(mock_openai_settings):
         await client.chat(request)
 
         # If the client appends to request.messages directly (not a copy), this will fail
-        assert len(original_messages) == length_before, (
-            f"original messages list was mutated: length went from {length_before} to {len(original_messages)}"
-        )
+        assert (
+            len(original_messages) == length_before
+        ), f"original messages list was mutated: length went from {length_before} to {len(original_messages)}"
 
 
 # ============================================================================
@@ -1142,9 +1146,9 @@ async def test_response_messages_independent_of_request(mock_openai_settings):
         llm_response.messages.append({"role": "tool", "content": "tool result"})
 
         # If response.messages is the same object as original_messages, this will fail
-        assert len(original_messages) == length_before, (
-            "mutating response.messages affected the caller's original list — they share the same object"
-        )
+        assert (
+            len(original_messages) == length_before
+        ), "mutating response.messages affected the caller's original list — they share the same object"
 
 
 # ============================================================================
@@ -1190,7 +1194,9 @@ async def test_second_call_does_not_inherit_first_call_history(mock_openai_setti
 
         sent_call1 = mock_client_instance.responses.create.call_args_list[0].kwargs["input"]
         print(f"  [call 1 → API]   sent {len(sent_call1)} message(s): {sent_call1[:1]}")
-        print(f"  [call 1 ← API]   role={actual_reply.role}  content='{actual_reply.content[0].text}'")
+        print(
+            f"  [call 1 ← API]   role={actual_reply.role}  content='{actual_reply.content[0].text}'"
+        )
         print(f"  [after call 1]   request.messages mutated → {request.messages}")
 
         await client.chat(request)
@@ -1244,14 +1250,13 @@ def test_google_sheets_integration_verification():
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         # The pytest_google_sheets.py plugin writes test results here after every run.
@@ -1261,20 +1266,20 @@ def test_google_sheets_integration_verification():
         # summary_data[0] is the first row — the column headers the plugin creates
         headers = summary_data[0]
         # These four columns are the core metrics the plugin must write after each test run
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
 
         # Check LLM Integration Testing worksheet (optional - may not exist yet)
         try:
-            llm_sheet = sheet.worksheet('LLM Integration Testing')
+            llm_sheet = sheet.worksheet("LLM Integration Testing")
             llm_data = llm_sheet.get_all_values()
 
             if llm_data:
                 # The automation_status column tracks which test cases are covered by automated tests
                 headers = llm_data[0]
-                has_automation_status = any('automation' in h.lower() for h in headers)
+                has_automation_status = any("automation" in h.lower() for h in headers)
                 assert has_automation_status, "Should have automation_status column"
         except gspread.exceptions.WorksheetNotFound:
             # Worksheet doesn't exist yet - skip this check

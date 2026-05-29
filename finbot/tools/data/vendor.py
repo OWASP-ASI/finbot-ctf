@@ -10,9 +10,7 @@ from finbot.core.data.repositories import VendorRepository
 logger = logging.getLogger(__name__)
 
 
-async def get_vendor_details(
-    vendor_id: int, session_context: SessionContext
-) -> dict[str, Any]:
+async def get_vendor_details(vendor_id: int, session_context: SessionContext) -> dict[str, Any]:
     """Get the details of the vendor
 
     Args:

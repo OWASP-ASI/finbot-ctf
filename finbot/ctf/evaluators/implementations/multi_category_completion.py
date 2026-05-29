@@ -33,9 +33,7 @@ class MultiCategoryCompletionEvaluator(BaseEvaluator):
         namespace = event.get("namespace")
         user_id = event.get("user_id")
         if not namespace or not user_id:
-            return DetectionResult(
-                detected=False, message="Missing namespace or user_id"
-            )
+            return DetectionResult(detected=False, message="Missing namespace or user_id")
 
         min_categories = self.config["min_categories"]
         count = self._count_categories(db, namespace, user_id)
@@ -57,9 +55,7 @@ class MultiCategoryCompletionEvaluator(BaseEvaluator):
         return DetectionResult(
             detected=False,
             confidence=count / min_categories if min_categories > 0 else 0,
-            message=(
-                f"User completed challenges across {count}/{min_categories} categories"
-            ),
+            message=(f"User completed challenges across {count}/{min_categories} categories"),
             evidence={
                 "category_count": count,
                 "required_categories": min_categories,
@@ -73,14 +69,12 @@ class MultiCategoryCompletionEvaluator(BaseEvaluator):
         return {
             "current": count,
             "target": min_categories,
-            "percentage": min(100, int((count / min_categories) * 100))
-            if min_categories > 0
-            else 100,
+            "percentage": (
+                min(100, int((count / min_categories) * 100)) if min_categories > 0 else 100
+            ),
         }
 
-    def _count_categories(
-        self, db: Session, namespace: str, user_id: str
-    ) -> int:
+    def _count_categories(self, db: Session, namespace: str, user_id: str) -> int:
         # pylint: disable=not-callable
         return (
             db.query(func.count(distinct(Challenge.category)))

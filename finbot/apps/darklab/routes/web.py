@@ -13,9 +13,7 @@ router = APIRouter(tags=["darklab-web"])
 
 
 @router.get("/", response_class=HTMLResponse, name="darklab_home")
-async def darklab_home(
-    _: Request, session_context: SessionContext = Depends(get_session_context)
-):
+async def darklab_home(_: Request, session_context: SessionContext = Depends(get_session_context)):
     return RedirectResponse(url="/darklab/dashboard", status_code=302)
 
 

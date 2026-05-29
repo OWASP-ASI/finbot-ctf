@@ -26,39 +26,33 @@ def _badge_list_with_stats(db) -> list[dict]:
     """Get all badges with per-badge earn stats."""
     registered_evaluators = set(list_registered_evaluators())
 
-    badges = (
-        db.query(Badge)
-        .order_by(Badge.category, Badge.rarity, Badge.id)
-        .all()
-    )
+    badges = db.query(Badge).order_by(Badge.category, Badge.rarity, Badge.id).all()
 
     result = []
     for b in badges:
-        earn_count = (
-            db.query(UserBadge)
-            .filter(UserBadge.badge_id == b.id)
-            .count()
-        )
+        earn_count = db.query(UserBadge).filter(UserBadge.badge_id == b.id).count()
 
         evaluator_config = json.loads(b.evaluator_config) if b.evaluator_config else {}
         evaluator_valid = b.evaluator_class in registered_evaluators
 
-        result.append({
-            "id": b.id,
-            "title": b.title,
-            "description": b.description,
-            "category": b.category,
-            "category_display": CATEGORY_DISPLAY.get(b.category, b.category),
-            "rarity": b.rarity,
-            "points": b.points,
-            "is_active": b.is_active,
-            "is_secret": b.is_secret,
-            "icon_url": b.icon_url,
-            "evaluator_class": b.evaluator_class,
-            "evaluator_config": evaluator_config,
-            "evaluator_valid": evaluator_valid,
-            "earn_count": earn_count,
-        })
+        result.append(
+            {
+                "id": b.id,
+                "title": b.title,
+                "description": b.description,
+                "category": b.category,
+                "category_display": CATEGORY_DISPLAY.get(b.category, b.category),
+                "rarity": b.rarity,
+                "points": b.points,
+                "is_active": b.is_active,
+                "is_secret": b.is_secret,
+                "icon_url": b.icon_url,
+                "evaluator_class": b.evaluator_class,
+                "evaluator_config": evaluator_config,
+                "evaluator_valid": evaluator_valid,
+                "earn_count": earn_count,
+            }
+        )
 
     return result
 

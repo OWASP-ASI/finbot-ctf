@@ -1,30 +1,31 @@
-import re
 import json
-import gspread
-from datetime import datetime
-from typing import Optional, Dict, List
-from google.oauth2.service_account import Credentials
-from dotenv import load_dotenv
 import os
+import re
+from datetime import datetime
+from typing import Dict, List, Optional
+
+import gspread
 import pytest
+from dotenv import load_dotenv
+from google.oauth2.service_account import Credentials
 
 # Load environment variables at module level
 load_dotenv()
 
 # Constants for worksheet names
-LLM_CLIENT = 'LLM Client'
-LLM_MOCK_CLIENT = 'LLM Mock Client'
-LLM_OLLAMA_CLIENT = 'LLM Ollama Client'
-LLM_OPENAI_CLIENT = 'LLM OpenAI Client'
-LLM_CONTEXTUAL_CLIENT = 'LLM Contextual Client'
-COMPLETE_USER_ISOLATION = 'Complete User Isolation'
-ISOLATION_TESTING_FRAMEWORK = 'Isolation Testing Framework TCs'
-SECURE_SESSION_MANAGEMENT = 'Secure Session Management'
-BASE_AGENT_FRAMEWORK = 'Base Agent Framework'
-SPECIALIZED_BUSINESS_AGENT = 'Specialized Business Agent'
-EVENT_DRIVEN_CTF = 'Event Driven CTF'
-MULTI_DB_SUPPORT = 'Multi-DB-Support'
-REDIS_MESSAGE_STREAMS = 'Redis Message Streams'
+LLM_CLIENT = "LLM Client"
+LLM_MOCK_CLIENT = "LLM Mock Client"
+LLM_OLLAMA_CLIENT = "LLM Ollama Client"
+LLM_OPENAI_CLIENT = "LLM OpenAI Client"
+LLM_CONTEXTUAL_CLIENT = "LLM Contextual Client"
+COMPLETE_USER_ISOLATION = "Complete User Isolation"
+ISOLATION_TESTING_FRAMEWORK = "Isolation Testing Framework TCs"
+SECURE_SESSION_MANAGEMENT = "Secure Session Management"
+BASE_AGENT_FRAMEWORK = "Base Agent Framework"
+SPECIALIZED_BUSINESS_AGENT = "Specialized Business Agent"
+EVENT_DRIVEN_CTF = "Event Driven CTF"
+MULTI_DB_SUPPORT = "Multi-DB-Support"
+REDIS_MESSAGE_STREAMS = "Redis Message Streams"
 
 
 class GoogleSheetsReporter:
@@ -36,11 +37,11 @@ class GoogleSheetsReporter:
         self.results: List[dict] = []
 
         # Validate required env vars eagerly (fast, no network)
-        self._credentials_json = os.getenv('GOOGLE_CREDENTIALS')
-        self._sheets_id = os.getenv('GOOGLE_SHEETS_ID')
+        self._credentials_json = os.getenv("GOOGLE_CREDENTIALS")
+        self._sheets_id = os.getenv("GOOGLE_SHEETS_ID")
         if not self._sheets_id:
             raise ValueError("GOOGLE_SHEETS_ID not set in environment")
-        self._credentials_file = os.getenv('GOOGLE_CREDENTIALS_FILE', 'google-credentials.json')
+        self._credentials_file = os.getenv("GOOGLE_CREDENTIALS_FILE", "google-credentials.json")
 
         # Lazily initialized on first write
         self.worksheet = None
@@ -50,7 +51,7 @@ class GoogleSheetsReporter:
         if self.worksheet is not None:
             return
 
-        scopes = ['https://www.googleapis.com/auth/spreadsheets']
+        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
         if self._credentials_json:
             credentials = Credentials.from_service_account_info(
                 json.loads(self._credentials_json), scopes=scopes
@@ -67,15 +68,17 @@ class GoogleSheetsReporter:
         # Get existing worksheet — never create a new tab
         self.worksheet = sheet.worksheet(self.worksheet_name)
 
-    def record_result(self, test_code: str, test_name: str, status: str, duration: float, message: str = ""):
+    def record_result(
+        self, test_code: str, test_name: str, status: str, duration: float, message: str = ""
+    ):
         """Record a single test result."""
         row = {
-            'code': test_code,
-            'name': test_name,
-            'status': status,
-            'duration': f"{duration:.2f}",
-            'timestamp': datetime.now().isoformat(),
-            'message': message
+            "code": test_code,
+            "name": test_name,
+            "status": status,
+            "duration": f"{duration:.2f}",
+            "timestamp": datetime.now().isoformat(),
+            "message": message,
         }
         self.results.append(row)
 
@@ -117,10 +120,10 @@ class GoogleSheetsReporter:
         timestamp = datetime.now().isoformat()
 
         for result in self.results:
-            test_code = result['code']
-            test_name = result['name']
-            status = result['status']
-            message = result['message']
+            test_code = result["code"]
+            test_name = result["name"]
+            status = result["status"]
+            message = result["message"]
 
             row = self._find_row(col_a, test_code, test_name)
             if row is None:
@@ -130,11 +133,13 @@ class GoogleSheetsReporter:
                 )
                 continue
 
-            cells_to_update.extend([
-                gspread.Cell(row, 11, status),
-                gspread.Cell(row, 12, message),
-                gspread.Cell(row, 13, timestamp),
-            ])
+            cells_to_update.extend(
+                [
+                    gspread.Cell(row, 11, status),
+                    gspread.Cell(row, 12, message),
+                    gspread.Cell(row, 13, timestamp),
+                ]
+            )
 
         if cells_to_update:
             self.worksheet.update_cells(cells_to_update)
@@ -148,7 +153,7 @@ class GoogleSheetsReporter:
 
         results_by_worksheet = {}
         for result in results_dicts:
-            ws = result.get('worksheet', 'Unknown')
+            ws = result.get("worksheet", "Unknown")
             if ws not in results_by_worksheet:
                 results_by_worksheet[ws] = []
             results_by_worksheet[ws].append(result)
@@ -160,17 +165,16 @@ class GoogleSheetsReporter:
         """Create summary row for a specific worksheet."""
         self._ensure_connected()
         total_tests = len(results)
-        passed_tests = sum(1 for r in results if r['status'] == 'PASSED')
-        failed_tests = sum(1 for r in results if r['status'] == 'FAILED')
+        passed_tests = sum(1 for r in results if r["status"] == "PASSED")
+        failed_tests = sum(1 for r in results if r["status"] == "FAILED")
         pass_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
-        total_duration = sum(float(r['duration']) for r in results)
+        total_duration = sum(float(r["duration"]) for r in results)
 
-        test_names = "\n".join([
-            f"{r['code']}: {r['name']} ({r['duration']:.2f}s)"
-            for r in results
-        ])
+        test_names = "\n".join(
+            [f"{r['code']}: {r['name']} ({r['duration']:.2f}s)" for r in results]
+        )
 
-        statuses_str = "\n".join([r['status'] for r in results])
+        statuses_str = "\n".join([r["status"] for r in results])
 
         summary_row = [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -181,7 +185,7 @@ class GoogleSheetsReporter:
             f"{pass_rate:.1f}%",
             f"{total_duration:.2f}",
             test_names,
-            statuses_str
+            statuses_str,
         ]
         self.worksheet.insert_row(summary_row, index=2)
 
@@ -190,7 +194,7 @@ def extract_iso_code(docstring: Optional[str]) -> Optional[str]:
     """Extract test code from docstring (ISO-*, SSM-*, CUI-*, etc.)."""
     if not docstring:
         return None
-    match = re.search(r'([A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-\d+)', docstring)
+    match = re.search(r"([A-Z][A-Z0-9]*(?:-[A-Z][A-Z0-9]*)*-\d+)", docstring)
     return match.group(1) if match else None
 
 
@@ -201,44 +205,44 @@ def detect_test_category(item) -> str:
     # Strip everything before the first 'tests/' component so that keywords
     # in the project root directory (e.g. 'finbot-ctf' matching 'ctf') are
     # not falsely matched.
-    tests_idx = full_path.find('/tests/')
+    tests_idx = full_path.find("/tests/")
     fspath = full_path[tests_idx:] if tests_idx >= 0 else full_path
 
     # LLM-specific detection — checked first to avoid matching generic keywords
-    if '/llm/' in fspath or '\\llm\\' in fspath:
-        if 'test_llm_client' in fspath:
+    if "/llm/" in fspath or "\\llm\\" in fspath:
+        if "test_llm_client" in fspath:
             return LLM_CLIENT
-        if 'test_mock_client' in fspath:
+        if "test_mock_client" in fspath:
             return LLM_MOCK_CLIENT
-        if 'test_ollama_client' in fspath:
+        if "test_ollama_client" in fspath:
             return LLM_OLLAMA_CLIENT
-        if 'test_openai_client' in fspath:
+        if "test_openai_client" in fspath:
             return LLM_OPENAI_CLIENT
-        if 'test_contextual_client' in fspath:
+        if "test_contextual_client" in fspath:
             return LLM_CONTEXTUAL_CLIENT
         # Unrecognized LLM test file — default to LLM_CLIENT rather than
         # silently routing to ISOLATION_TESTING_FRAMEWORK
         return LLM_CLIENT
 
     path_worksheet_map = {
-        'complete_user_isolation': COMPLETE_USER_ISOLATION,
-        'redis_message_streams': REDIS_MESSAGE_STREAMS,
-        'specialized': SPECIALIZED_BUSINESS_AGENT,
-        'agents': BASE_AGENT_FRAMEWORK,
-        'isolation': ISOLATION_TESTING_FRAMEWORK,
-        'vendor': ISOLATION_TESTING_FRAMEWORK,
-        'auth': SECURE_SESSION_MANAGEMENT,
-        'session': SECURE_SESSION_MANAGEMENT,
-        'security': 'Security Penetration Testing',
-        'test_event_driven_ctf_backend': EVENT_DRIVEN_CTF,
-        'ctf': 'CTF Challenge Validation',
-        'performance': 'Performance Testing',
-        'browser': 'Cross_Browser',
-        'e2e': 'End-To-End',
-        'integration': 'End-To-End',
-        'database': MULTI_DB_SUPPORT,
-        'google_sheets': 'Google Sheets Integration',
-        'summary': 'Summary'
+        "complete_user_isolation": COMPLETE_USER_ISOLATION,
+        "redis_message_streams": REDIS_MESSAGE_STREAMS,
+        "specialized": SPECIALIZED_BUSINESS_AGENT,
+        "agents": BASE_AGENT_FRAMEWORK,
+        "isolation": ISOLATION_TESTING_FRAMEWORK,
+        "vendor": ISOLATION_TESTING_FRAMEWORK,
+        "auth": SECURE_SESSION_MANAGEMENT,
+        "session": SECURE_SESSION_MANAGEMENT,
+        "security": "Security Penetration Testing",
+        "test_event_driven_ctf_backend": EVENT_DRIVEN_CTF,
+        "ctf": "CTF Challenge Validation",
+        "performance": "Performance Testing",
+        "browser": "Cross_Browser",
+        "e2e": "End-To-End",
+        "integration": "End-To-End",
+        "database": MULTI_DB_SUPPORT,
+        "google_sheets": "Google Sheets Integration",
+        "summary": "Summary",
     }
 
     for keyword, worksheet in path_worksheet_map.items():
@@ -285,18 +289,18 @@ class GoogleSheetsPlugin:
                 SPECIALIZED_BUSINESS_AGENT,
                 EVENT_DRIVEN_CTF,
                 MULTI_DB_SUPPORT,
-                'Security Penetration Testing',
-                'CTF Challenge Validation',
-                'Performance Testing',
-                'Cross_Browser',
-                'End-To-End',
+                "Security Penetration Testing",
+                "CTF Challenge Validation",
+                "Performance Testing",
+                "Cross_Browser",
+                "End-To-End",
                 LLM_CLIENT,
                 LLM_MOCK_CLIENT,
                 LLM_OLLAMA_CLIENT,
                 LLM_OPENAI_CLIENT,
                 LLM_CONTEXTUAL_CLIENT,
                 COMPLETE_USER_ISOLATION,
-                'Summary',
+                "Summary",
             ]
 
             for worksheet_name in worksheets:
@@ -331,19 +335,19 @@ class GoogleSheetsPlugin:
         self._update_counters(status)
 
         result = {
-            'code': test_code or item.name,
-            'name': item.name,
-            'status': status,
-            'duration': report.duration,
-            'message': message,
-            'worksheet': worksheet_name
+            "code": test_code or item.name,
+            "name": item.name,
+            "status": status,
+            "duration": report.duration,
+            "message": message,
+            "worksheet": worksheet_name,
         }
 
         if worksheet_name in self.results_by_worksheet:
             self.results_by_worksheet[worksheet_name].append(result)
 
-        if 'Summary' in self.results_by_worksheet:
-            self.results_by_worksheet['Summary'].append(result)
+        if "Summary" in self.results_by_worksheet:
+            self.results_by_worksheet["Summary"].append(result)
 
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
@@ -366,18 +370,25 @@ class GoogleSheetsPlugin:
     def _flush_worksheet(self, worksheet_name: str, results: list) -> tuple:
         """Record and save results for one worksheet. Returns (passed_count, total_count)."""
         total_count = len(results)
-        passed_count = sum(1 for r in results if r['status'] == 'PASSED')
+        passed_count = sum(1 for r in results if r["status"] == "PASSED")
         if worksheet_name not in self.reporters:
-            print(f"⊗ Skipping '{worksheet_name}' — reporter not initialized (check credentials/tab permissions)")
+            print(
+                f"⊗ Skipping '{worksheet_name}' — reporter not initialized (check credentials/tab permissions)"
+            )
             return passed_count, total_count
         try:
             for result in results:
                 self.reporters[worksheet_name].record_result(
-                    result['code'], result['name'], result['status'],
-                    result['duration'], result['message']
+                    result["code"],
+                    result["name"],
+                    result["status"],
+                    result["duration"],
+                    result["message"],
                 )
             self.reporters[worksheet_name].save_results()
-            print(f"✓ Saved {total_count} results to '{worksheet_name}' ({passed_count}/{total_count} passed)")
+            print(
+                f"✓ Saved {total_count} results to '{worksheet_name}' ({passed_count}/{total_count} passed)"
+            )
         except Exception as e:
             print(f"✗ ERROR saving to '{worksheet_name}': {e}")
         return passed_count, total_count
@@ -388,7 +399,7 @@ class GoogleSheetsPlugin:
         print("=" * 80)
         for worksheet_name, results in self.results_by_worksheet.items():
             if results and worksheet_name != "Summary":
-                passed = sum(1 for r in results if r['status'] == 'PASSED')
+                passed = sum(1 for r in results if r["status"] == "PASSED")
                 print(f"✓ {worksheet_name}: {passed}/{len(results)} passed")
 
     def pytest_sessionfinish(self):
@@ -405,7 +416,11 @@ class GoogleSheetsPlugin:
         worksheet_count = 0
 
         for worksheet_name, results in self.results_by_worksheet.items():
-            if results and worksheet_name != "Summary" and worksheet_name in self.UPDATABLE_WORKSHEETS:
+            if (
+                results
+                and worksheet_name != "Summary"
+                and worksheet_name in self.UPDATABLE_WORKSHEETS
+            ):
                 worksheet_count += 1
                 passed_count, total_count = self._flush_worksheet(worksheet_name, results)
                 passed_tests += passed_count
@@ -434,15 +449,13 @@ def pytest_addoption(parser):
         "--google-sheets",
         action="store_true",
         default=False,
-        help="Enable automatic Google Sheets test result reporting"
+        help="Enable automatic Google Sheets test result reporting",
     )
 
 
 def pytest_configure(config):
     """Register the plugin."""
-    config.addinivalue_line(
-        "markers", "google_sheets: mark test to report to Google Sheets"
-    )
+    config.addinivalue_line("markers", "google_sheets: mark test to report to Google Sheets")
     if config.getoption("--google-sheets"):
         plugin = GoogleSheetsPlugin(config)
         config.pluginmanager.register(plugin)

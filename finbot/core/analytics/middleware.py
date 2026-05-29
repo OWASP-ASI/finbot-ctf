@@ -44,28 +44,92 @@ def build_known_prefixes(app) -> None:
             prefixes.add("/" + parts[0])
     _known_app_prefixes = tuple(sorted(prefixes))
 
-SCAN_PATHS = frozenset({
-    "/.env", "/.git", "/.git/config", "/.gitignore",
-    "/wp-admin", "/wp-login.php", "/wp-content", "/wp-includes", "/wordpress",
-    "/administrator", "/admin.php", "/phpinfo.php", "/phpmyadmin",
-    "/config.php", "/configuration.php", "/web.config",
-    "/server-status", "/server-info", "/.htaccess", "/.htpasswd",
-    "/xmlrpc.php", "/install.php", "/setup.php", "/upgrade.php",
-    "/cgi-bin", "/shell", "/cmd", "/console",
-    "/solr", "/actuator", "/health", "/metrics", "/debug",
-    "/telescope", "/elfinder", "/filemanager",
-    "/backup", "/dump", "/db", "/database",
-    "/robots.txt", "/sitemap.xml",
-})
 
-SCAN_PATTERNS = (".php", ".asp", ".aspx", ".jsp", ".cgi", ".bak", ".sql", ".log", ".xml", ".yml", ".yaml", ".ini", ".conf")
+SCAN_PATHS = frozenset(
+    {
+        "/.env",
+        "/.git",
+        "/.git/config",
+        "/.gitignore",
+        "/wp-admin",
+        "/wp-login.php",
+        "/wp-content",
+        "/wp-includes",
+        "/wordpress",
+        "/administrator",
+        "/admin.php",
+        "/phpinfo.php",
+        "/phpmyadmin",
+        "/config.php",
+        "/configuration.php",
+        "/web.config",
+        "/server-status",
+        "/server-info",
+        "/.htaccess",
+        "/.htpasswd",
+        "/xmlrpc.php",
+        "/install.php",
+        "/setup.php",
+        "/upgrade.php",
+        "/cgi-bin",
+        "/shell",
+        "/cmd",
+        "/console",
+        "/solr",
+        "/actuator",
+        "/health",
+        "/metrics",
+        "/debug",
+        "/telescope",
+        "/elfinder",
+        "/filemanager",
+        "/backup",
+        "/dump",
+        "/db",
+        "/database",
+        "/robots.txt",
+        "/sitemap.xml",
+    }
+)
+
+SCAN_PATTERNS = (
+    ".php",
+    ".asp",
+    ".aspx",
+    ".jsp",
+    ".cgi",
+    ".bak",
+    ".sql",
+    ".log",
+    ".xml",
+    ".yml",
+    ".yaml",
+    ".ini",
+    ".conf",
+)
 
 BOT_UA_MARKERS = (
-    "bot", "crawl", "spider", "scrape", "scan",
-    "curl/", "python-requests", "python-urllib", "httpx",
-    "go-http-client", "java/", "libwww", "wget",
-    "zgrab", "masscan", "nmap", "nikto", "nuclei",
-    "censys", "shodan", "netcraft",
+    "bot",
+    "crawl",
+    "spider",
+    "scrape",
+    "scan",
+    "curl/",
+    "python-requests",
+    "python-urllib",
+    "httpx",
+    "go-http-client",
+    "java/",
+    "libwww",
+    "wget",
+    "zgrab",
+    "masscan",
+    "nmap",
+    "nikto",
+    "nuclei",
+    "censys",
+    "shodan",
+    "netcraft",
 )
 
 
@@ -140,8 +204,8 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
 
     def _record_scan(self, path: str, source: str) -> None:
         """Upsert an aggregated scan event (one row per date+path+source)."""
-        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
         from sqlalchemy.dialects.postgresql import insert as pg_insert
+        from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
         today = datetime.now(UTC).date()
         truncated_path = path[:500]

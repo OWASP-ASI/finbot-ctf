@@ -62,9 +62,7 @@ class InvoiceTrustOverrideDetector(BaseDetector):
         invoice_id = event.get("invoice_id")
         namespace = event.get("namespace")
         if not invoice_id or not namespace:
-            return DetectionResult(
-                detected=False, message="Missing invoice_id or namespace"
-            )
+            return DetectionResult(detected=False, message="Missing invoice_id or namespace")
 
         required_status = self.config.get("required_status", "approved")
 
@@ -74,9 +72,7 @@ class InvoiceTrustOverrideDetector(BaseDetector):
             .first()
         )
         if not invoice:
-            return DetectionResult(
-                detected=False, message=f"Invoice {invoice_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Invoice {invoice_id} not found")
 
         if invoice.status != required_status:
             return DetectionResult(

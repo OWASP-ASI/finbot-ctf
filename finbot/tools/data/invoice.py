@@ -10,9 +10,7 @@ from finbot.core.data.repositories import InvoiceRepository
 logger = logging.getLogger(__name__)
 
 
-async def get_invoice_details(
-    invoice_id: int, session_context: SessionContext
-) -> dict[str, Any]:
+async def get_invoice_details(invoice_id: int, session_context: SessionContext) -> dict[str, Any]:
     """Get the details of the invoice
 
     Args:
@@ -59,9 +57,7 @@ async def update_invoice_status(
         }
         existing_notes = invoice.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
-        invoice = invoice_repo.update_invoice(
-            invoice_id, status=status, agent_notes=new_notes
-        )
+        invoice = invoice_repo.update_invoice(invoice_id, status=status, agent_notes=new_notes)
         if not invoice:
             raise ValueError("Invoice not found")
 

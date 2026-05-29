@@ -89,9 +89,7 @@ async def toggle_guardrail_enabled(
         repo = LabsGuardrailConfigRepository(db, session_context)
         config = repo.toggle_enabled()
         if not config:
-            raise HTTPException(
-                status_code=404, detail="No guardrail config found"
-            )
+            raise HTTPException(status_code=404, detail="No guardrail config found")
         result = config.to_dict()
         result["signing_secret"] = config.signing_secret
         return result
@@ -106,9 +104,7 @@ async def rotate_signing_secret(
         repo = LabsGuardrailConfigRepository(db, session_context)
         config = repo.rotate_secret()
         if not config:
-            raise HTTPException(
-                status_code=404, detail="No guardrail config found"
-            )
+            raise HTTPException(status_code=404, detail="No guardrail config found")
         result = config.to_dict()
         result["signing_secret"] = config.signing_secret
         return result
@@ -123,9 +119,7 @@ async def delete_guardrail_config(
         repo = LabsGuardrailConfigRepository(db, session_context)
         deleted = repo.delete_config()
         if not deleted:
-            raise HTTPException(
-                status_code=404, detail="No guardrail config found"
-            )
+            raise HTTPException(status_code=404, detail="No guardrail config found")
 
 
 @router.post("/test")
@@ -133,9 +127,7 @@ async def test_webhook_delivery(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Send a test before_tool hook to the user's webhook and return the result."""
-    svc = GuardrailHookService(
-        session_context=session_context, workflow_id="wf_labs_test"
-    )
+    svc = GuardrailHookService(session_context=session_context, workflow_id="wf_labs_test")
     outcome = await svc.invoke(
         HookKind.before_tool,
         tool_name="test_tool",
@@ -158,8 +150,4 @@ async def get_guardrail_activity(
         repo = CTFEventRepository(db, session_context)
         events = repo.get_events(limit=min(limit, 200), category="agent")
 
-    return [
-        ev.to_dict()
-        for ev in events
-        if ev.agent_name == "guardrail"
-    ]
+    return [ev.to_dict() for ev in events if ev.agent_name == "guardrail"]

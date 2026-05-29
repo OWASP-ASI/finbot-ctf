@@ -28,13 +28,17 @@ sys.path.insert(0, str(project_root))
 from finbot.core.analytics import models as _analytics_models  # noqa: F401
 from finbot.core.analytics.models import PageView
 from finbot.core.data import models as _data_models  # noqa: F401
-from finbot.core.data.models import User, UserProfile
 from finbot.core.data.database import SessionLocal, create_tables
+from finbot.core.data.models import User, UserProfile
 
 MOCK_USERNAMES = ["yello", "hackr42", "ctfpro", "nullbyte", "0xdead"]
 MOCK_BADGE_IDS = [
-    "first-blood", "renaissance-hacker", "goal-hijacker",
-    "puppet-master", "wrecking-ball", "policy-architect",
+    "first-blood",
+    "renaissance-hacker",
+    "goal-hijacker",
+    "puppet-master",
+    "wrecking-ball",
+    "policy-architect",
 ]
 
 PATHS = [
@@ -146,10 +150,30 @@ def generate_pageviews(days: int = 30, base_daily: int = 80) -> list[PageView]:
             hour = random.choices(
                 range(24),
                 weights=[
-                    1, 1, 1, 1, 1, 2,        # 00-05: low
-                    3, 5, 7, 9, 10, 10,      # 06-11: morning ramp
-                    9, 10, 11, 10, 9, 8,     # 12-17: afternoon peak
-                    7, 6, 5, 4, 3, 2,        # 18-23: evening decline
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    2,  # 00-05: low
+                    3,
+                    5,
+                    7,
+                    9,
+                    10,
+                    10,  # 06-11: morning ramp
+                    9,
+                    10,
+                    11,
+                    10,
+                    9,
+                    8,  # 12-17: afternoon peak
+                    7,
+                    6,
+                    5,
+                    4,
+                    3,
+                    2,  # 18-23: evening decline
                 ],
                 k=1,
             )[0]
@@ -189,45 +213,59 @@ def generate_pageviews(days: int = 30, base_daily: int = 80) -> list[PageView]:
 
             referer = f"https://{referer_domain}/search" if referer_domain else None
 
-            records.append(PageView(
-                timestamp=ts,
-                path=path,
-                method="GET",
-                status_code=status,
-                response_time_ms=response_time,
-                session_id=session_id,
-                session_type=session_type,
-                user_agent=make_user_agent(browser, os_name),
-                browser=browser,
-                os=os_name,
-                device_type=device,
-                referer=referer,
-                referer_domain=referer_domain,
-            ))
+            records.append(
+                PageView(
+                    timestamp=ts,
+                    path=path,
+                    method="GET",
+                    status_code=status,
+                    response_time_ms=response_time,
+                    session_id=session_id,
+                    session_type=session_type,
+                    user_agent=make_user_agent(browser, os_name),
+                    browser=browser,
+                    os=os_name,
+                    device_type=device,
+                    referer=referer,
+                    referer_domain=referer_domain,
+                )
+            )
 
     return records
 
 
 MOCK_PROFILES = [
     {
-        "username": "hackr42", "bio": "Red teamer by day, CTF player by night",
-        "avatar_emoji": "💀", "is_public": True, "show_activity": True,
+        "username": "hackr42",
+        "bio": "Red teamer by day, CTF player by night",
+        "avatar_emoji": "💀",
+        "is_public": True,
+        "show_activity": True,
         "social_github": "https://github.com/hackr42",
         "social_twitter": "https://twitter.com/hackr42",
     },
     {
-        "username": "ctfpro", "bio": "OWASP contributor | AI security researcher",
-        "avatar_emoji": "🎯", "is_public": True, "show_activity": False,
+        "username": "ctfpro",
+        "bio": "OWASP contributor | AI security researcher",
+        "avatar_emoji": "🎯",
+        "is_public": True,
+        "show_activity": False,
         "social_github": "https://github.com/ctfpro",
         "social_linkedin": "https://linkedin.com/in/ctfpro",
     },
     {
-        "username": "nullbyte", "bio": None,
-        "avatar_emoji": "🔓", "is_public": True, "show_activity": False,
+        "username": "nullbyte",
+        "bio": None,
+        "avatar_emoji": "🔓",
+        "is_public": True,
+        "show_activity": False,
     },
     {
-        "username": "0xdead", "bio": "Just here for the badges",
-        "avatar_emoji": "☠️", "is_public": False, "show_activity": False,
+        "username": "0xdead",
+        "bio": "Just here for the badges",
+        "avatar_emoji": "☠️",
+        "is_public": False,
+        "show_activity": False,
         "social_website": "https://0xdead.dev",
     },
 ]
@@ -258,11 +296,7 @@ def seed_profiles(db):
 
         user = existing_users[username]
 
-        existing_profile = (
-            db.query(UserProfile)
-            .filter(UserProfile.user_id == user.user_id)
-            .first()
-        )
+        existing_profile = db.query(UserProfile).filter(UserProfile.user_id == user.user_id).first()
         if existing_profile:
             continue
 
@@ -278,7 +312,9 @@ def seed_profiles(db):
             social_twitter=p.get("social_twitter"),
             social_linkedin=p.get("social_linkedin"),
             social_website=p.get("social_website"),
-            featured_badge_ids='["first-blood", "goal-hijacker"]' if random.random() > 0.5 else None,
+            featured_badge_ids=(
+                '["first-blood", "goal-hijacker"]' if random.random() > 0.5 else None
+            ),
         )
         db.add(profile)
         created_profiles += 1
@@ -289,8 +325,12 @@ def seed_profiles(db):
 
 def main():
     parser = argparse.ArgumentParser(description="Seed analytics mock data")
-    parser.add_argument("--days", type=int, default=30, help="Days of data to generate (default: 30)")
-    parser.add_argument("--daily", type=int, default=80, help="Base daily pageview count (default: 80)")
+    parser.add_argument(
+        "--days", type=int, default=30, help="Days of data to generate (default: 30)"
+    )
+    parser.add_argument(
+        "--daily", type=int, default=80, help="Base daily pageview count (default: 80)"
+    )
     parser.add_argument("--clear", action="store_true", help="Delete all existing pageviews first")
     args = parser.parse_args()
 

@@ -86,14 +86,11 @@ async def process_payment(
 
         existing_notes = invoice.agent_notes or ""
         payment_note = (
-            f"Payment processed via {payment_method} (ref: {payment_reference}). "
-            f"{agent_notes}"
+            f"Payment processed via {payment_method} (ref: {payment_reference}). " f"{agent_notes}"
         )
         new_notes = f"{existing_notes}\n\n{payment_note}"
 
-        invoice = invoice_repo.update_invoice(
-            invoice_id, status="paid", agent_notes=new_notes
-        )
+        invoice = invoice_repo.update_invoice(invoice_id, status="paid", agent_notes=new_notes)
         if not invoice:
             raise ValueError("Failed to update invoice")
 
@@ -151,9 +148,11 @@ async def get_vendor_payment_summary(
                     "invoice_number": invoice.invoice_number,
                     "amount": amount,
                     "status": invoice.status,
-                    "due_date": invoice.due_date.isoformat().replace("+00:00", "Z")
-                    if invoice.due_date
-                    else None,
+                    "due_date": (
+                        invoice.due_date.isoformat().replace("+00:00", "Z")
+                        if invoice.due_date
+                        else None
+                    ),
                 }
             )
 

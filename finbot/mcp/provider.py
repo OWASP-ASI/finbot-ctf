@@ -92,9 +92,7 @@ class MCPToolProvider:
                     payload={"discovered_tools": [t.name for t in tools]},
                 )
 
-                tool_descriptions = {
-                    t.name: t.description or "" for t in tools
-                }
+                tool_descriptions = {t.name: t.description or "" for t in tools}
                 await event_bus.emit_agent_event(
                     agent_name=self._agent_name,
                     event_type="mcp_tools_discovered",
@@ -122,9 +120,7 @@ class MCPToolProvider:
                 await client.__aexit__(None, None, None)
                 logger.info("MCP server '%s' disconnected", server_name)
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception(
-                    "Error disconnecting from MCP server '%s'", server_name
-                )
+                logger.exception("Error disconnecting from MCP server '%s'", server_name)
         self._clients.clear()
         self._tools.clear()
         self._tool_server_map.clear()

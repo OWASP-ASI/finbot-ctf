@@ -8,10 +8,10 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
-from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
 from finbot.core.data.repositories import BadgeRepository, UserBadgeRepository
+from finbot.core.utils import to_utc_iso
 from finbot.ctf.evaluators import create_evaluator
 
 logger = logging.getLogger(__name__)

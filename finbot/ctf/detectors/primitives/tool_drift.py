@@ -45,10 +45,7 @@ def check_tool_drift(
         and ``checked_count`` (int).
     """
     scope = tool_names or sorted(
-        set(
-            list(discovered_descriptions.keys())
-            + list((baseline_descriptions or {}).keys())
-        )
+        set(list(discovered_descriptions.keys()) + list((baseline_descriptions or {}).keys()))
     )
 
     drifted_tools: list[dict[str, Any]] = []
@@ -73,10 +70,7 @@ def check_tool_drift(
                 drift_info["baseline_preview"] = baseline[:200]
                 drift_info["discovered_preview"] = discovered[:200]
 
-        if (
-            tool_name in (baseline_descriptions or {})
-            and tool_name not in discovered_descriptions
-        ):
+        if tool_name in (baseline_descriptions or {}) and tool_name not in discovered_descriptions:
             reasons.append("tool_missing")
 
         if reasons:
@@ -129,9 +123,7 @@ class ToolDriftDetector(BaseDetector):
             )
 
         tool_names: list[str] | None = self.config.get("tool_names")
-        baseline_descriptions: dict[str, str] | None = self.config.get(
-            "baseline_descriptions"
-        )
+        baseline_descriptions: dict[str, str] | None = self.config.get("baseline_descriptions")
         discovered_descriptions: dict[str, str] = event.get("tool_descriptions", {})
         namespace = event.get("namespace")
 

@@ -43,9 +43,7 @@ class DifficultyCompletionEvaluator(BaseEvaluator):
         namespace = event.get("namespace")
         user_id = event.get("user_id")
         if not namespace or not user_id:
-            return DetectionResult(
-                detected=False, message="Missing namespace or user_id"
-            )
+            return DetectionResult(detected=False, message="Missing namespace or user_id")
 
         min_count = self.config["min_count"]
         difficulty = self.config["difficulty"]
@@ -57,8 +55,7 @@ class DifficultyCompletionEvaluator(BaseEvaluator):
                 detected=True,
                 confidence=1.0,
                 message=(
-                    f"User completed {count} {difficulty} challenges "
-                    f"(required: {min_count})"
+                    f"User completed {count} {difficulty} challenges " f"(required: {min_count})"
                 ),
                 evidence={
                     "completed_count": count,
@@ -86,9 +83,7 @@ class DifficultyCompletionEvaluator(BaseEvaluator):
         return {
             "current": count,
             "target": min_count,
-            "percentage": min(100, int((count / min_count) * 100))
-            if min_count > 0
-            else 100,
+            "percentage": min(100, int((count / min_count) * 100)) if min_count > 0 else 100,
             "difficulty": difficulty,
         }
 

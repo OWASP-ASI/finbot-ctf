@@ -94,9 +94,7 @@ class GuardrailHookService:
         NOT branch on the outcome (execution always proceeds).
         """
         if not self._is_hook_enabled(kind):
-            return (
-                HookOutcome.no_config if not self._config else HookOutcome.hook_disabled
-            )
+            return HookOutcome.no_config if not self._config else HookOutcome.hook_disabled
 
         config = self._config
         assert config is not None  # _is_hook_enabled guarantees this

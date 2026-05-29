@@ -34,21 +34,22 @@
 #   LLM-CONT-GSI-001: Google Sheets Integration Verification
 # ==============================================================================
 
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, UTC
-
-import pytest
-
-from finbot.core.llm.contextual_client import ContextualLLMClient
-from finbot.core.data.models import LLMRequest, LLMResponse
-from finbot.core.auth.session import SessionContext
-
 import os
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import gspread
+import pytest
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-import gspread
+
+from finbot.core.auth.session import SessionContext
+from finbot.core.data.models import LLMRequest, LLMResponse
+from finbot.core.llm.contextual_client import ContextualLLMClient
 
 load_dotenv()
+
+
 # ============================================================================
 # LLM-CTX-001: Session Context Preservation
 # ============================================================================
@@ -80,17 +81,14 @@ def test_session_context_preservation():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
         mock_llm_client = MagicMock()
         mock_get_client.return_value = mock_llm_client
 
-        client = ContextualLLMClient(
-            session_context=session_context,
-            agent_name="test_agent"
-        )
+        client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
         # user_id is the primary identifier — it must be preserved so events can be linked to a real user
         assert client.session_context.user_id == "user_123"
@@ -136,7 +134,7 @@ def test_workflow_id_tracking():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -144,18 +142,13 @@ def test_workflow_id_tracking():
         mock_get_client.return_value = mock_llm_client
 
         # Test auto-generated workflow_id
-        client1 = ContextualLLMClient(
-            session_context=session_context,
-            agent_name="agent1"
-        )
+        client1 = ContextualLLMClient(session_context=session_context, agent_name="agent1")
         # The "wf_" prefix makes workflow IDs easy to spot in logs and Redis streams
         assert client1.workflow_id.startswith("wf_")
 
         # Test custom workflow_id
         client2 = ContextualLLMClient(
-            session_context=session_context,
-            agent_name="agent2",
-            workflow_id="custom_workflow"
+            session_context=session_context, agent_name="agent2", workflow_id="custom_workflow"
         )
         # A caller-supplied workflow_id must be stored exactly — it lets the caller correlate events with their own tracking system
         assert client2.workflow_id == "custom_workflow"
@@ -199,14 +192,10 @@ async def test_event_emission_on_request_start():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
-    mock_response = LLMResponse(
-        content="test response",
-        provider="mock",
-        success=True
-    )
+    mock_response = LLMResponse(content="test response", provider="mock", success=True)
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
         mock_llm_client = MagicMock()
@@ -219,14 +208,9 @@ async def test_event_emission_on_request_start():
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             mock_event_bus.emit_agent_event = AsyncMock()
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
-            request = LLMRequest(
-                messages=[{"role": "user", "content": "test"}]
-            )
+            request = LLMRequest(messages=[{"role": "user", "content": "test"}])
 
             await client.chat(request)
 
@@ -278,14 +262,14 @@ async def test_event_emission_on_success():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     mock_response = LLMResponse(
         content="Success response",
         provider="mock",
         success=True,
-        tool_calls=[{"name": "test_tool", "call_id": "call_1"}]
+        tool_calls=[{"name": "test_tool", "call_id": "call_1"}],
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -299,14 +283,9 @@ async def test_event_emission_on_success():
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             mock_event_bus.emit_agent_event = AsyncMock()
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
-            request = LLMRequest(
-                messages=[{"role": "user", "content": "test"}]
-            )
+            request = LLMRequest(messages=[{"role": "user", "content": "test"}])
 
             await client.chat(request)
 
@@ -326,6 +305,7 @@ async def test_event_emission_on_success():
             assert success_call.kwargs["event_data"]["response_length"] == len("Success response")
             # tool_call_count tells monitoring how often the model is using tools vs replying with text
             assert success_call.kwargs["event_data"]["tool_call_count"] == 1
+
 
 # ============================================================================
 # LLM-CTX-005: Event Emission on Error
@@ -361,7 +341,7 @@ async def test_event_emission_on_error():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -375,14 +355,9 @@ async def test_event_emission_on_error():
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             mock_event_bus.emit_agent_event = AsyncMock()
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
-            request = LLMRequest(
-                messages=[{"role": "user", "content": "test"}]
-            )
+            request = LLMRequest(messages=[{"role": "user", "content": "test"}])
 
             with pytest.raises(Exception):
                 await client.chat(request)
@@ -432,17 +407,14 @@ def test_child_client_creation():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
         mock_llm_client = MagicMock()
         mock_get_client.return_value = mock_llm_client
 
-        parent = ContextualLLMClient(
-            session_context=session_context,
-            agent_name="parent_agent"
-        )
+        parent = ContextualLLMClient(session_context=session_context, agent_name="parent_agent")
 
         # Create child with default name
         child1 = parent.create_child_client()
@@ -488,7 +460,7 @@ def test_workflow_id_update():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -496,9 +468,7 @@ def test_workflow_id_update():
         mock_get_client.return_value = mock_llm_client
 
         client = ContextualLLMClient(
-            session_context=session_context,
-            agent_name="test_agent",
-            workflow_id="initial_workflow"
+            session_context=session_context, agent_name="test_agent", workflow_id="initial_workflow"
         )
 
         # Confirm the initial value was set before we test the update
@@ -541,14 +511,10 @@ async def test_call_count_tracking():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
-    mock_response = LLMResponse(
-        content="response",
-        provider="mock",
-        success=True
-    )
+    mock_response = LLMResponse(content="response", provider="mock", success=True)
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
         mock_llm_client = MagicMock()
@@ -561,10 +527,7 @@ async def test_call_count_tracking():
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             mock_event_bus.emit_agent_event = AsyncMock()
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
             # Before any requests, the counter must start at zero
             assert client.call_count == 0
@@ -713,9 +676,7 @@ async def test_full_request_content_emitted_to_event_bus():
             llm_client=mock_llm_client,
         )
 
-        await client.chat(LLMRequest(
-            messages=[{"role": "user", "content": sensitive_content}]
-        ))
+        await client.chat(LLMRequest(messages=[{"role": "user", "content": sensitive_content}]))
 
     # If no events were captured the test setup is broken — we need at least the start event
     assert len(captured) >= 1
@@ -795,9 +756,7 @@ async def test_full_response_content_emitted_to_event_bus():
             llm_client=mock_llm_client,
         )
 
-        await client.chat(LLMRequest(
-            messages=[{"role": "user", "content": "What is my balance?"}]
-        ))
+        await client.chat(LLMRequest(messages=[{"role": "user", "content": "What is my balance?"}]))
 
     # We need at least 2 events: the start event (index 0) and the success event (index 1)
     assert len(captured) >= 2, "Expected start + success events."
@@ -815,7 +774,8 @@ async def test_full_response_content_emitted_to_event_bus():
         "Bug confirmed: full LLM response including sensitive financial data "
         "is stored in the Redis event stream via response_content."
     )
-    
+
+
 # ============================================================================
 # LLM-CTX-ERR-001: Event Emission Failure Resilience
 # ============================================================================
@@ -844,13 +804,11 @@ async def test_event_emission_failure_resilience():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     mock_response = LLMResponse(
-        content="response despite event failure",
-        provider="mock",
-        success=True
+        content="response despite event failure", provider="mock", success=True
     )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -863,14 +821,9 @@ async def test_event_emission_failure_resilience():
 
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             # Event emission fails
-            mock_event_bus.emit_agent_event = AsyncMock(
-                side_effect=Exception("Event bus error")
-            )
+            mock_event_bus.emit_agent_event = AsyncMock(side_effect=Exception("Event bus error"))
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
             request = LLMRequest(messages=[{"role": "user", "content": "test"}])
 
@@ -913,7 +866,7 @@ async def test_concurrent_client_access():
         is_temporary=False,
         namespace="vendor_789",
         created_at=datetime.now(UTC),
-        expires_at=datetime.now(UTC)
+        expires_at=datetime.now(UTC),
     )
 
     call_counter = {"count": 0}
@@ -922,9 +875,7 @@ async def test_concurrent_client_access():
         call_counter["count"] += 1
         await asyncio.sleep(0.01)  # Simulate async work
         return LLMResponse(
-            content=f"Response {call_counter['count']}",
-            provider="mock",
-            success=True
+            content=f"Response {call_counter['count']}", provider="mock", success=True
         )
 
     with patch("finbot.core.llm.contextual_client.get_llm_client") as mock_get_client:
@@ -938,10 +889,7 @@ async def test_concurrent_client_access():
         with patch("finbot.core.llm.contextual_client.event_bus") as mock_event_bus:
             mock_event_bus.emit_agent_event = AsyncMock()
 
-            client = ContextualLLMClient(
-                session_context=session_context,
-                agent_name="test_agent"
-            )
+            client = ContextualLLMClient(session_context=session_context, agent_name="test_agent")
 
             # Make 5 concurrent requests
             requests = [
@@ -957,7 +905,6 @@ async def test_concurrent_client_access():
             assert all(r.success for r in responses)
             # The counter must have been incremented for all 5 calls, not just some of them
             assert client.call_count == 5
-
 
 
 # ============================================================================
@@ -1164,11 +1111,15 @@ async def test_zero_temperature_inaccurate_in_event_log():
         print("=" * 65)
         print()
         print("  STEP 1 — Caller explicitly requests deterministic mode:")
-        print(f"           request.temperature        = {request.temperature!r}  ← caller wants 0.0")
+        print(
+            f"           request.temperature        = {request.temperature!r}  ← caller wants 0.0"
+        )
         print(f"           client.default_temperature = {mock_llm_client.default_temperature!r}")
         print()
         print("  STEP 2 — The bug lives in the event_data dict (contextual_client.py:89):")
-        print("           'temperature': request.temperature or self.llm_client.default_temperature")
+        print(
+            "           'temperature': request.temperature or self.llm_client.default_temperature"
+        )
         print("            0.0 or 0.7  →  0.7   ← Python treats 0.0 as falsy ❌")
         print()
         print("  STEP 3 — Calling client.chat(request)...")
@@ -1207,7 +1158,9 @@ async def test_request_dump_not_emitted_to_redis():
     By design, the current implementation includes request/response data in Redis
     events. This behaviour is intentional and this test is skipped accordingly.
     """
-    pytest.skip("By design: request/response data is intentionally included in Redis event payloads.")
+    pytest.skip(
+        "By design: request/response data is intentionally included in Redis event payloads."
+    )
 
 
 # ============================================================================
@@ -1247,14 +1200,13 @@ def test_google_sheets_integration_verification():
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         # The pytest_google_sheets.py plugin writes test results here after every run.
@@ -1264,20 +1216,20 @@ def test_google_sheets_integration_verification():
         # summary_data[0] is the first row — the column headers the plugin creates
         headers = summary_data[0]
         # These four columns are the core metrics the plugin must write after each test run
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
 
         # Check LLM Integration Testing worksheet (optional - may not exist yet)
         try:
-            llm_sheet = sheet.worksheet('LLM Integration Testing')
+            llm_sheet = sheet.worksheet("LLM Integration Testing")
             llm_data = llm_sheet.get_all_values()
 
             if llm_data:
                 # The automation_status column tracks which test cases are covered by automated tests
                 headers = llm_data[0]
-                has_automation_status = any('automation' in h.lower() for h in headers)
+                has_automation_status = any("automation" in h.lower() for h in headers)
                 assert has_automation_status, "Should have automation_status column"
         except gspread.exceptions.WorksheetNotFound:
             # Worksheet doesn't exist yet - skip this check
@@ -1287,5 +1239,3 @@ def test_google_sheets_integration_verification():
 
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")
-
-

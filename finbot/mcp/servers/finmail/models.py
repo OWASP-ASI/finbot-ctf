@@ -11,13 +11,15 @@ from datetime import UTC, datetime
 from sqlalchemy import (
     Boolean,
     Column,
+)
+from sqlalchemy import DateTime as _DateTime
+from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
     String,
     Text,
 )
-from sqlalchemy import DateTime as _DateTime
 from sqlalchemy.orm import relationship
 
 from finbot.core.data.database import Base
@@ -102,9 +104,7 @@ class Email(Base):
             "bcc_addresses": self._parse_addresses(self.bcc_addresses),
             "recipient_role": self.recipient_role,
             "is_read": self.is_read,
-            "read_at": self.read_at.isoformat().replace("+00:00", "Z")
-            if self.read_at
-            else None,
+            "read_at": self.read_at.isoformat().replace("+00:00", "Z") if self.read_at else None,
             "related_invoice_id": self.related_invoice_id,
             "metadata": json.loads(self.metadata_json) if self.metadata_json else None,
             "created_at": self.created_at.isoformat().replace("+00:00", "Z"),

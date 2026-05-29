@@ -48,8 +48,7 @@ async def request_magic_link(
             token=token,
             email=email,
             session_id=session_id,
-            expires_at=datetime.now(UTC)
-            + timedelta(minutes=settings.MAGIC_LINK_EXPIRY_MINUTES),
+            expires_at=datetime.now(UTC) + timedelta(minutes=settings.MAGIC_LINK_EXPIRY_MINUTES),
             ip_address=request.client.host if request.client else None,
         )
         db.add(magic_token)
@@ -90,9 +89,7 @@ async def verify_magic_link(request: Request, token: str):
     db = SessionLocal()
     try:
         # Find token
-        magic_token = (
-            db.query(MagicLinkToken).filter(MagicLinkToken.token == token).first()
-        )
+        magic_token = db.query(MagicLinkToken).filter(MagicLinkToken.token == token).first()
 
         if not magic_token:
             return template_response(

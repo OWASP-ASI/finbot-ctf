@@ -100,13 +100,19 @@ def main():
     print("\n" + "=" * 55)
     print("  What you can run")
     print("=" * 55)
-    print(f"  Docker Compose (quickest)         {status(docker_ready)}  {'Ready' if docker_ready else 'Docker not available'}")
-    print(f"  Local + SQLite (minimal)          {status(sqlite_ready)}  {'Ready' if sqlite_ready else 'missing: ' + ', '.join(
+    print(
+        f"  Docker Compose (quickest)         {status(docker_ready)}  {'Ready' if docker_ready else 'Docker not available'}"
+    )
+    print(
+        f"  Local + SQLite (minimal)          {status(sqlite_ready)}  {'Ready' if sqlite_ready else 'missing: ' + ', '.join(
         name for ok, name in [(py_ok, 'Python 3.13+'), (uv_ok, 'uv'), (redis_ok, 'Redis')] if not ok
-    )}")
-    print(f"  Local + PostgreSQL (recommended)  {status(pg_ready)}  {'Ready' if pg_ready else 'missing: ' + ', '.join(
+    )}"
+    )
+    print(
+        f"  Local + PostgreSQL (recommended)  {status(pg_ready)}  {'Ready' if pg_ready else 'missing: ' + ', '.join(
         name for ok, name in [(py_ok, 'Python 3.13+'), (uv_ok, 'uv'), (redis_ok, 'Redis'), (pg_ok, 'PostgreSQL')] if not ok
-    )}")
+    )}"
+    )
 
     if not redis_ok and local_base:
         print("\n  ⚠️  Without Redis the platform starts but CTF challenge detection won't work.")

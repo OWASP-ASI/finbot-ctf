@@ -94,8 +94,8 @@ def create_fingerprint_data(
         return f"{accept_language or ''}:{accept_encoding or ''}:{settings.SECRET_KEY}"
     elif fingerprint_type == "loose":
         # Include normalized user agent for additional security
-        return f"{normalized_ua}:{accept_language or ''}:{accept_encoding or ''}:{settings.SECRET_KEY}"
-    else:
-        raise ValueError(
-            f"Invalid fingerprint_type: {fingerprint_type}. Use 'strict' or 'loose'."
+        return (
+            f"{normalized_ua}:{accept_language or ''}:{accept_encoding or ''}:{settings.SECRET_KEY}"
         )
+    else:
+        raise ValueError(f"Invalid fingerprint_type: {fingerprint_type}. Use 'strict' or 'loose'.")

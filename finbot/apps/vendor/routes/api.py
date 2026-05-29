@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 from finbot.agents.runner import run_orchestrator_agent
 from finbot.core.auth.middleware import get_session_context
-from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import (
@@ -18,6 +17,7 @@ from finbot.core.data.repositories import (
     VendorRepository,
 )
 from finbot.core.messaging import event_bus
+from finbot.core.utils import to_utc_iso
 from finbot.mcp.servers.finmail.repositories import EmailRepository
 
 # Create API router
@@ -146,9 +146,7 @@ async def register_vendor(
             }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to register vendor: {str(e)}"
-        ) from e
+        raise HTTPException(status_code=500, detail=f"Failed to register vendor: {str(e)}") from e
 
 
 @router.get("/vendors/me")
@@ -189,9 +187,7 @@ async def get_vendor(
 
         # Verify vendor is the current vendor (vendor portal only sees current vendor)
         if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to view this vendor"
-            )
+            raise HTTPException(status_code=403, detail="Not authorized to view this vendor")
 
         return vendor.to_dict()
 
@@ -213,9 +209,7 @@ async def update_vendor(
 
         # Verify vendor belongs to current user and is the current vendor
         if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to update this vendor"
-            )
+            raise HTTPException(status_code=403, detail="Not authorized to update this vendor")
 
         try:
             # Update only provided fields
@@ -263,9 +257,7 @@ async def update_vendor(
 
         except Exception as e:
             db.rollback()
-            raise HTTPException(
-                status_code=500, detail=f"Failed to update vendor: {str(e)}"
-            ) from e
+            raise HTTPException(status_code=500, detail=f"Failed to update vendor: {str(e)}") from e
 
 
 @router.delete("/vendors/{vendor_id}")
@@ -283,9 +275,7 @@ async def delete_vendor(
 
         # Verify vendor belongs to current user and is the current vendor
         if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to delete this vendor"
-            )
+            raise HTTPException(status_code=403, detail="Not authorized to delete this vendor")
 
         company_name = vendor.company_name
         success = vendor_repo.delete_vendor(vendor_id)
@@ -434,16 +424,10 @@ async def get_dashboard_metrics(
             )
 
             txn_repo = PaymentTransactionRepository(db, session_context)
-            transactions = txn_repo.list_for_vendor(
-                session_context.current_vendor_id, limit=1000
-            )
+            transactions = txn_repo.list_for_vendor(session_context.current_vendor_id, limit=1000)
             payment_summary = {
-                "total_paid": sum(
-                    t.amount for t in transactions if t.status == "completed"
-                ),
-                "total_pending": sum(
-                    t.amount for t in transactions if t.status == "pending"
-                ),
+                "total_paid": sum(t.amount for t in transactions if t.status == "completed"),
+                "total_pending": sum(t.amount for t in transactions if t.status == "pending"),
                 "completed_count": sum(1 for t in transactions if t.status == "completed"),
                 "pending_count": sum(1 for t in transactions if t.status == "pending"),
                 "failed_count": sum(1 for t in transactions if t.status == "failed"),
@@ -464,9 +448,7 @@ async def get_dashboard_metrics(
             from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository
 
             file_repo = FinDriveFileRepository(db, session_context)
-            files = file_repo.list_files(
-                vendor_id=session_context.current_vendor_id, limit=1000
-            )
+            files = file_repo.list_files(vendor_id=session_context.current_vendor_id, limit=1000)
             file_count = len(files)
         except Exception:
             pass
@@ -541,7 +523,9 @@ async def create_invoice(
         try:
             invoice_dict = invoice_data.model_dump()
             inv_date = datetime.fromisoformat(invoice_data.invoice_date)
-            invoice_dict["invoice_date"] = inv_date if inv_date.tzinfo else inv_date.replace(tzinfo=UTC)
+            invoice_dict["invoice_date"] = (
+                inv_date if inv_date.tzinfo else inv_date.replace(tzinfo=UTC)
+            )
             due = datetime.fromisoformat(invoice_data.due_date)
             invoice_dict["due_date"] = due if due.tzinfo else due.replace(tzinfo=UTC)
 
@@ -564,8 +548,7 @@ async def create_invoice(
             }
             if attachments_list:
                 task_data["attachment_file_ids"] = [
-                    a["file_id"] if isinstance(a, dict) else a.file_id
-                    for a in attachments_list
+                    a["file_id"] if isinstance(a, dict) else a.file_id for a in attachments_list
                 ]
 
             background_tasks.add_task(
@@ -672,9 +655,7 @@ async def update_invoice(
         if invoice_data.attachments is not None:
             import json as _json
 
-            updates["attachments"] = _json.dumps(
-                [a.model_dump() for a in invoice_data.attachments]
-            )
+            updates["attachments"] = _json.dumps([a.model_dump() for a in invoice_data.attachments])
 
         if not updates:
             raise HTTPException(status_code=400, detail="No fields to update")
@@ -775,9 +756,7 @@ async def get_payment_summary(
 
     with db_session() as db:
         txn_repo = PaymentTransactionRepository(db, session_context)
-        transactions = txn_repo.list_for_vendor(
-            session_context.current_vendor_id, limit=1000
-        )
+        transactions = txn_repo.list_for_vendor(session_context.current_vendor_id, limit=1000)
 
         total_paid = sum(t.amount for t in transactions if t.status == "completed")
         total_pending = sum(t.amount for t in transactions if t.status == "pending")
@@ -1024,14 +1003,20 @@ async def get_message_contacts(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Get addressable contacts for email compose autocomplete."""
-    from finbot.mcp.servers.finmail.routing import get_admin_address  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+        get_admin_address,
+    )
 
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendors = vendor_repo.list_vendors() or []
 
         contacts = [
-            {"email": get_admin_address(session_context.namespace), "name": "Admin", "type": "admin"},
+            {
+                "email": get_admin_address(session_context.namespace),
+                "name": "Admin",
+                "type": "admin",
+            },
         ]
         for v in vendors:
             contacts.append({"email": v.email, "name": v.company_name, "type": "vendor"})
@@ -1094,6 +1079,7 @@ async def mark_all_messages_read(
 
 class ComposeEmailRequest(BaseModel):
     """Compose and send an email"""
+
     to: list[str]
     subject: str
     body: str
@@ -1111,7 +1097,9 @@ async def send_message(
     if not session_context.current_vendor_id:
         raise HTTPException(status_code=400, detail="Vendor context required")
 
-    from finbot.mcp.servers.finmail.routing import route_and_deliver  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+        route_and_deliver,
+    )
 
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
@@ -1173,18 +1161,14 @@ async def chat(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Stream a chat response from the AI assistant"""
-    from finbot.agents.chat import (
-        VendorChatAssistant,  # pylint: disable=import-outside-toplevel
-    )
+    from finbot.agents.chat import VendorChatAssistant  # pylint: disable=import-outside-toplevel
 
     assistant = VendorChatAssistant(
         session_context=session_context,
         background_tasks=background_tasks,
     )
 
-    attachments = (
-        [a.model_dump() for a in request.attachments] if request.attachments else None
-    )
+    attachments = [a.model_dump() for a in request.attachments] if request.attachments else None
 
     return StreamingResponse(
         assistant.stream_response(request.message, attachments=attachments),

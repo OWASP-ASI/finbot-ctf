@@ -83,15 +83,9 @@ class SessionContext:
     def is_too_old(self) -> bool:
         """Check if session is too old for a replacement - forced"""
         max_age = (
-            settings.MAX_TEMP_SESSION_AGE
-            if self.is_temporary
-            else settings.MAX_PERM_SESSION_AGE
+            settings.MAX_TEMP_SESSION_AGE if self.is_temporary else settings.MAX_PERM_SESSION_AGE
         )
-        ca = (
-            self.created_at
-            if self.created_at.tzinfo
-            else self.created_at.replace(tzinfo=UTC)
-        )
+        ca = self.created_at if self.created_at.tzinfo else self.created_at.replace(tzinfo=UTC)
         session_age = datetime.now(UTC) - ca
         return session_age.total_seconds() > max_age
 
@@ -103,14 +97,10 @@ class SessionContext:
             return False
         # detection: check for too many recent rotations
         if self.rotation_count >= settings.SUSPICIOUS_ROTATION_THRESHOLD:
-            ca = (
-                self.created_at
-                if self.created_at.tzinfo
-                else self.created_at.replace(tzinfo=UTC)
+            ca = self.created_at if self.created_at.tzinfo else self.created_at.replace(tzinfo=UTC)
+            avg_rotation_interval = (datetime.now(UTC) - ca).total_seconds() / max(
+                1, self.rotation_count
             )
-            avg_rotation_interval = (
-                datetime.now(UTC) - ca
-            ).total_seconds() / max(1, self.rotation_count)
             min_expected_interval = (
                 settings.TEMP_SESSION_ROTATION_INTERVAL
                 if self.is_temporary
@@ -127,11 +117,7 @@ class SessionContext:
             if self.last_rotation.tzinfo
             else self.last_rotation.replace(tzinfo=UTC)
         )
-        ca = (
-            self.created_at
-            if self.created_at.tzinfo
-            else self.created_at.replace(tzinfo=UTC)
-        )
+        ca = self.created_at if self.created_at.tzinfo else self.created_at.replace(tzinfo=UTC)
         return {
             "rotation_count": self.rotation_count,
             "time_since_rotation": (datetime.now(UTC) - lr).total_seconds(),
@@ -139,9 +125,7 @@ class SessionContext:
             "should_rotate": self.should_rotate(),
             "is_too_old": self.is_too_old(),
             "suspicious_activity": self.detect_suspicious_activity(),
-            "fingerprint_protected": bool(
-                self.strict_fingerprint or self.loose_fingerprint
-            ),
+            "fingerprint_protected": bool(self.strict_fingerprint or self.loose_fingerprint),
         }
 
     def is_vendor_portal(self) -> bool:
@@ -242,9 +226,7 @@ class SessionManager:
         # compute expiry
         now = datetime.now(UTC)
         session_lifetime = (
-            settings.TEMP_SESSION_TIMEOUT
-            if is_temporary
-            else settings.PERM_SESSION_TIMEOUT
+            settings.TEMP_SESSION_TIMEOUT if is_temporary else settings.PERM_SESSION_TIMEOUT
         )
         expires_at = now + timedelta(seconds=session_lifetime)
 
@@ -265,12 +247,8 @@ class SessionManager:
             namespace=namespace,
             created_at=now,
             expires_at=expires_at,
-            strict_fingerprint=hashlib.sha256(
-                strict_fingerprint_data.encode()
-            ).hexdigest()[:16],
-            loose_fingerprint=hashlib.sha256(
-                loose_fingerprint_data.encode()
-            ).hexdigest()[:16],
+            strict_fingerprint=hashlib.sha256(strict_fingerprint_data.encode()).hexdigest()[:16],
+            loose_fingerprint=hashlib.sha256(loose_fingerprint_data.encode()).hexdigest()[:16],
             original_ip=ip_address or "",
             current_ip=ip_address or "",
             user_agent=user_agent,
@@ -282,9 +260,7 @@ class SessionManager:
 
         return session_context
 
-    def _store_session_securely(
-        self, session_context: SessionContext, db: Session | None = None
-    ):
+    def _store_session_securely(self, session_context: SessionContext, db: Session | None = None):
         """Store session in db with integrity protection - HMAC signatures.
 
         Args:
@@ -297,11 +273,7 @@ class SessionManager:
             db = SessionLocal()
         try:
             if session_context.email:
-                user = (
-                    db.query(User)
-                    .filter(User.user_id == session_context.user_id)
-                    .first()
-                )
+                user = db.query(User).filter(User.user_id == session_context.user_id).first()
                 if not user:
                     user = User(
                         user_id=session_context.user_id,
@@ -343,9 +315,7 @@ class SessionManager:
                 db.commit()
         except Exception as e:
             db.rollback()
-            logger.error(
-                "Failed to store session for user %s: %s", session_context.user_id, e
-            )
+            logger.error("Failed to store session for user %s: %s", session_context.user_id, e)
             raise RuntimeError(f"Failed to store session: {e}") from e
         finally:
             if own_db:
@@ -353,9 +323,7 @@ class SessionManager:
 
     def _sign_session_data(self, session_data: str) -> str:
         """Create HMAC signature for session data"""
-        return hmac.new(
-            self.signing_key, session_data.encode(), hashlib.sha256
-        ).hexdigest()
+        return hmac.new(self.signing_key, session_data.encode(), hashlib.sha256).hexdigest()
 
     def _verify_session_signature(self, session_data: str, signature: str) -> bool:
         """Verify session data integrity using HMAC"""
@@ -387,11 +355,7 @@ class SessionManager:
         own_db = _db is None
         db = _db or SessionLocal()
         try:
-            session = (
-                db.query(UserSession)
-                .filter(UserSession.session_id == session_id)
-                .first()
-            )
+            session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
             if not session:
                 return None, "session_not_found"
 
@@ -402,9 +366,7 @@ class SessionManager:
                 return None, "session_expired"
 
             # verify signature
-            if not self._verify_session_signature(
-                session.session_data, session.signature
-            ):
+            if not self._verify_session_signature(session.session_data, session.signature):
                 db.delete(session)
                 db.commit()
                 return None, "session_tampered"
@@ -492,9 +454,7 @@ class SessionManager:
                         return None, "session_hijacked"
                     else:
                         # Lenient handling for permanent sessions
-                        session_context.security_event = (
-                            f"fingerprint_mismatch_{validation_method}"
-                        )
+                        session_context.security_event = f"fingerprint_mismatch_{validation_method}"
                         session_context.needs_cookie_update = True
                         logger.warning(
                             "Fingerprint mismatch for permanent session %s (method: %s)",
@@ -539,9 +499,7 @@ class SessionManager:
             if own_db:
                 db.close()
 
-    def _rotate_session(
-        self, old_context: SessionContext, db: Session
-    ) -> SessionContext:
+    def _rotate_session(self, old_context: SessionContext, db: Session) -> SessionContext:
         """Rotate session ID while preserving user context
         - Preserves namespace, user context, and vendor selection
         - Keeps old session alive briefly so concurrent requests don't lose it
@@ -576,9 +534,7 @@ class SessionManager:
         # context). Setting a short expiry + updating last_rotation prevents
         # re-rotation while letting those requests complete normally.
         old_session = (
-            db.query(UserSession)
-            .filter(UserSession.session_id == old_context.session_id)
-            .first()
+            db.query(UserSession).filter(UserSession.session_id == old_context.session_id).first()
         )
         if old_session:
             old_session.expires_at = datetime.now(UTC) + timedelta(seconds=60)
@@ -591,11 +547,7 @@ class SessionManager:
         """Delete session by session id"""
         db = SessionLocal()
         try:
-            session = (
-                db.query(UserSession)
-                .filter(UserSession.session_id == session_id)
-                .first()
-            )
+            session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
             if session:
                 db.delete(session)
                 db.commit()
@@ -614,9 +566,7 @@ class SessionManager:
         db = SessionLocal()
         try:
             expired_sessions = (
-                db.query(UserSession)
-                .filter(UserSession.expires_at < datetime.now(UTC))
-                .all()
+                db.query(UserSession).filter(UserSession.expires_at < datetime.now(UTC)).all()
             )
             for session in expired_sessions:
                 db.delete(session)
@@ -663,9 +613,7 @@ class SessionManager:
         try:
             # Get current session
             current_session = (
-                db.query(UserSession)
-                .filter(UserSession.session_id == session_id)
-                .first()
+                db.query(UserSession).filter(UserSession.session_id == session_id).first()
             )
             if not current_session:
                 logger.warning("Session not found for upgrade: %s", session_id[:8])
@@ -722,9 +670,7 @@ class SessionManager:
                 "+00:00", "Z"
             )
             current_session.session_data = json.dumps(session_data, sort_keys=True)
-            current_session.signature = self._sign_session_data(
-                current_session.session_data
-            )
+            current_session.signature = self._sign_session_data(current_session.session_data)
 
             # Create User record for new permanent user
             user = User(
@@ -772,11 +718,7 @@ class SessionManager:
         db = SessionLocal()
         try:
             # Get the session to find the user
-            session = (
-                db.query(UserSession)
-                .filter(UserSession.session_id == session_id)
-                .first()
-            )
+            session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
 
             if not session:
                 return False
@@ -811,13 +753,9 @@ class SessionManager:
         """Get session with vendor context loaded in a single DB connection."""
         db = SessionLocal()
         try:
-            session_context, status = self.get_session(
-                session_id, _db=db, **kwargs
-            )
+            session_context, status = self.get_session(session_id, _db=db, **kwargs)
             if session_context:
-                session_context = self._load_vendor_context_with_db(
-                    session_context, db
-                )
+                session_context = self._load_vendor_context_with_db(session_context, db)
             return session_context, status
         except Exception as e:
             logger.error("Error in get_session_with_vendor_context: %s", e)

@@ -160,7 +160,9 @@ def create_tables() -> None:
         tables = inspector.get_table_names()
         if not tables:
             logger.error("No tables found in the database")
-            raise Exception("No tables found in the database")  # pylint: disable=broad-exception-raised
+            raise Exception(
+                "No tables found in the database"
+            )  # pylint: disable=broad-exception-raised
         logger.info("All database tables created successfully: %s", tables)
     except Exception as e:
         logger.error("Error creating database tables: %s", e)
@@ -201,9 +203,11 @@ def get_database_info() -> dict:
         with engine.connect() as connection:
             info = {
                 "type": settings.DATABASE_TYPE,
-                "url": settings.get_database_url().split("@")[0] + "@***"
-                if "@" in settings.get_database_url()
-                else settings.get_database_url(),
+                "url": (
+                    settings.get_database_url().split("@")[0] + "@***"
+                    if "@" in settings.get_database_url()
+                    else settings.get_database_url()
+                ),
                 "tables": list(Base.metadata.tables.keys()),
                 "connected": True,
                 "pool_status": get_pool_status(),
@@ -219,9 +223,11 @@ def get_database_info() -> dict:
         logger.error("Error getting database information: %s", e)
         return {
             "type": settings.DATABASE_TYPE,
-            "url": settings.get_database_url().split("@")[0] + "@***"
-            if "@" in settings.get_database_url()
-            else settings.get_database_url(),
+            "url": (
+                settings.get_database_url().split("@")[0] + "@***"
+                if "@" in settings.get_database_url()
+                else settings.get_database_url()
+            ),
             "tables": [],
             "connected": False,
             "error": str(e),

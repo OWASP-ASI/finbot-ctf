@@ -4,7 +4,6 @@
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
-
 from sqlalchemy import func
 
 from finbot.core.data.database import SessionLocal
@@ -28,6 +27,7 @@ router = APIRouter(prefix="/users")
 # ---------------------------------------------------------------------------
 # Queries
 # ---------------------------------------------------------------------------
+
 
 def _user_list(db, search: str | None = None) -> list[dict]:
     """Get all users with summary stats."""
@@ -56,39 +56,43 @@ def _user_list(db, search: str | None = None) -> list[dict]:
                 UserChallengeProgress.user_id == u.user_id,
                 UserChallengeProgress.status == "completed",
             )
-            .scalar() or 0
+            .scalar()
+            or 0
         )
         attempted = (
             db.query(func.count(UserChallengeProgress.id))
             .filter(UserChallengeProgress.user_id == u.user_id)
-            .scalar() or 0
+            .scalar()
+            or 0
         )
         badges = (
-            db.query(func.count(UserBadge.id))
-            .filter(UserBadge.user_id == u.user_id)
-            .scalar() or 0
+            db.query(func.count(UserBadge.id)).filter(UserBadge.user_id == u.user_id).scalar() or 0
         )
         has_profile = (
-            db.query(UserProfile)
-            .filter(UserProfile.user_id == u.user_id)
-            .first() is not None
+            db.query(UserProfile).filter(UserProfile.user_id == u.user_id).first() is not None
         )
 
-        result.append({
-            "user_id": u.user_id,
-            "email": u.email,
-            "display_name": u.display_name,
-            "namespace": u.namespace,
-            "is_active": u.is_active,
-            "created_at": u.created_at,
-            "last_login": u.last_login,
-            "has_profile": has_profile,
-            "completed": completed,
-            "attempted": attempted,
-            "badges": badges,
-            "session_type": "perm" if latest_session and not latest_session.is_temporary else "temp" if latest_session else None,
-            "last_active": latest_session.last_accessed if latest_session else u.last_login,
-        })
+        result.append(
+            {
+                "user_id": u.user_id,
+                "email": u.email,
+                "display_name": u.display_name,
+                "namespace": u.namespace,
+                "is_active": u.is_active,
+                "created_at": u.created_at,
+                "last_login": u.last_login,
+                "has_profile": has_profile,
+                "completed": completed,
+                "attempted": attempted,
+                "badges": badges,
+                "session_type": (
+                    "perm"
+                    if latest_session and not latest_session.is_temporary
+                    else "temp" if latest_session else None
+                ),
+                "last_active": latest_session.last_accessed if latest_session else u.last_login,
+            }
+        )
 
     return result
 
@@ -132,27 +136,27 @@ def _user_detail(db, user_id: str) -> dict | None:
     )
 
     event_count = (
-        db.query(func.count(CTFEvent.id))
-        .filter(CTFEvent.user_id == user_id)
-        .scalar() or 0
+        db.query(func.count(CTFEvent.id)).filter(CTFEvent.user_id == user_id).scalar() or 0
     )
     chat_count = (
-        db.query(func.count(ChatMessage.id))
-        .filter(ChatMessage.user_id == user_id)
-        .scalar() or 0
+        db.query(func.count(ChatMessage.id)).filter(ChatMessage.user_id == user_id).scalar() or 0
     )
 
     user_dict = {
-        "user_id": user.user_id, "email": user.email,
-        "display_name": user.display_name, "namespace": user.namespace,
-        "is_active": user.is_active, "created_at": user.created_at,
+        "user_id": user.user_id,
+        "email": user.email,
+        "display_name": user.display_name,
+        "namespace": user.namespace,
+        "is_active": user.is_active,
+        "created_at": user.created_at,
         "last_login": user.last_login,
     }
 
     profile_dict = None
     if profile_row:
         profile_dict = {
-            "username": profile_row.username, "bio": profile_row.bio,
+            "username": profile_row.username,
+            "bio": profile_row.bio,
             "avatar_emoji": profile_row.avatar_emoji,
             "avatar_type": profile_row.avatar_type,
             "is_public": profile_row.is_public,
@@ -160,28 +164,45 @@ def _user_detail(db, user_id: str) -> dict | None:
         }
 
     sessions = [
-        {"session_id": s.session_id, "is_temporary": s.is_temporary,
-         "last_accessed": s.last_accessed, "expires_at": s.expires_at,
-         "current_ip": s.current_ip, "original_ip": s.original_ip}
+        {
+            "session_id": s.session_id,
+            "is_temporary": s.is_temporary,
+            "last_accessed": s.last_accessed,
+            "expires_at": s.expires_at,
+            "current_ip": s.current_ip,
+            "original_ip": s.original_ip,
+        }
         for s in sessions_rows
     ]
 
     progress = [
-        {"challenge_id": p.challenge_id, "status": p.status,
-         "attempts": p.attempts, "hints_used": p.hints_used,
-         "completed_at": p.completed_at}
+        {
+            "challenge_id": p.challenge_id,
+            "status": p.status,
+            "attempts": p.attempts,
+            "hints_used": p.hints_used,
+            "completed_at": p.completed_at,
+        }
         for p in progress_rows
     ]
 
     badges_earned = [
-        {"badge_id": ub.UserBadge.badge_id, "title": ub.title,
-         "rarity": ub.rarity, "earned_at": ub.UserBadge.earned_at}
+        {
+            "badge_id": ub.UserBadge.badge_id,
+            "title": ub.title,
+            "rarity": ub.rarity,
+            "earned_at": ub.UserBadge.earned_at,
+        }
         for ub in badges_rows
     ]
 
     recent_events = [
-        {"event_type": e.event_type, "summary": e.summary,
-         "severity": e.severity, "timestamp": e.timestamp}
+        {
+            "event_type": e.event_type,
+            "summary": e.summary,
+            "severity": e.severity,
+            "timestamp": e.timestamp,
+        }
         for e in events_rows
     ]
 
@@ -206,6 +227,7 @@ def _user_detail(db, user_id: str) -> dict | None:
 # ---------------------------------------------------------------------------
 # Views
 # ---------------------------------------------------------------------------
+
 
 @router.get("/", response_class=HTMLResponse)
 async def users_list(request: Request, search: str = Query(default="")):
@@ -240,6 +262,7 @@ async def user_detail(request: Request, user_id: str):
 # ---------------------------------------------------------------------------
 # Actions
 # ---------------------------------------------------------------------------
+
 
 @router.post("/api/{user_id}/kill-sessions")
 async def kill_sessions(user_id: str):
@@ -295,8 +318,10 @@ async def toggle_active(user_id: str):
             sessions_killed = db.query(UserSession).filter(UserSession.user_id == user_id).delete()
         db.commit()
         return {
-            "action": "toggle_active", "user_id": user_id,
-            "is_active": user.is_active, "sessions_killed": sessions_killed,
+            "action": "toggle_active",
+            "user_id": user_id,
+            "is_active": user.is_active,
+            "sessions_killed": sessions_killed,
         }
     except HTTPException:
         raise
@@ -322,21 +347,15 @@ async def full_ctf_reset(user_id: str, confirm_user_id: str = Query(...)):
             raise HTTPException(status_code=404, detail="User not found")
 
         deleted = {}
-        deleted["progress"] = db.query(UserChallengeProgress).filter(
-            UserChallengeProgress.user_id == user_id
-        ).delete()
-        deleted["badges"] = db.query(UserBadge).filter(
-            UserBadge.user_id == user_id
-        ).delete()
-        deleted["events"] = db.query(CTFEvent).filter(
-            CTFEvent.user_id == user_id
-        ).delete()
-        deleted["chat"] = db.query(ChatMessage).filter(
-            ChatMessage.user_id == user_id
-        ).delete()
-        deleted["sessions"] = db.query(UserSession).filter(
-            UserSession.user_id == user_id
-        ).delete()
+        deleted["progress"] = (
+            db.query(UserChallengeProgress)
+            .filter(UserChallengeProgress.user_id == user_id)
+            .delete()
+        )
+        deleted["badges"] = db.query(UserBadge).filter(UserBadge.user_id == user_id).delete()
+        deleted["events"] = db.query(CTFEvent).filter(CTFEvent.user_id == user_id).delete()
+        deleted["chat"] = db.query(ChatMessage).filter(ChatMessage.user_id == user_id).delete()
+        deleted["sessions"] = db.query(UserSession).filter(UserSession.user_id == user_id).delete()
 
         db.commit()
         return {"action": "full_ctf_reset", "user_id": user_id, "deleted": deleted}

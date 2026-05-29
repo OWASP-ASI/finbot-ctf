@@ -34,25 +34,17 @@ class ChallengeService:
         completed = []
         challenges = db.query(Challenge).filter(Challenge.is_active).all()
         for challenge in challenges:
-            config = (
-                json.loads(challenge.detector_config)
-                if challenge.detector_config
-                else None
-            )
+            config = json.loads(challenge.detector_config) if challenge.detector_config else None
             detector = create_detector(challenge.detector_class, challenge.id, config)
             if not detector:
                 continue
             if not detector.matches_event_type(event_type):
                 continue
-            progress = self._get_or_create_progress(
-                db, namespace, user_id, challenge.id
-            )
+            progress = self._get_or_create_progress(db, namespace, user_id, challenge.id)
             if progress.status == "completed":
                 continue
 
-            prerequisites = (
-                json.loads(challenge.prerequisites) if challenge.prerequisites else []
-            )
+            prerequisites = json.loads(challenge.prerequisites) if challenge.prerequisites else []
             if not self._check_prerequisites(db, namespace, user_id, prerequisites):
                 logger.debug(
                     "Challenge %s prerequisites not met for user %s",
@@ -73,9 +65,7 @@ class ChallengeService:
 
                 workflow_id = event.get("workflow_id")
                 is_new_attempt = bool(
-                    is_relevant
-                    and workflow_id
-                    and workflow_id != progress.last_attempt_workflow_id
+                    is_relevant and workflow_id and workflow_id != progress.last_attempt_workflow_id
                 )
                 if is_new_attempt:
                     progress.attempts += 1
@@ -85,32 +75,28 @@ class ChallengeService:
                     if not result.detected:
                         progress.failed_attempts += 1
                     progress.status = (
-                        "in_progress"
-                        if progress.status == "available"
-                        else progress.status
+                        "in_progress" if progress.status == "available" else progress.status
                     )
 
                 if is_relevant:
-                    progress.last_attempt_result = json.dumps({
-                        "detected": result.detected,
-                        "message": result.message,
-                        "confidence": result.confidence,
-                        "evidence": result.evidence,
-                        "event_type": event.get("event_type"),
-                        "timestamp": to_utc_iso(result.timestamp),
-                    })
+                    progress.last_attempt_result = json.dumps(
+                        {
+                            "detected": result.detected,
+                            "message": result.message,
+                            "confidence": result.confidence,
+                            "evidence": result.evidence,
+                            "event_type": event.get("event_type"),
+                            "timestamp": to_utc_iso(result.timestamp),
+                        }
+                    )
 
                 # Commit attempt tracking to release the SQLite write lock
                 # before the potentially slow scoring LLM call.
                 db.commit()
 
                 if result.detected:
-                    scoring_result = await self._apply_scoring_modifiers(
-                        challenge, event
-                    )
-                    self._mark_completed(
-                        db, progress, event, result, scoring_result
-                    )
+                    scoring_result = await self._apply_scoring_modifiers(challenge, event)
+                    self._mark_completed(db, progress, event, result, scoring_result)
                     db.commit()
                     completed.append((challenge.id, result))
                     logger.info(
@@ -214,9 +200,7 @@ class ChallengeService:
             first_attempt = progress.first_attempt_at
             if first_attempt.tzinfo is None:
                 first_attempt = first_attempt.replace(tzinfo=UTC)
-            progress.completion_time_seconds = int(
-                (now - first_attempt).total_seconds()
-            )
+            progress.completion_time_seconds = int((now - first_attempt).total_seconds())
 
         evidence = {
             "result_message": result.message,

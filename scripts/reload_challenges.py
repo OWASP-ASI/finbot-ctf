@@ -21,10 +21,11 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from finbot.core.data.database import db_session
+
 # pylint: disable=wrong-import-position
 # ruff: noqa: E402
 from finbot.ctf.definitions.loader import get_loader
-from finbot.core.data.database import db_session
 
 
 def main() -> None:
@@ -53,9 +54,7 @@ def main() -> None:
             if args.quiet:
                 print(f"{challenges_count} {badges_count}")
             else:
-                print(
-                    f"Reloaded {challenges_count} challenges, {badges_count} badges."
-                )
+                print(f"Reloaded {challenges_count} challenges, {badges_count} badges.")
         else:
             loaded = loader.load_challenges(db)
             count = len(loaded)

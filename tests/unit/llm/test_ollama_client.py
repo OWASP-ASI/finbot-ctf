@@ -54,15 +54,18 @@ mock_ollama.AsyncClient = MagicMock()
 sys.modules["ollama"] = mock_ollama
 # --------------------------------------------------------------
 
-from finbot.core.llm.ollama_client import OllamaClient
-from finbot.core.data.models import LLMRequest
-
 import os
+
+import gspread
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-import gspread
+
+from finbot.core.data.models import LLMRequest
+from finbot.core.llm.ollama_client import OllamaClient
 
 load_dotenv()
+
+
 # ============================================================================
 # LLM-CONF-001: Default Configuration Loading
 # ============================================================================
@@ -104,8 +107,7 @@ async def test_default_configuration_loading():
             assert client.host == "https://custom-ollama:11434"
             # AsyncClient must be constructed with the correct host+timeout — wrong values cause connection failures
             mock_async_client.assert_called_once_with(
-                host="https://custom-ollama:11434",
-                timeout=60
+                host="https://custom-ollama:11434", timeout=60
             )
 
 
@@ -157,9 +159,7 @@ async def test_successful_chat_completion():
 
         client = OllamaClient()
 
-        request = LLMRequest(
-            messages=[{"role": "user", "content": "hi"}]
-        )
+        request = LLMRequest(messages=[{"role": "user", "content": "hi"}])
 
         response = await client.chat(request)
 
@@ -222,7 +222,7 @@ async def test_message_history_preservation():
             messages=[
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi there!"},
-                {"role": "user", "content": "How are you?"}
+                {"role": "user", "content": "How are you?"},
             ]
         )
 
@@ -293,7 +293,7 @@ async def test_custom_model_temperature_override():
             request = LLMRequest(
                 messages=[{"role": "user", "content": "Write a function"}],
                 model="codellama",
-                temperature=0.2
+                temperature=0.2,
             )
 
             response = await client.chat(request)
@@ -304,6 +304,7 @@ async def test_custom_model_temperature_override():
             call_args = instance.chat.call_args
             assert call_args.kwargs["model"] == "codellama"
             assert call_args.kwargs["options"]["temperature"] == pytest.approx(0.2)
+
 
 # ============================================================================
 # LLM-CHAT-004: Zero Temperature Override Prevention
@@ -364,6 +365,8 @@ async def test_zero_temperature_not_overridden():
                 f"Expected temperature=0.0 but got {actual}. "
                 "Bug: `or` treats 0.0 as falsy and substitutes the default."
             )
+
+
 # ============================================================================
 # LLM-TOOL-001: Tool Calls Extraction
 # ============================================================================
@@ -412,19 +415,19 @@ async def test_tool_calls_extraction():
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "What's the weather in San Francisco?"}],
-            tools=[{
-                "type": "function",
-                "function": {
-                    "name": "get_weather",
-                    "description": "Get current weather",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {"type": "string"}
-                        }
-                    }
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_weather",
+                        "description": "Get current weather",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {"location": {"type": "string"}},
+                        },
+                    },
                 }
-            }]
+            ],
         )
 
         response = await client.chat(request)
@@ -497,13 +500,12 @@ async def test_multiple_tool_calls():
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Compare weather in NYC and LA"}],
-            tools=[{
-                "type": "function",
-                "function": {
-                    "name": "get_weather",
-                    "description": "Get current weather"
+            tools=[
+                {
+                    "type": "function",
+                    "function": {"name": "get_weather", "description": "Get current weather"},
                 }
-            }]
+            ],
         )
 
         response = await client.chat(request)
@@ -520,6 +522,7 @@ async def test_multiple_tool_calls():
         assert tool_calls[0]["arguments"] == {"location": "NYC"}
         assert tool_calls[1]["call_id"] == "ollama_call_1"
         assert tool_calls[1]["arguments"] == {"location": "LA"}
+
 
 # ============================================================================
 # LLM-TOOL-003: Tool Calls In History Are JSON-Serializable
@@ -649,16 +652,17 @@ async def test_tool_calls_in_history_have_expected_dict_structure():
         assert len(tool_calls_in_history) == 1
         tc = tool_calls_in_history[0]
         # Must be a plain dict — raw SDK objects cannot be sent back to the API on the next turn
-        assert isinstance(tc, dict), (
-            f"Bug: tool_call in history is {type(tc).__name__}, expected dict."
-        )
+        assert isinstance(
+            tc, dict
+        ), f"Bug: tool_call in history is {type(tc).__name__}, expected dict."
         # "name" tells the caller which function was invoked
         assert "name" in tc
         # "call_id" links this call to its result when the result is sent back to the model
         assert "call_id" in tc
         # "arguments" holds the parameters that were passed to the function
         assert "arguments" in tc
-        
+
+
 # ============================================================================
 # LLM-ERR-001: Retry on Timeout Error
 # ============================================================================
@@ -895,16 +899,14 @@ async def test_json_schema_output_formatting():
             "name": "user_info",
             "schema": {
                 "type": "object",
-                "properties": {
-                    "name": {"type": "string"}
-                },
-                "required": ["name"]
-            }
+                "properties": {"name": {"type": "string"}},
+                "required": ["name"],
+            },
         }
 
         request = LLMRequest(
             messages=[{"role": "user", "content": "Extract user info"}],
-            output_json_schema=json_schema
+            output_json_schema=json_schema,
         )
 
         response = await client.chat(request)
@@ -1029,6 +1031,7 @@ async def test_missing_metadata_graceful_handling():
         assert response.metadata.get("load_duration") is None
         assert response.metadata.get("eval_count") is None
 
+
 # ============================================================================
 # LLM-OLLA-EDGE-001: Empty Message Content Handling
 # ============================================================================
@@ -1126,7 +1129,7 @@ async def test_tool_calls_with_message_content():
         client = OllamaClient()
         request = LLMRequest(
             messages=[{"role": "user", "content": "What's the weather in Boston?"}],
-            tools=[{"type": "function", "function": {"name": "get_weather"}}]
+            tools=[{"type": "function", "function": {"name": "get_weather"}}],
         )
 
         response = await client.chat(request)
@@ -1141,12 +1144,13 @@ async def test_tool_calls_with_message_content():
         tool_calls = response.tool_calls or []
         assert len(tool_calls) == 1
         assert tool_calls[0]["name"] == "get_weather"
-        
+
         # [-1] means "the last message in the list" — after chat(), that is always the assistant reply just added
         # The history entry must record the tool call so the model can receive the tool result on the next turn
         assert response.messages is not None
         assistant_message = response.messages[-1]
         assert "tool_calls" in assistant_message
+
 
 # ============================================================================
 # LLM-OLLA-EDGE-003: Chat Does Not Mutate Original Messages List
@@ -1224,9 +1228,9 @@ async def test_chat_does_not_mutate_original_messages_list():
             "chat() must copy the list, not hold a reference."
         )
         assert request.messages is not None
-        assert len(request.messages) == 1, (
-            f"Bug: request.messages was mutated — now has {len(request.messages)} items."
-        )
+        assert (
+            len(request.messages) == 1
+        ), f"Bug: request.messages was mutated — now has {len(request.messages)} items."
 
 
 # ============================================================================
@@ -1285,7 +1289,9 @@ async def test_second_call_does_not_inherit_first_call_history():
 
         first_call_messages = instance.chat.call_args_list[0].kwargs["messages"]
         print()
-        print(f"           Ollama was sent:   {first_call_messages}  ({len(first_call_messages)} msg)")
+        print(
+            f"           Ollama was sent:   {first_call_messages}  ({len(first_call_messages)} msg)"
+        )
         print("           Ollama replied:    'reply'")
         print()
         print("  STEP 3 — Inspect request.messages after call 1")
@@ -1307,7 +1313,9 @@ async def test_second_call_does_not_inherit_first_call_history():
 
         second_call_messages = instance.chat.call_args_list[1].kwargs["messages"]
         print()
-        print(f"           Ollama was sent:   {second_call_messages}  ({len(second_call_messages)} msg)")
+        print(
+            f"           Ollama was sent:   {second_call_messages}  ({len(second_call_messages)} msg)"
+        )
         print()
         print("  STEP 5 — Was call 2 clean?")
         print(f"           Expected: 1 message  |  Actual: {len(second_call_messages)} message(s)")
@@ -1317,7 +1325,9 @@ async def test_second_call_does_not_inherit_first_call_history():
             print("           ❌ BUG  — Call 2 carried over the assistant reply from call 1.")
             print("                     The list was never copied — it was mutated in place.")
         print()
-        print(f"  FINAL state of request.messages: {list(request.messages or [])}  ({len(request.messages or [])} msg)")
+        print(
+            f"  FINAL state of request.messages: {list(request.messages or [])}  ({len(request.messages or [])} msg)"
+        )
         print("=" * 65)
 
         assert len(second_call_messages) == 1, (
@@ -1329,8 +1339,9 @@ async def test_second_call_does_not_inherit_first_call_history():
             "Expected 1 — the original user message must never be modified."
         )
 
+
 # ============================================================================
-# LLM-OLLA-EDGE-005: OllamaClient.chat() returns response with messages as None 
+# LLM-OLLA-EDGE-005: OllamaClient.chat() returns response with messages as None
 # when called with minimal input
 # ============================================================================
 @pytest.mark.asyncio
@@ -1360,7 +1371,9 @@ async def test_ollama_response_messages_is_not_none():
     fake_message.tool_calls = None
 
     fake_response = AsyncMock()
-    fake_response.message = None  # Simulate a response where message is None, which should not happen
+    fake_response.message = (
+        None  # Simulate a response where message is None, which should not happen
+    )
 
     with patch("finbot.core.llm.ollama_client.AsyncClient") as mock_client:
         instance = mock_client.return_value
@@ -1375,6 +1388,7 @@ async def test_ollama_response_messages_is_not_none():
             "OllamaClient.chat() returned response.messages=None. "
             "This must be fixed in the implementation."
         )
+
 
 # ============================================================================
 # LLM-OLLA-EDGE-006: OllamaClient.chat() handles tool_calls with unexpected type
@@ -1413,6 +1427,7 @@ async def test_tool_calls_unexpected_type():
 
         # Should not crash, should treat as no tool calls
         assert isinstance(response.tool_calls, list)
+
 
 # ============================================================================
 # LLM-OLLA-EDGE-007: OllamaClient.chat() handles tool_call missing required fields
@@ -1458,6 +1473,7 @@ async def test_tool_call_missing_fields():
         # Should not crash, should handle missing fields gracefully
         assert response.success is True
 
+
 # ============================================================================
 # LLM-OLLA-EDGE-008: OllamaClient.chat() handles request with messages=None
 # ============================================================================
@@ -1472,7 +1488,7 @@ async def test_request_messages_none():
     1. Create an LLMRequest with messages=None.
     2. Mock Ollama response with a valid message.
     3. Call OllamaClient.chat().
-    
+
     Expected Behavior:
 
     1. The client does not crash.
@@ -1497,6 +1513,7 @@ async def test_request_messages_none():
         assert response.success is True
         assert response.messages is not None
         assert len(response.messages) == 1  # Only assistant reply
+
 
 # ============================================================================
 # LLM-OLLA-EDGE-009: OllamaClient.chat() handles message.content as unexpected type
@@ -1536,6 +1553,7 @@ async def test_unexpected_content_type():
         # Should not crash, should convert to string or empty string
         assert isinstance(response.content, str)
 
+
 # ============================================================================
 # LLM-OLLA-EDGE-010: OllamaClient.chat() does not retry on unexpected exceptions
 # ============================================================================
@@ -1567,6 +1585,8 @@ async def test_unexpected_exception_not_retried():
 
         # Only one call should be made, no retries
         assert instance.chat.call_count == 1
+
+
 # ============================================================================
 # LLM-OLLA-GSI-001: Google Sheets Integration Verification
 # ============================================================================
@@ -1595,7 +1615,6 @@ def test_google_sheets_integration_verification():
     6. Integration allows CI/CD pipeline to record test results
     """
 
-
     sheet_id = os.getenv("GOOGLE_SHEETS_ID")
     creds_file = os.getenv("GOOGLE_CREDENTIALS_FILE", "google-credentials.json")
 
@@ -1605,14 +1624,13 @@ def test_google_sheets_integration_verification():
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         # The pytest_google_sheets.py plugin writes test results here after every run.
@@ -1622,20 +1640,20 @@ def test_google_sheets_integration_verification():
         # summary_data[0] is the first row — the column headers the plugin creates
         headers = summary_data[0]
         # These four columns are the core metrics the plugin must write after each test run
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
 
         # Check LLM Integration Testing worksheet (optional - may not exist yet)
         try:
-            llm_sheet = sheet.worksheet('LLM Integration Testing')
+            llm_sheet = sheet.worksheet("LLM Integration Testing")
             llm_data = llm_sheet.get_all_values()
 
             if llm_data:
                 # The automation_status column tracks which test cases are covered by automated tests
                 headers = llm_data[0]
-                has_automation_status = any('automation' in h.lower() for h in headers)
+                has_automation_status = any("automation" in h.lower() for h in headers)
                 assert has_automation_status, "Should have automation_status column"
         except gspread.exceptions.WorksheetNotFound:
             # Worksheet doesn't exist yet - skip this check
@@ -1645,5 +1663,3 @@ def test_google_sheets_integration_verification():
 
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")
-
-

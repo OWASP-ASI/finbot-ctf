@@ -38,15 +38,11 @@ class OpenAIClient:
         try:
             model = request.model or self.default_model
             temperature = (
-                self.default_temperature
-                if request.temperature is None
-                else request.temperature
+                self.default_temperature if request.temperature is None else request.temperature
             )
             max_tokens = settings.LLM_MAX_TOKENS
 
-            input_list: list[dict[str, Any]] = (
-                list(request.messages) if request.messages else []
-            )
+            input_list: list[dict[str, Any]] = list(request.messages) if request.messages else []
 
             tool_calls: list[dict[str, Any]] = []
 
@@ -57,9 +53,7 @@ class OpenAIClient:
                 "timeout": settings.LLM_TIMEOUT,
             }
 
-            no_temperature = any(
-                model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5")
-            )
+            no_temperature = any(model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5"))
             if not no_temperature:
                 create_params["temperature"] = temperature
 
@@ -80,7 +74,6 @@ class OpenAIClient:
                 create_params["previous_response_id"] = request.previous_response_id
 
             response = await self._client.responses.create(**create_params)
-
 
             # Guard against malformed or empty SDK responses.
             # Prevents AttributeError when accessing response.message.content
@@ -138,7 +131,7 @@ class OpenAIClient:
                     # Safe JSON parsing (avoid crash if malformed)
                     raw_args = item.arguments
                     parsed_args = json.loads(raw_args)
-                    
+
                     tool_call = {
                         "name": item.name,
                         "call_id": item.call_id,
@@ -171,4 +164,6 @@ class OpenAIClient:
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("OpenAI chat failed: %s", e)
-            raise Exception(f"OpenAI chat failed: {e}") from e  # pylint: disable=broad-exception-raised
+            raise Exception(
+                f"OpenAI chat failed: {e}"
+            ) from e  # pylint: disable=broad-exception-raised

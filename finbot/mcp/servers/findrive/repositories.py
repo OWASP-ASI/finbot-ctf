@@ -35,9 +35,7 @@ class FinDriveFileRepository(NamespacedRepository):
 
     def get_file(self, file_id: int) -> FinDriveFile | None:
         return (
-            self._add_namespace_filter(
-                self.db.query(FinDriveFile), FinDriveFile
-            )
+            self._add_namespace_filter(self.db.query(FinDriveFile), FinDriveFile)
             .filter(FinDriveFile.id == file_id)
             .first()
         )
@@ -49,27 +47,16 @@ class FinDriveFileRepository(NamespacedRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> list[FinDriveFile]:
-        query = self._add_namespace_filter(
-            self.db.query(FinDriveFile), FinDriveFile
-        )
+        query = self._add_namespace_filter(self.db.query(FinDriveFile), FinDriveFile)
         if vendor_id is not None:
             query = query.filter(FinDriveFile.vendor_id == vendor_id)
         if folder_path is not None:
             query = query.filter(FinDriveFile.folder_path == folder_path)
-        return (
-            query.order_by(FinDriveFile.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(FinDriveFile.created_at.desc()).offset(offset).limit(limit).all()
 
-    def search_files(
-        self, query_str: str, limit: int = 20
-    ) -> list[FinDriveFile]:
+    def search_files(self, query_str: str, limit: int = 20) -> list[FinDriveFile]:
         return (
-            self._add_namespace_filter(
-                self.db.query(FinDriveFile), FinDriveFile
-            )
+            self._add_namespace_filter(self.db.query(FinDriveFile), FinDriveFile)
             .filter(
                 FinDriveFile.filename.ilike(f"%{query_str}%")
                 | FinDriveFile.content_text.ilike(f"%{query_str}%")
@@ -104,9 +91,7 @@ class FinDriveFileRepository(NamespacedRepository):
         return f
 
     def get_file_count(self, vendor_id: int | None = None) -> int:
-        query = self._add_namespace_filter(
-            self.db.query(FinDriveFile), FinDriveFile
-        )
+        query = self._add_namespace_filter(self.db.query(FinDriveFile), FinDriveFile)
         if vendor_id is not None:
             query = query.filter(FinDriveFile.vendor_id == vendor_id)
         return query.count()

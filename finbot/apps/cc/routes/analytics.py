@@ -3,6 +3,26 @@
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
 
+from finbot.core.analytics.ctf_queries import (
+    get_badges_by_rarity,
+    get_challenges_by_category,
+    get_challenges_by_difficulty,
+    get_ctf_overview,
+    get_ctf_session_breakdown,
+    get_daily_completions,
+    get_daily_events,
+    get_events_count,
+    get_profile_adoption,
+    get_recent_badges,
+    get_share_link_stats,
+    get_top_agents,
+    get_top_badges_earned,
+    get_top_challenges,
+    get_top_event_types,
+    get_top_players,
+    get_top_tools,
+    get_unsolved_challenges,
+)
 from finbot.core.analytics.probe_queries import (
     get_bot_traffic_overview,
     get_bot_ua_breakdown,
@@ -13,26 +33,6 @@ from finbot.core.analytics.probe_queries import (
     get_top_bot_crawled_pages,
     get_top_probed_paths,
     get_top_sources,
-)
-from finbot.core.analytics.ctf_queries import (
-    get_badges_by_rarity,
-    get_challenges_by_category,
-    get_challenges_by_difficulty,
-    get_ctf_overview,
-    get_ctf_session_breakdown,
-    get_daily_completions,
-    get_daily_events,
-    get_events_count,
-    get_recent_badges,
-    get_top_agents,
-    get_top_badges_earned,
-    get_top_challenges,
-    get_top_event_types,
-    get_top_players,
-    get_top_tools,
-    get_unsolved_challenges,
-    get_profile_adoption,
-    get_share_link_stats,
 )
 from finbot.core.analytics.queries import (
     get_api_calls_count,

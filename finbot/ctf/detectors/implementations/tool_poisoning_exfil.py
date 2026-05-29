@@ -121,9 +121,7 @@ class ToolPoisoningExfilDetector(BaseDetector):
                 tool_arguments = {}
 
         scan_fields = matched_channel.get("fields", [])
-        combined_text = " ".join(
-            str(tool_arguments.get(f, "")) for f in scan_fields
-        )
+        combined_text = " ".join(str(tool_arguments.get(f, "")) for f in scan_fields)
 
         if not combined_text.strip():
             return DetectionResult(
@@ -155,9 +153,7 @@ class ToolPoisoningExfilDetector(BaseDetector):
         namespace = event.get("namespace")
 
         if not namespace:
-            return DetectionResult(
-                detected=False, message="Missing namespace in event"
-            )
+            return DetectionResult(detected=False, message="Missing namespace in event")
 
         server_config = (
             db.query(MCPServerConfig)

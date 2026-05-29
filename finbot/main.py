@@ -10,13 +10,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from finbot.apps.admin.main import app as admin_app
-from finbot.apps.darklab.main import app as darklab_app
-from finbot.apps.labs import labs_app
 from finbot.apps.cc import models as _cc_models  # noqa: F401
 from finbot.apps.ctf import ctf_app
 from finbot.apps.ctf.rendering import get_renderer
+from finbot.apps.darklab.main import app as darklab_app
 from finbot.apps.finbot.auth import router as auth_router
 from finbot.apps.finbot.routes import router as finbot_router
+from finbot.apps.labs import labs_app
 from finbot.apps.vendor.main import app as vendor_app
 from finbot.apps.web.routes import router as web_router
 from finbot.config import settings
@@ -24,9 +24,7 @@ from finbot.core.analytics import models as _analytics_models  # noqa: F401
 from finbot.core.auth.csrf import CSRFProtectionMiddleware
 from finbot.core.auth.middleware import SessionMiddleware, get_session_context
 from finbot.core.auth.session import SessionContext
-from finbot.core.data import (
-    models as _models,  # noqa: F401 — register all tables with Base
-)
+from finbot.core.data import models as _models  # noqa: F401 — register all tables with Base
 from finbot.core.error_handlers import register_error_handlers
 from finbot.core.messaging import event_bus
 from finbot.core.websocket import websocket_router
@@ -56,7 +54,9 @@ async def lifespan(app: FastAPI):
     # 1. Enable cross-replica WebSocket fan-out via Redis Pub/Sub
     ws_mgr = None
     if settings.REDIS_URL:
-        from finbot.core.websocket.manager import get_ws_manager  # pylint: disable=import-outside-toplevel,ungrouped-imports
+        from finbot.core.websocket.manager import (  # pylint: disable=import-outside-toplevel,ungrouped-imports
+            get_ws_manager,
+        )
 
         ws_mgr = get_ws_manager()
         try:
@@ -86,6 +86,7 @@ async def lifespan(app: FastAPI):
     if settings.CC_ANALYTICS_ENABLED:
         try:
             from finbot.core.analytics.middleware import build_known_prefixes
+
             build_known_prefixes(app)
         except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"⚠️ Analytics prefix build skipped: {e}")

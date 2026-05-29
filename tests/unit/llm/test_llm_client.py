@@ -32,6 +32,7 @@
 
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 # ---- mock ollama so the import does not require the package installed ----
@@ -40,15 +41,18 @@ mock_ollama.AsyncClient = MagicMock()
 sys.modules.setdefault("ollama", mock_ollama)
 # -------------------------------------------------------------------------
 
-from finbot.core.llm.client import LLMClient
-from finbot.core.llm.ollama_client import OllamaClient
-from finbot.core.data.models import LLMRequest, LLMResponse
 import os
+
+import gspread
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-import gspread
+
+from finbot.core.data.models import LLMRequest, LLMResponse
+from finbot.core.llm.client import LLMClient
+from finbot.core.llm.ollama_client import OllamaClient
 
 load_dotenv()
+
 
 # ============================================================================
 # Pytest fixture for patching settings
@@ -65,6 +69,7 @@ def patched_settings():
     """
     with patch("finbot.core.llm.client.settings") as mock_settings:
         yield mock_settings
+
 
 # ============================================================================
 # LLM-PROV-001: OpenAI Provider Initialization
@@ -102,6 +107,7 @@ def test_openai_provider_initialization(patched_settings):
         assert client.default_temperature == pytest.approx(0.7)
         # OpenAIClient must be created exactly once at init time — not on every chat call
         mock_openai_client.assert_called_once()
+
 
 # ============================================================================
 # LLM-PROV-002: Ollama Provider Initialization
@@ -145,10 +151,7 @@ def test_ollama_client_default_configuration():
             # host must be set from OLLAMA_BASE_URL so the client knows which server to connect to
             assert client.host == "http://localhost:11434"
             # AsyncClient must be constructed with correct host and timeout
-            mock_async_client.assert_called_once_with(
-                host="http://localhost:11434",
-                timeout=60
-            )
+            mock_async_client.assert_called_once_with(host="http://localhost:11434", timeout=60)
 
 
 # ============================================================================
@@ -184,6 +187,7 @@ def test_mock_provider_initialization(patched_settings):
         # MockLLMClient must be instantiated once — if it were called multiple times, each call would create a separate instance
         mock_llm_client.assert_called_once()
 
+
 # ============================================================================
 # LLM-PROV-004: Unsupported Provider Error Handling
 # ============================================================================
@@ -214,6 +218,7 @@ def test_unsupported_provider_error(patched_settings):
     # The error message must name the bad provider so the developer knows exactly which value to fix in settings
     assert "unsupported_provider" in str(exc_info.value).lower()
 
+
 # ============================================================================
 # LLM-PROV-005: Provider Mismatch Warning
 # ============================================================================
@@ -243,11 +248,7 @@ async def test_provider_mismatch_warning(patched_settings):
     patched_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
     patched_settings.LLM_DEFAULT_TEMPERATURE = 0.7
 
-    mock_response = LLMResponse(
-        content="test response",
-        provider="openai",
-        success=True
-    )
+    mock_response = LLMResponse(content="test response", provider="openai", success=True)
 
     with patch("finbot.core.llm.openai_client.OpenAIClient") as mock_openai_client:
         mock_client_instance = AsyncMock()
@@ -257,8 +258,7 @@ async def test_provider_mismatch_warning(patched_settings):
         with patch("finbot.core.llm.client.logger") as mock_logger:
             client = LLMClient()
             request = LLMRequest(
-                messages=[{"role": "user", "content": "test"}],
-                provider="mock"  # Mismatch!
+                messages=[{"role": "user", "content": "test"}], provider="mock"  # Mismatch!
             )
             response = await client.chat(request)
             # A warning must be logged when request.provider differs from the client's configured provider
@@ -277,6 +277,7 @@ async def test_provider_mismatch_warning(patched_settings):
             assert response.success is True
             # The response content must come through unchanged from the underlying provider
             assert response.content == "test response"
+
 
 # ============================================================================
 # LLM-PROV-006: Error Response on Provider Failure
@@ -310,15 +311,11 @@ async def test_error_response_on_provider_failure(patched_settings):
 
     with patch("finbot.core.llm.openai_client.OpenAIClient") as mock_openai_client:
         mock_client_instance = AsyncMock()
-        mock_client_instance.chat = AsyncMock(
-            side_effect=Exception("API connection failed")
-        )
+        mock_client_instance.chat = AsyncMock(side_effect=Exception("API connection failed"))
         mock_openai_client.return_value = mock_client_instance
 
         client = LLMClient()
-        request = LLMRequest(
-            messages=[{"role": "user", "content": "test"}]
-        )
+        request = LLMRequest(messages=[{"role": "user", "content": "test"}])
         response = await client.chat(request)
         # success=False tells the caller the request failed without raising an exception that would crash the caller
         assert response.success is False
@@ -326,6 +323,7 @@ async def test_error_response_on_provider_failure(patched_settings):
         assert response.content is not None and "openai" in response.content.lower()
         # "unavailable" is the expected wording — callers and monitoring tools may check for this specific word
         assert response.content is not None and "unavailable" in response.content.lower()
+
 
 # ============================================================================
 # LLM-PROV-007: Successful Chat Through Provider
@@ -363,8 +361,8 @@ async def test_successful_chat_through_provider(patched_settings):
         success=True,
         messages=[
             {"role": "user", "content": "Hello"},
-            {"role": "assistant", "content": "Mock response content"}
-        ]
+            {"role": "assistant", "content": "Mock response content"},
+        ],
     )
 
     with patch("finbot.core.llm.mock_client.MockLLMClient") as mock_llm_client:
@@ -373,9 +371,7 @@ async def test_successful_chat_through_provider(patched_settings):
         mock_llm_client.return_value = mock_client_instance
 
         client = LLMClient()
-        request = LLMRequest(
-            messages=[{"role": "user", "content": "Hello"}]
-        )
+        request = LLMRequest(messages=[{"role": "user", "content": "Hello"}])
         response = await client.chat(request)
         # The original request object must be passed directly to the inner provider without any modification
         mock_client_instance.chat.assert_called_once_with(request)
@@ -419,9 +415,9 @@ def test_module_level_singleton_exists_and_is_returned_by_getter():
         "Module-level singleton 'llm_client' not found. "
         "get_llm_client() depends on this attribute."
     )
-    assert client_module.llm_client is client_module.get_llm_client(), (
-        "get_llm_client() must return the module-level singleton, not a new instance."
-    )
+    assert (
+        client_module.llm_client is client_module.get_llm_client()
+    ), "get_llm_client() must return the module-level singleton, not a new instance."
 
 
 # ============================================================================
@@ -499,10 +495,7 @@ def test_ollama_provider_initialization():
             # host must be set from OLLAMA_BASE_URL so the client knows which server to connect to
             assert client.host == "http://localhost:11434"
             # AsyncClient must be constructed with the correct host — wrong host means every request fails
-            mock_async_client.assert_called_once_with(
-                host="http://localhost:11434",
-                timeout=60
-            )
+            mock_async_client.assert_called_once_with(host="http://localhost:11434", timeout=60)
 
 
 # ============================================================================
@@ -640,18 +633,18 @@ async def test_llm_client_does_not_mutate_request(patched_settings):
 
         await client.chat(request)
 
-        assert request.provider == provider_before, (
-            f"Bug: LLMClient mutated request.provider from {provider_before!r} to {request.provider!r}"
-        )
-        assert request.model == model_before, (
-            f"Bug: LLMClient mutated request.model from {model_before!r} to {request.model!r}"
-        )
-        assert request.temperature == temperature_before, (
-            f"Bug: LLMClient mutated request.temperature from {temperature_before!r} to {request.temperature!r}"
-        )
-        assert len(request.messages) if request.messages is not None else 0 == msg_count_before, (
-            f"Bug: LLMClient mutated request.messages — now has {len(request.messages) if request.messages is not None else 0} items."
-        )
+        assert (
+            request.provider == provider_before
+        ), f"Bug: LLMClient mutated request.provider from {provider_before!r} to {request.provider!r}"
+        assert (
+            request.model == model_before
+        ), f"Bug: LLMClient mutated request.model from {model_before!r} to {request.model!r}"
+        assert (
+            request.temperature == temperature_before
+        ), f"Bug: LLMClient mutated request.temperature from {temperature_before!r} to {request.temperature!r}"
+        assert (
+            len(request.messages) if request.messages is not None else 0 == msg_count_before
+        ), f"Bug: LLMClient mutated request.messages — now has {len(request.messages) if request.messages is not None else 0} items."
 
 
 # ============================================================================
@@ -694,18 +687,18 @@ async def test_error_response_is_well_formed(patched_settings):
         response = await client.chat(request)
 
         assert response.success is False
-        assert response.content is not None and len(response.content) > 0, (
-            "Bug: error response.content is empty — caller has no information about what failed."
-        )
-        assert response.provider is not None and len(response.provider) > 0, (
-            "Bug: error response.provider is empty — caller cannot identify which backend failed."
-        )
-        assert "mock" in response.content.lower(), (
-            "Bug: provider name missing from error response content."
-        )
-        assert "unavailable" in response.content.lower(), (
-            "Bug: 'unavailable' missing from error content — monitoring rules may not trigger."
-        )
+        assert (
+            response.content is not None and len(response.content) > 0
+        ), "Bug: error response.content is empty — caller has no information about what failed."
+        assert (
+            response.provider is not None and len(response.provider) > 0
+        ), "Bug: error response.provider is empty — caller cannot identify which backend failed."
+        assert (
+            "mock" in response.content.lower()
+        ), "Bug: provider name missing from error response content."
+        assert (
+            "unavailable" in response.content.lower()
+        ), "Bug: 'unavailable' missing from error content — monitoring rules may not trigger."
 
 
 # ============================================================================
@@ -744,27 +737,26 @@ def test_google_sheets_integration_verification():
 
     try:
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
         assert len(summary_data) > 1, "Summary sheet should have data"
         headers = summary_data[0]
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
 
         try:
-            llm_sheet = sheet.worksheet('LLM Integration Testing')
+            llm_sheet = sheet.worksheet("LLM Integration Testing")
             llm_data = llm_sheet.get_all_values()
             assert len(llm_data) > 0, "LLM Integration Testing worksheet should have data"
             headers = llm_data[0]
-            has_automation_status = any('automation' in h.lower() for h in headers)
+            has_automation_status = any("automation" in h.lower() for h in headers)
             assert has_automation_status, "Should have automation_status column"
         except gspread.exceptions.WorksheetNotFound:
             pass
