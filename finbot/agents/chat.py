@@ -514,10 +514,8 @@ class VendorChatAssistant(ChatAssistantBase):
         return ["findrive", "finmail", "systemutils"]
 
     def _get_system_prompt(self) -> str:
-        from finbot.mcp.servers.finmail.routing import (
-            get_admin_address,  # pylint: disable=import-outside-toplevel
-        )
-        from finbot.mcp.servers.finmail.routing import (
+        from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+            get_admin_address,
             get_department_addresses,
         )
 
@@ -734,10 +732,8 @@ class CoPilotAssistant(ChatAssistantBase):
         return ["findrive", "finmail", "systemutils"]
 
     def _get_system_prompt(self) -> str:
-        from finbot.mcp.servers.finmail.routing import (
-            get_admin_address,  # pylint: disable=import-outside-toplevel
-        )
-        from finbot.mcp.servers.finmail.routing import (
+        from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+            get_admin_address,
             get_department_addresses,
         )
 
