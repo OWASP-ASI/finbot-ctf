@@ -49,6 +49,9 @@ from finbot.ctf.detectors.implementations.agent_impersonation import (
 from finbot.ctf.detectors.implementations.document_injection import (
     DocumentInjectionDetector,
 )
+from finbot.ctf.detectors.implementations.cross_agent_trust import (
+    CrossAgentTrustDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
