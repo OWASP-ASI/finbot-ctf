@@ -137,6 +137,22 @@ class Settings(BaseSettings):
     LABS_GUARDRAIL_MAX_TIMEOUT: int = 30  # seconds
     LABS_GUARDRAIL_MAX_PAYLOAD_BYTES: int = 65536  # 64 KiB
 
+    # FinBot-AEGIS runtime security (GSoC 2026)
+    AEGIS_ENABLED: bool = True
+    AEGIS_ENFORCEMENT_MODE: str = "observe"  # observe | enforce
+    AEGIS_POLICY_DIR: str = "finbot/aegis/policies"
+    AEGIS_TRUST_ENFORCE: bool = False
+    AEGIS_TRUST_MANIFESTS_JSON: str = ""
+    AEGIS_AUDIT_CHAIN_TTL: int = 86400
+    AEGIS_CASCADE_WINDOW_SECONDS: int = 30
+    AEGIS_CASCADE_MAX_CALLS: int = 25
+
+    # AEGIS Telemetry Pipeline (Week 1-3)
+    AEGIS_TELEMETRY_ENABLED: bool = True
+    AEGIS_CHAIN_SECRET: str = "default-telemetry-chain-secret"  # Change in production
+    AEGIS_TELEMETRY_STREAM_NAME: str = "finbot:aegis:audit"
+    AEGIS_TELEMETRY_RETENTION_DAYS: int = 7
+
     # Email Config
     EMAIL_PROVIDER: str = "console"  # "console" | "resend"
     RESEND_API_KEY: str = ""
