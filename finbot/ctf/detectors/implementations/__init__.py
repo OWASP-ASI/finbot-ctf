@@ -46,6 +46,9 @@ from finbot.ctf.detectors.implementations.vendor_status_flip import (
 from finbot.ctf.detectors.implementations.agent_impersonation import (
     AgentImpersonationDetector,
 )
+from finbot.ctf.detectors.implementations.document_injection import (
+    DocumentInjectionDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
@@ -63,4 +66,5 @@ __all__ = [
     "VendorRiskDownplayDetector",
     "VendorStatusFlipDetector",
     "AgentImpersonationDetector",
+    "DocumentInjectionDetector",
 ]
