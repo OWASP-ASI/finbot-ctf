@@ -52,6 +52,9 @@ from finbot.ctf.detectors.implementations.document_injection import (
 from finbot.ctf.detectors.implementations.cross_agent_trust import (
     CrossAgentTrustDetector,
 )
+from finbot.ctf.detectors.implementations.role_hijack import (
+    RoleHijackDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
@@ -70,4 +73,5 @@ __all__ = [
     "VendorStatusFlipDetector",
     "AgentImpersonationDetector",
     "DocumentInjectionDetector",
+    "RoleHijackDetector",
 ]
