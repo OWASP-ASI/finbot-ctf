@@ -58,6 +58,9 @@ from finbot.ctf.detectors.implementations.role_hijack import (
 from finbot.ctf.detectors.implementations.email_injection import (
     EmailInjectionDetector,
 )
+from finbot.ctf.detectors.implementations.tool_output_injection import (
+    ToolOutputInjectionDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
@@ -77,5 +80,6 @@ __all__ = [
     "AgentImpersonationDetector",
     "DocumentInjectionDetector",
     "RoleHijackDetector",
-    "EmailInjectionDetector"
+    "EmailInjectionDetector",
+    "ToolOutputInjectionDetector",
 ]
