@@ -1,137 +1,226 @@
-"""
-Sequence Detector Primitive
+"""Sequence Detector
 
 Detects multi-step attack patterns across a session or workflow window.
-Unlike all existing detectors (which fire on a single event), this primitive
-queries CTFEvent history to match an ordered sequence of steps.
-
-Challenge authors configure sequences in YAML — no Python required.
+Challenge authors configure this in YAML with no Python required.
 """
 
+import fnmatch
+import json
 import logging
-from datetime import datetime
+import re
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.orm import Session
 
+from finbot.core.data.models import CTFEvent
 from finbot.ctf.detectors.base import BaseDetector
+from finbot.ctf.detectors.registry import register_detector
 from finbot.ctf.detectors.result import DetectionResult
 
 logger = logging.getLogger(__name__)
 
 
-class StepSpec:
-    """A single step in an attack sequence.
-
-    Attributes:
-        event_type: Glob pattern matched against CTFEvent.event_type
-                    e.g. "agent.*.tool_call_success"
-        conditions: Field conditions checked against the event's details dict
-                    e.g. {"tool_name": "approve_invoice"}
-        label:      Human-readable name shown in evidence output
-    """
-
-    def __init__(self, event_type: str, conditions: dict[str, Any], label: str):
-        self.event_type = event_type
-        self.conditions = conditions
-        self.label = label
-
-    @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "StepSpec":
-        return cls(
-            event_type=d["event_type"],
-            conditions=d.get("conditions", {}),
-            label=d.get("label", d["event_type"]),
-        )
-
-
+@register_detector("SequenceDetector")
 class SequenceDetector(BaseDetector):
     """Detects multi-step attack patterns across a session window.
 
-    Configuration (set via YAML detector_config):
-        steps:           list[StepSpec]  — ordered sequence to match (required)
-        within_n_events: int             — max events between steps (default: unlimited)
-        within_seconds:  int             — optional time-based window (default: None)
-        order_matters:   bool            — enforce step ordering (default: True)
-        window:          str             — "session" | "workflow" (default: "session")
+    Configuration:
+        steps: list[StepSpec]      -- ordered sequence to match
+        within_n_events: int       -- max events between steps (default: unlimited)
+        within_seconds: int        -- optional time-based window (default: unlimited)
+        order_matters: bool        -- enforce step ordering (default: true)
+        window: "session" | "workflow"  -- scope for history query (default: "session")
+
+    StepSpec fields:
+        event_type: str   -- glob pattern, e.g. "agent.*.tool_call_success"
+        conditions: dict  -- field conditions using ToolCallDetector operators
+        label: str        -- human-readable name for evidence output
+
+    Example YAML:
+        detector_class: SequenceDetector
+        detector_config:
+          steps:
+            - event_type: "agent.*.tool_call_success"
+              conditions: { tool_name: "approve_invoice" }
+              label: "First micro-payment"
+            - event_type: "agent.*.tool_call_success"
+              conditions: { tool_name: "approve_invoice" }
+              label: "Second micro-payment"
+          within_n_events: 50
+          within_seconds: 300
+          order_matters: true
+          window: "session"
     """
 
     def _validate_config(self) -> None:
-        if not self.config.get("steps"):
-            raise ValueError("SequenceDetector requires at least one step in config")
-
+        steps = self.config.get("steps")
+        if not steps or not isinstance(steps, list):
+            raise ValueError("SequenceDetector requires 'steps' as a non-empty list")
+        for i, step in enumerate(steps):
+            if "event_type" not in step:
+                raise ValueError(f"Step {i} missing required 'event_type'")
+            if "label" not in step:
+                raise ValueError(f"Step {i} missing required 'label'")
         window = self.config.get("window", "session")
         if window not in ("session", "workflow"):
-            raise ValueError(f"window must be 'session' or 'workflow', got: {window!r}")
-
-        within_n = self.config.get("within_n_events")
-        if within_n is not None and (not isinstance(within_n, int) or within_n < 1):
-            raise ValueError("within_n_events must be a positive integer")
-
-        within_s = self.config.get("within_seconds")
-        if within_s is not None and (not isinstance(within_s, int) or within_s < 1):
-            raise ValueError("within_seconds must be a positive integer")
-
-    def _get_steps(self) -> list[StepSpec]:
-        return [StepSpec.from_dict(s) for s in self.config["steps"]]
+            raise ValueError("window must be 'session' or 'workflow'")
 
     def get_relevant_event_types(self) -> list[str]:
         return [step["event_type"] for step in self.config.get("steps", [])]
 
     async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
-        """Check if the incoming event completes a configured attack sequence.
+        steps = self.config.get("steps", [])
+        within_n = self.config.get("within_n_events")
+        within_seconds = self.config.get("within_seconds")
+        order_matters = self.config.get("order_matters", True)
+        window = self.config.get("window", "session")
 
-        Steps:
-          1. Determine the window scope (session_id or workflow_id)
-          2. Query CTFEvent history for that scope
-          3. Walk configured steps and match against history in order
-          4. Fire only if all steps matched within the configured window
-        """
-        raise NotImplementedError("check_event will be implemented in the next step")
+        namespace = event.get("namespace")
 
-    # ------------------------------------------------------------------
-    # Private helpers (stubs — to be filled in next)
-    # ------------------------------------------------------------------
+        if window == "workflow":
+            window_id = event.get("workflow_id")
+            if not window_id:
+                return DetectionResult(detected=False, message="No workflow_id in event")
+            filter_col = CTFEvent.workflow_id
+        else:
+            window_id = event.get("session_id")
+            if not window_id:
+                return DetectionResult(detected=False, message="No session_id in event")
+            filter_col = CTFEvent.session_id
 
-    def _query_history(
-        self, db: Session, namespace: str, scope_field: str, scope_value: str
-    ) -> list[dict[str, Any]]:
-        """Query CTFEvent history for the window scope, ordered by timestamp asc.
+        query = db.query(CTFEvent).filter(
+            CTFEvent.namespace == namespace,
+            filter_col == window_id,
+        )
 
-        Args:
-            db:          SQLAlchemy session
-            namespace:   tenant namespace
-            scope_field: "session_id" or "workflow_id"
-            scope_value: the actual id value
+        if within_seconds is not None:
+            event_time = event.get("timestamp")
+            if isinstance(event_time, str):
+                event_time = datetime.fromisoformat(event_time.replace("Z", "+00:00"))
+            elif not isinstance(event_time, datetime):
+                event_time = datetime.now(UTC)
+            cutoff = event_time - timedelta(seconds=within_seconds)
+            query = query.filter(CTFEvent.timestamp >= cutoff)
 
-        Returns:
-            List of event dicts (details parsed from JSON) ordered oldest → newest
-        """
-        raise NotImplementedError
+        if within_n is not None:
+            history = (
+                query.order_by(CTFEvent.timestamp.desc())
+                .limit(within_n)
+                .all()
+            )
+            history = list(reversed(history))
+        else:
+            history = query.order_by(CTFEvent.timestamp.asc()).all()
 
-    def _match_steps(
-        self,
-        steps: list[StepSpec],
-        history: list[dict[str, Any]],
-        within_n_events: int | None,
-        within_seconds: int | None,
-        order_matters: bool,
-    ) -> tuple[bool, list[dict[str, Any]]]:
-        """Walk history and try to match all steps.
+        matched: list[dict[str, Any]] = []
+        search_from = 0
 
-        Returns:
-            (matched: bool, evidence_steps: list of matched event dicts)
-        """
-        raise NotImplementedError
+        for step in steps:
+            found_at = None
+            for i in range(search_from, len(history)):
+                if self._matches_step(history[i], step):
+                    found_at = i
+                    break
 
-    @staticmethod
-    def _event_matches_step(event: dict[str, Any], step: StepSpec) -> bool:
-        """Return True if event satisfies the step's event_type glob and conditions."""
-        raise NotImplementedError
+            if found_at is None:
+                return DetectionResult(
+                    detected=False,
+                    message=f"Sequence incomplete: step '{step['label']}' not matched",
+                    evidence={
+                        "matched_steps": matched,
+                        "missing_step": step["label"],
+                        "window": window,
+                        "window_id": window_id,
+                    },
+                )
 
-    @staticmethod
-    def _within_time_window(
-        first: datetime, last: datetime, within_seconds: int
-    ) -> bool:
-        """Return True if last - first <= within_seconds."""
-        raise NotImplementedError
+            matched.append(
+                {
+                    "step": step["label"],
+                    "event_id": history[found_at].id,
+                    "event_type": history[found_at].event_type,
+                }
+            )
+            if order_matters:
+                search_from = found_at + 1
+
+        return DetectionResult(
+            detected=True,
+            confidence=1.0,
+            message=f"Multi-step sequence detected: {[m['step'] for m in matched]}",
+            evidence={
+                "matched_steps": matched,
+                "window": window,
+                "window_id": window_id,
+                "step_count": len(matched),
+            },
+        )
+
+    def _matches_step(self, ctf_event: CTFEvent, step: dict[str, Any]) -> bool:
+        """Check if a CTFEvent matches a step spec."""
+        if not fnmatch.fnmatch(ctf_event.event_type, step["event_type"]):
+            return False
+
+        conditions = step.get("conditions", {})
+        if not conditions:
+            return True
+
+        details: dict[str, Any] = {}
+        if ctf_event.details:
+            try:
+                details = json.loads(ctf_event.details)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Known CTFEvent column names that can be matched directly
+        _ctf_columns = frozenset({
+            "event_type", "event_category", "event_subtype",
+            "session_id", "workflow_id", "namespace", "user_id",
+            "vendor_id", "agent_name", "tool_name", "severity",
+        })
+
+        for field, condition in conditions.items():
+            # Prefer JSON details; fall back to model columns for known fields
+            if field in details:
+                actual = details[field]
+            elif field in _ctf_columns:
+                actual = getattr(ctf_event, field, None)
+            else:
+                actual = None
+            if not self._check_condition(actual, condition):
+                return False
+
+        return True
+
+    def _check_condition(self, actual: Any, condition: Any) -> bool:
+        """Check if actual value satisfies condition (ToolCallDetector operators)."""
+        if not isinstance(condition, dict):
+            return actual == condition
+
+        for operator, expected in condition.items():
+            op = operator.lower()
+            if op == "exists":
+                return (actual is not None) == expected
+            if actual is None:
+                return False
+            if op in ("equals", "eq"):
+                return actual == expected
+            if op == "in":
+                return actual in expected
+            if op == "not_in":
+                return actual not in expected
+            if op == "contains":
+                return expected in str(actual).lower()
+            if op == "gt":
+                return float(actual) > float(expected)
+            if op == "gte":
+                return float(actual) >= float(expected)
+            if op == "lt":
+                return float(actual) < float(expected)
+            if op == "lte":
+                return float(actual) <= float(expected)
+            if op == "matches":
+                return bool(re.search(expected, str(actual), re.IGNORECASE))
+
+        return False
