@@ -1,7 +1,10 @@
 """Profile API Routes - Social features for authenticated users"""
 
 import hashlib
+import ipaddress
 import logging
+import socket
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
@@ -20,6 +23,30 @@ from finbot.core.data.repositories import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/profile", tags=["profile"])
+
+BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),    # loopback
+    ipaddress.ip_network("169.254.0.0/16"), # link-local (AWS metadata)
+    ipaddress.ip_network("10.0.0.0/8"),     # RFC-1918 private
+    ipaddress.ip_network("172.16.0.0/12"),  # RFC-1918 private
+    ipaddress.ip_network("192.168.0.0/16"), # RFC-1918 private
+    ipaddress.ip_network("::1/128"),        # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),       # IPv6 ULA
+    ipaddress.ip_network("fe80::/10"),      # IPv6 link-local
+]
+
+def is_ssrf_safe(url: str) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    try:
+        host = parsed.hostname
+        if not host:
+            return False
+        ip = ipaddress.ip_address(socket.gethostbyname(host))
+        return not any(ip in net for net in BLOCKED_NETWORKS)
+    except Exception:
+        return False  # fail closed
 
 
 # =============================================================================
@@ -348,8 +375,8 @@ async def update_profile(
     effective_avatar_type = request.avatar_type if request.avatar_type is not None else profile.avatar_type
     effective_avatar_url = request.avatar_url if request.avatar_url is not None else profile.avatar_url
     if effective_avatar_type == "url" and effective_avatar_url:
-        if not effective_avatar_url.startswith("https://"):
-            raise HTTPException(status_code=400, detail="Avatar URL must use HTTPS")
+        if not is_ssrf_safe(effective_avatar_url):
+            raise HTTPException(status_code=400, detail="Invalid Avatar URL: Only public HTTPS URLs are allowed")
 
     # Update other fields
     profile = profile_repo.update_profile(

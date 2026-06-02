@@ -96,7 +96,7 @@ async def _fetch_avatar_b64(url: str) -> str:
     Returns empty string on any failure (timeout, bad content type, too large).
     """
     try:
-        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=False) as client:
             resp = await client.get(url)
             if resp.status_code != 200:
                 return ""
