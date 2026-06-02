@@ -9,7 +9,7 @@ import json
 import logging
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, NotRequired, TypedDict
 
 from sqlalchemy.orm import Session
 
@@ -19,6 +19,12 @@ from finbot.ctf.detectors.registry import register_detector
 from finbot.ctf.detectors.result import DetectionResult
 
 logger = logging.getLogger(__name__)
+
+
+class StepSpec(TypedDict):
+    event_type: str          # Glob pattern, e.g. "agent.*.tool_call_success"
+    label: str               # Human-readable name for evidence output
+    conditions: NotRequired[dict[str, Any]]  # ToolCallDetector operators
 
 
 @register_detector("SequenceDetector")
@@ -67,10 +73,11 @@ class SequenceDetector(BaseDetector):
             raise ValueError("window must be 'session' or 'workflow'")
 
     def get_relevant_event_types(self) -> list[str]:
-        return [step["event_type"] for step in self.config.get("steps", [])]
+        steps: list[StepSpec] = self.config.get("steps", [])
+        return [step["event_type"] for step in steps]
 
     async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
-        steps = self.config.get("steps", [])
+        steps: list[StepSpec] = self.config.get("steps", [])
         within_n = self.config.get("within_n_events")
         within_seconds = self.config.get("within_seconds")
         order_matters = self.config.get("order_matters", True)
@@ -157,7 +164,7 @@ class SequenceDetector(BaseDetector):
             },
         )
 
-    def _matches_step(self, ctf_event: CTFEvent, step: dict[str, Any]) -> bool:
+    def _matches_step(self, ctf_event: CTFEvent, step: StepSpec) -> bool:
         """Check if a CTFEvent matches a step spec."""
         if not fnmatch.fnmatch(ctf_event.event_type, step["event_type"]):
             return False
