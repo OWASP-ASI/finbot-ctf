@@ -107,7 +107,7 @@ async def test_update_profile_avatar_url_insecure_blocked(
         )
     
     assert exc_info.value.status_code == 400
-    assert "Avatar URL must use HTTPS" in exc_info.value.detail
+    assert "Invalid Avatar URL: Only public HTTPS URLs are allowed" in exc_info.value.detail
     mock_profile_repo.update_profile.assert_not_called()
 
 
@@ -137,7 +137,7 @@ async def test_update_profile_avatar_url_bypass_attempt_blocked(
         )
     
     assert exc_info.value.status_code == 400
-    assert "Avatar URL must use HTTPS" in exc_info.value.detail
+    assert "Invalid Avatar URL: Only public HTTPS URLs are allowed" in exc_info.value.detail
     mock_profile_repo.update_profile.assert_not_called()
 
 
@@ -180,3 +180,33 @@ async def test_update_profile_avatar_url_emoji_retains_insecure_url_ignored(
         is_public=None,
         show_activity=None
     )
+
+
+@pytest.mark.asyncio
+async def test_update_profile_avatar_url_ssrf_blocked(
+    mock_session_context, mock_db, mock_profile_repo, patch_dependencies
+):
+    """Test that a private IP is blocked even if it uses HTTPS"""
+    # Arrange
+    existing_profile = MagicMock()
+    existing_profile.avatar_type = "url"
+    existing_profile.avatar_url = "https://example.com/old.png"
+    existing_profile.user_id = "test_user_id"
+    mock_profile_repo.get_by_user_id.return_value = existing_profile
+
+    request = ProfileUpdateRequest(
+        avatar_type="url",
+        avatar_url="https://127.0.0.1/malicious.png"
+    )
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        await update_profile(
+            request=request,
+            session_context=mock_session_context,
+            db=mock_db
+        )
+    
+    assert exc_info.value.status_code == 400
+    assert "Invalid Avatar URL: Only public HTTPS URLs are allowed" in exc_info.value.detail
+    mock_profile_repo.update_profile.assert_not_called()
