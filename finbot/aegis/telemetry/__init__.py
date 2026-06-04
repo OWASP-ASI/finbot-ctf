@@ -7,7 +7,6 @@
 # ============================================================
 """AEGIS Telemetry: structured audit event pipeline with HMAC chaining."""
 
-from finbot.aegis.telemetry.chain import AuditChain
 from finbot.aegis.telemetry.schema import (
     AuditEvent,
     DelegationEvent,
