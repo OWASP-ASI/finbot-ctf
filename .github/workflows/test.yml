@@ -22,13 +22,13 @@ jobs:
     - name: Install lint dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install black==25.11.0 isort==7.0.0
+        pip install -e ".[dev]"
 
     - name: Check formatting with black
-      run: black --check .
+      run: black --check --diff finbot/ tests/
 
     - name: Check import order with isort
-      run: isort --check-only .
+      run: isort --check-only finbot/ tests/
 
   test:
     needs: lint
