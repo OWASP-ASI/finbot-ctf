@@ -6,7 +6,6 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from finbot.ctf.detectors.primitives.sequence_detector import SequenceDetector
-from finbot.ctf.detectors.result import DetectionResult
 
 
 # ---------------------------------------------------------------------------

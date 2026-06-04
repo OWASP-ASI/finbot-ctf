@@ -104,9 +104,18 @@ class SequenceDetector(BaseDetector):
         if within_seconds is not None:
             event_time = event.get("timestamp")
             if isinstance(event_time, str):
-                event_time = datetime.fromisoformat(event_time.replace("Z", "+00:00"))
+                try:
+                    event_time = datetime.fromisoformat(event_time.replace("Z", "+00:00"))
+                except ValueError:
+                    return DetectionResult(
+                        detected=False,
+                        message="within_seconds set but event timestamp is invalid",
+                    )
             elif not isinstance(event_time, datetime):
-                event_time = datetime.now(UTC)
+                return DetectionResult(
+                    detected=False,
+                    message="within_seconds set but event has no timestamp",
+                )
             cutoff = event_time - timedelta(seconds=within_seconds)
             query = query.filter(CTFEvent.timestamp >= cutoff)
 
@@ -201,33 +210,47 @@ class SequenceDetector(BaseDetector):
         return True
 
     def _check_condition(self, actual: Any, condition: Any) -> bool:
-        """Check if actual value satisfies condition (ToolCallDetector operators)."""
+        """Check if actual value satisfies condition (ToolCallDetector operators).
+
+        Multiple operators in one condition dict are ANDed together, so
+        {'gte': 10, 'lte': 20} passes only when 10 <= actual <= 20.
+        """
         if not isinstance(condition, dict):
             return actual == condition
 
         for operator, expected in condition.items():
             op = operator.lower()
             if op == "exists":
-                return (actual is not None) == expected
-            if actual is None:
+                if not ((actual is not None) == expected):
+                    return False
+            elif actual is None:
                 return False
-            if op in ("equals", "eq"):
-                return actual == expected
-            if op == "in":
-                return actual in expected
-            if op == "not_in":
-                return actual not in expected
-            if op == "contains":
-                return expected in str(actual).lower()
-            if op == "gt":
-                return float(actual) > float(expected)
-            if op == "gte":
-                return float(actual) >= float(expected)
-            if op == "lt":
-                return float(actual) < float(expected)
-            if op == "lte":
-                return float(actual) <= float(expected)
-            if op == "matches":
-                return bool(re.search(expected, str(actual), re.IGNORECASE))
+            elif op in ("equals", "eq"):
+                if actual != expected:
+                    return False
+            elif op == "in":
+                if actual not in expected:
+                    return False
+            elif op == "not_in":
+                if actual in expected:
+                    return False
+            elif op == "contains":
+                if expected.lower() not in str(actual).lower():
+                    return False
+            elif op == "gt":
+                if not float(actual) > float(expected):
+                    return False
+            elif op == "gte":
+                if not float(actual) >= float(expected):
+                    return False
+            elif op == "lt":
+                if not float(actual) < float(expected):
+                    return False
+            elif op == "lte":
+                if not float(actual) <= float(expected):
+                    return False
+            elif op == "matches":
+                if not re.search(expected, str(actual), re.IGNORECASE):
+                    return False
 
-        return False
+        return True

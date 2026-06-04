@@ -20,12 +20,13 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # Composite index for SequenceDetector session-window queries:
     # WHERE namespace = ? AND session_id = ? ORDER BY timestamp ASC
-    # The event_type column is included to support index-only scans when
-    # filtering by step event_type after the session window is resolved.
+    # namespace leads so rows are partitioned by tenant first, then by
+    # session within that tenant — matches the actual filter shape and
+    # keeps selectivity high in multi-tenant deployments.
     op.create_index(
         "idx_ctf_event_session_ts_type",
         "ctf_events",
-        ["session_id", "timestamp", "event_type"],
+        ["namespace", "session_id", "timestamp", "event_type"],
     )
 
 
