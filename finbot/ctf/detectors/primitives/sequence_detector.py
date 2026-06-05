@@ -33,7 +33,7 @@ class SequenceDetector(BaseDetector):
 
     Configuration:
         steps: list[StepSpec]      -- ordered sequence to match
-        within_n_events: int       -- max events between steps (default: unlimited)
+        within_n_events: int       -- history window size: load latest N events for the session/workflow (default: unlimited)
         within_seconds: int        -- optional time-based window (default: unlimited)
         order_matters: bool        -- enforce step ordering (default: true)
         window: "session" | "workflow"  -- scope for history query (default: "session")
