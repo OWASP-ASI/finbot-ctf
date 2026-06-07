@@ -119,15 +119,39 @@ class GuardrailHookService:
         body_bytes = envelope.model_dump_json().encode()
 
         max_payload = settings.LABS_GUARDRAIL_MAX_PAYLOAD_BYTES
-        if len(body_bytes) > max_payload:
+        was_truncated = False
+        original_size = len(body_bytes)
+
+        if original_size > max_payload:
+            # Truncate at the field level so the body remains valid JSON.
+            # We shorten the large free-text fields iteratively until the
+            # re-serialised envelope fits within the configured limit.
+            was_truncated = True
+            _LARGE_FIELDS = ("model_output", "tool_result", "user_message")
+            budget = max_payload
+
+            envelope_data = envelope.model_dump()
+            for field in _LARGE_FIELDS:
+                if envelope_data.get(field) and len(body_bytes) > budget:
+                    # Estimate how many chars we can keep (1 char ≈ 1–4 bytes);
+                    # use a conservative ratio then iterate to convergence.
+                    current_val: str = envelope_data[field]
+                    overflow = len(body_bytes) - budget
+                    cap = max(0, len(current_val) - overflow)
+                    envelope_data[field] = current_val[:cap]
+                    body_bytes = (
+                        envelope.model_copy(update=envelope_data)
+                        .model_dump_json()
+                        .encode()
+                    )
+
             logger.info(
-                "guardrail payload truncated: %d -> %d bytes, hook=%s tool=%s",
+                "guardrail payload truncated (field-level): %d -> %d bytes, hook=%s tool=%s",
+                original_size,
                 len(body_bytes),
-                max_payload,
                 kind.value,
                 tool_name,
             )
-            body_bytes = body_bytes[:max_payload]
 
         signature = self._sign_payload(body_bytes, config.signing_secret, timestamp)
 
@@ -136,6 +160,9 @@ class GuardrailHookService:
             "X-Guardrail-Signature": signature,
             "X-Guardrail-Timestamp": timestamp,
         }
+        if was_truncated:
+            headers["X-Guardrail-Truncated"] = "true"
+            headers["X-Guardrail-Full-Size"] = str(original_size)
 
         start = time.monotonic()
         outcome: HookOutcome
