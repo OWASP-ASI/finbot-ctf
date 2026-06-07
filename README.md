@@ -211,4 +211,9 @@ OWASP FinBot CTF is part of the [OWASP GenAI Security Project](https://genai.owa
 - **[Abigail Dede Okley](https://www.linkedin.com/in/abigailokley)** -- Chief Cat Herder (project manager, keeping all the cats aligned and on track)
 - **[Carolina Steadham](https://www.linkedin.com/in/carolinacsteadham)** -- Guardian of Quality Realms (ensuring every feature meets its highest destiny, safeguarding workstream integrity)
 
+## Privacy and Data Handling
+
+This project includes AI-agent interactions, challenge progress tracking, and optional hosted/self-hosted deployments.  
+Please review the [Privacy and Data Handling Policy](PRIVACY.md) before using the platform, especially for public hosted or enterprise training scenarios.
+
 And all the amazing [contributors](https://github.com/GenAI-Security-Project/finbot-ctf/graphs/contributors) who make this project possible.
