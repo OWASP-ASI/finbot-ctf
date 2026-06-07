@@ -20,6 +20,15 @@ from finbot.ctf.detectors.result import DetectionResult
 
 logger = logging.getLogger(__name__)
 
+# Known CTFEvent column names available for condition matching.
+# Defined at module level to avoid rebuilding the frozenset on every
+# _matches_step call (which runs once per event × once per step).
+_CTF_COLUMNS: frozenset[str] = frozenset({
+    "event_type", "event_category", "event_subtype",
+    "session_id", "workflow_id", "namespace", "user_id",
+    "vendor_id", "agent_name", "tool_name", "severity",
+})
+
 
 class StepSpec(TypedDict):
     event_type: str          # Glob pattern, e.g. "agent.*.tool_call_success"
@@ -131,10 +140,14 @@ class SequenceDetector(BaseDetector):
 
         matched: list[dict[str, Any]] = []
         search_from = 0
+        consumed: set[int] = set()  # indices already claimed by a previous step
 
         for step in steps:
             found_at = None
-            for i in range(search_from, len(history)):
+            start = search_from if order_matters else 0
+            for i in range(start, len(history)):
+                if i in consumed:
+                    continue
                 if self._matches_step(history[i], step):
                     found_at = i
                     break
@@ -158,6 +171,7 @@ class SequenceDetector(BaseDetector):
                     "event_type": history[found_at].event_type,
                 }
             )
+            consumed.add(found_at)
             if order_matters:
                 search_from = found_at + 1
 
@@ -189,18 +203,11 @@ class SequenceDetector(BaseDetector):
             except (json.JSONDecodeError, TypeError):
                 pass
 
-        # Known CTFEvent column names that can be matched directly
-        _ctf_columns = frozenset({
-            "event_type", "event_category", "event_subtype",
-            "session_id", "workflow_id", "namespace", "user_id",
-            "vendor_id", "agent_name", "tool_name", "severity",
-        })
-
         for field, condition in conditions.items():
             # Prefer JSON details; fall back to model columns for known fields
             if field in details:
                 actual = details[field]
-            elif field in _ctf_columns:
+            elif field in _CTF_COLUMNS:
                 actual = getattr(ctf_event, field, None)
             else:
                 actual = None
@@ -252,5 +259,10 @@ class SequenceDetector(BaseDetector):
             elif op == "matches":
                 if not re.search(expected, str(actual), re.IGNORECASE):
                     return False
+            else:
+                logger.warning(
+                    "Unknown condition operator %r — treating as no-match", op
+                )
+                return False
 
         return True
