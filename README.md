@@ -214,6 +214,6 @@ OWASP FinBot CTF is part of the [OWASP GenAI Security Project](https://genai.owa
 ## Privacy and Data Handling
 
 This project includes AI-agent interactions, challenge progress tracking, and optional hosted/self-hosted deployments.  
-Please review the [Privacy and Data Handling Policy](PRIVACY.md) before using the platform, especially for public hosted or enterprise training scenarios.
+Please review the [Privacy and Data Handling Policy](PRIVACY_POLICY.md) before using the platform, especially for public hosted or enterprise training scenarios.
 
 And all the amazing [contributors](https://github.com/GenAI-Security-Project/finbot-ctf/graphs/contributors) who make this project possible.
