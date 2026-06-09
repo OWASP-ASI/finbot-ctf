@@ -170,7 +170,6 @@ async def update_mcp_server_config(
 
         return {"success": True, "server": config.to_dict()}
 
-
     # Tool definition overrides have moved to Dark Lab (/darklab/supply-chain)
 
 
@@ -236,14 +235,20 @@ async def get_message_contacts(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Get addressable contacts for email compose autocomplete."""
-    from finbot.mcp.servers.finmail.routing import get_admin_address  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+        get_admin_address,
+    )
 
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendors = vendor_repo.list_vendors() or []
 
         contacts = [
-            {"email": get_admin_address(session_context.namespace), "name": "Admin", "type": "admin"},
+            {
+                "email": get_admin_address(session_context.namespace),
+                "name": "Admin",
+                "type": "admin",
+            },
         ]
         for v in vendors:
             contacts.append({"email": v.email, "name": v.company_name, "type": "vendor"})
@@ -298,6 +303,7 @@ async def mark_all_messages_read(
 
 class ComposeEmailRequest(BaseModel):
     """Compose and send an email"""
+
     to: list[str]
     subject: str
     body: str
@@ -312,7 +318,10 @@ async def send_message(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Compose and send an email from the admin portal."""
-    from finbot.mcp.servers.finmail.routing import get_admin_address, route_and_deliver  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+        get_admin_address,
+        route_and_deliver,
+    )
 
     sender_name = session_context.email or "Admin"
     from_addr = get_admin_address(session_context.namespace)
@@ -368,7 +377,9 @@ async def list_admin_files(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """List admin-scoped files from FinDrive (vendor_id=NULL)."""
-    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.findrive.repositories import (  # pylint: disable=import-outside-toplevel
+        FinDriveFileRepository,
+    )
 
     with db_session() as db:
         repo = FinDriveFileRepository(db, session_context)
@@ -388,7 +399,9 @@ async def get_admin_file(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Get a specific admin file's content from FinDrive."""
-    from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository  # pylint: disable=import-outside-toplevel
+    from finbot.mcp.servers.findrive.repositories import (  # pylint: disable=import-outside-toplevel
+        FinDriveFileRepository,
+    )
 
     with db_session() as db:
         repo = FinDriveFileRepository(db, session_context)
@@ -495,6 +508,7 @@ async def _get_default_tool_definitions(server_type: str) -> list[dict]:
 
 class ChatRequest(BaseModel):
     """Chat message request"""
+
     message: str
 
 

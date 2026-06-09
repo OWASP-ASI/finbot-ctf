@@ -118,9 +118,7 @@ def run_interactive(client: httpx.Client, base_url: str, namespace: str, user_id
 
 def main():
     """Main function to run the WebSocket test."""
-    parser = argparse.ArgumentParser(
-        description="Push test WS events to a browser session"
-    )
+    parser = argparse.ArgumentParser(description="Push test WS events to a browser session")
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--namespace", required=True, help="Session namespace")

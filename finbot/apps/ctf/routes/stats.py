@@ -81,9 +81,7 @@ def get_user_stats(
     category_progress = []
     for cat, total in category_counts.items():
         # Count completed in this category
-        completed_in_cat = sum(
-            1 for c in challenges if c.category == cat and c.id in completed_ids
-        )
+        completed_in_cat = sum(1 for c in challenges if c.category == cat and c.id in completed_ids)
         category_progress.append(
             CategoryProgress(
                 category=cat,

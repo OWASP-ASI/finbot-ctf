@@ -2,8 +2,6 @@
 
 from fastapi import FastAPI
 
-from finbot.core.error_handlers import register_error_handlers
-
 from finbot.apps.ctf.routes import (
     activity,
     admin,
@@ -16,6 +14,7 @@ from finbot.apps.ctf.routes import (
     toolkit,
     web_router,
 )
+from finbot.core.error_handlers import register_error_handlers
 
 ctf_app = FastAPI(
     title="FinBot CTF API",

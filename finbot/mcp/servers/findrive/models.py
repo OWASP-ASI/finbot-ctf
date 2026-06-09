@@ -2,8 +2,9 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Column
 from sqlalchemy import DateTime as _DateTime
+from sqlalchemy import ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from finbot.core.data.database import Base

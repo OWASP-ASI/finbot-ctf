@@ -179,7 +179,9 @@ class TestGuardrailExfilValidation:
             config=self.CARTE_NOIRE_CONFIG.copy(),
         )
 
-    def _make_event(self, tool_name="systemutils__network_request", tool_arguments=None, **overrides):
+    def _make_event(
+        self, tool_name="systemutils__network_request", tool_arguments=None, **overrides
+    ):
         event = {
             "event_type": "agent.guardrail.webhook_completed",
             "hook_kind": "before_tool",

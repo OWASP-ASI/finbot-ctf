@@ -93,9 +93,7 @@ def create_finmail_server(
             bcc: Optional BCC: recipient email addresses (hidden from other recipients)
             related_invoice_id: Optional invoice ID this email relates to (0 for none)
         """
-        effective_sender = sender_name or config.get(
-            "default_sender", "OWASP FinBot"
-        )
+        effective_sender = sender_name or config.get("default_sender", "OWASP FinBot")
         inv_id = related_invoice_id if related_invoice_id > 0 else None
 
         if _is_vendor_session(session_context):
@@ -145,9 +143,7 @@ def create_finmail_server(
             limit: Maximum number of messages to return
         """
         if _is_vendor_session(session_context) and inbox == "admin":
-            return {
-                "error": "Access denied: vendor sessions cannot read the admin inbox"
-            }
+            return {"error": "Access denied: vendor sessions cannot read the admin inbox"}
 
         with db_session() as db:
             repo = EmailRepository(db, session_context)
@@ -200,9 +196,7 @@ def create_finmail_server(
                 return {"error": f"Message {message_id} not found"}
 
             if _is_vendor_session(session_context) and msg.inbox_type == "admin":
-                return {
-                    "error": "Access denied: vendor sessions cannot read admin messages"
-                }
+                return {"error": "Access denied: vendor sessions cannot read admin messages"}
 
             return {"message": msg.to_dict()}
 
@@ -223,9 +217,7 @@ def create_finmail_server(
             limit: Maximum results to return
         """
         if _is_vendor_session(session_context) and inbox == "admin":
-            return {
-                "error": "Access denied: vendor sessions cannot search the admin inbox"
-            }
+            return {"error": "Access denied: vendor sessions cannot search the admin inbox"}
 
         with db_session() as db:
             repo = EmailRepository(db, session_context)
@@ -235,9 +227,7 @@ def create_finmail_server(
             if inbox == "vendor":
                 if vendor_id <= 0:
                     return {"error": "vendor_id is required when inbox is 'vendor'"}
-                messages = repo.list_vendor_emails(
-                    vendor_id=vendor_id, limit=effective_limit * 3
-                )
+                messages = repo.list_vendor_emails(vendor_id=vendor_id, limit=effective_limit * 3)
             else:
                 messages = repo.list_admin_emails(limit=effective_limit * 3)
 
@@ -245,8 +235,7 @@ def create_finmail_server(
             results = [
                 m
                 for m in messages
-                if query_lower in (m.subject or "").lower()
-                or query_lower in (m.body or "").lower()
+                if query_lower in (m.subject or "").lower() or query_lower in (m.body or "").lower()
             ][:effective_limit]
 
             return {
@@ -273,9 +262,7 @@ def create_finmail_server(
                 return {"error": f"Message {message_id} not found"}
 
             if _is_vendor_session(session_context) and msg.inbox_type == "admin":
-                return {
-                    "error": "Access denied: vendor sessions cannot modify admin messages"
-                }
+                return {"error": "Access denied: vendor sessions cannot modify admin messages"}
 
             msg = repo.mark_as_read(message_id)
             return {"marked_read": True, "message_id": message_id}

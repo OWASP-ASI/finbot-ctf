@@ -3,8 +3,6 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
-
-from finbot.core.utils import to_utc_iso
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
@@ -17,6 +15,7 @@ from finbot.core.data.repositories import (
     UserBadgeRepository,
     UserChallengeProgressRepository,
 )
+from finbot.core.utils import to_utc_iso
 
 router = APIRouter(prefix="/api/v1", tags=["sidecar"])
 

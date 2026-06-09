@@ -13,9 +13,7 @@ router = APIRouter(tags=["labs-web"])
 
 
 @router.get("/", response_class=HTMLResponse)
-async def labs_home(
-    _: Request, session_context: SessionContext = Depends(get_session_context)
-):
+async def labs_home(_: Request, session_context: SessionContext = Depends(get_session_context)):
     return RedirectResponse(url="/labs/guardrails", status_code=302)
 
 
@@ -27,9 +25,7 @@ async def labs_guardrails(
     return template_response(request, "pages/guardrails.html")
 
 
-@router.get(
-    "/guardrails/activity", response_class=HTMLResponse, name="labs_guardrails_activity"
-)
+@router.get("/guardrails/activity", response_class=HTMLResponse, name="labs_guardrails_activity")
 async def labs_guardrails_activity(
     request: Request,
     session_context: SessionContext = Depends(get_session_context),

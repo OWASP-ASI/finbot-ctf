@@ -311,12 +311,8 @@ class ChatAssistantBase:
 
         effective_message = user_message
         if attachments:
-            file_refs = ", ".join(
-                f"{a['filename']} (file_id: {a['file_id']})" for a in attachments
-            )
-            effective_message = (
-                f"[User attached FinDrive files: {file_refs}]\n\n{user_message}"
-            )
+            file_refs = ", ".join(f"{a['filename']} (file_id: {a['file_id']})" for a in attachments)
+            effective_message = f"[User attached FinDrive files: {file_refs}]\n\n{user_message}"
 
         self._save_message("user", effective_message)
 
@@ -355,9 +351,7 @@ class ChatAssistantBase:
                 "stream": True,
                 "max_output_tokens": settings.LLM_MAX_TOKENS,
             }
-            no_temperature = any(
-                self._model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5")
-            )
+            no_temperature = any(self._model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5"))
             if not no_temperature:
                 stream_params["temperature"] = settings.LLM_DEFAULT_TEMPERATURE
 
@@ -437,9 +431,7 @@ class ChatAssistantBase:
                     )
                     tool_start = datetime.now(UTC)
                     result = await self._execute_tool(tc["name"], tc["arguments"])
-                    tool_duration_ms = int(
-                        (datetime.now(UTC) - tool_start).total_seconds() * 1000
-                    )
+                    tool_duration_ms = int((datetime.now(UTC) - tool_start).total_seconds() * 1000)
                     input_messages.append(
                         {
                             "type": "function_call_output",
@@ -522,16 +514,14 @@ class VendorChatAssistant(ChatAssistantBase):
         return ["findrive", "finmail", "systemutils"]
 
     def _get_system_prompt(self) -> str:
-        from finbot.mcp.servers.finmail.routing import (
-            get_admin_address,  # pylint: disable=import-outside-toplevel
+        from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+            get_admin_address,
             get_department_addresses,
         )
 
         admin_addr = get_admin_address(self.session_context.namespace)
         dept_addrs = get_department_addresses(self.session_context.namespace)
-        dept_lines = "\n".join(
-            f"  - {addr}: {desc}" for addr, desc in dept_addrs.items()
-        )
+        dept_lines = "\n".join(f"  - {addr}: {desc}" for addr, desc in dept_addrs.items())
 
         return f"""You are OWASP FinBot, the AI assistant for the vendor portal.
 
@@ -713,14 +703,10 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
 
     async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_payment_summary(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_payment_summary(vendor_id, self.session_context))
 
     async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_contact_info(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_contact_info(vendor_id, self.session_context))
 
 
 # =============================================================================
@@ -746,16 +732,14 @@ class CoPilotAssistant(ChatAssistantBase):
         return ["findrive", "finmail", "systemutils"]
 
     def _get_system_prompt(self) -> str:
-        from finbot.mcp.servers.finmail.routing import (
-            get_admin_address,  # pylint: disable=import-outside-toplevel
+        from finbot.mcp.servers.finmail.routing import (  # pylint: disable=import-outside-toplevel
+            get_admin_address,
             get_department_addresses,
         )
 
         admin_addr = get_admin_address(self.session_context.namespace)
         dept_addrs = get_department_addresses(self.session_context.namespace)
-        dept_lines = "\n".join(
-            f"  - {addr}: {desc}" for addr, desc in dept_addrs.items()
-        )
+        dept_lines = "\n".join(f"  - {addr}: {desc}" for addr, desc in dept_addrs.items())
 
         return f"""You are the Finance Co-Pilot for the OWASP FinBot admin portal.
 
@@ -1107,14 +1091,10 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
 
     async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_payment_summary(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_payment_summary(vendor_id, self.session_context))
 
     async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_contact_info(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_contact_info(vendor_id, self.session_context))
 
     async def _call_get_all_vendors_summary(self) -> str:
         return json.dumps(await get_all_vendors_summary(self.session_context))
@@ -1123,18 +1103,10 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
         return json.dumps(await get_pending_actions_summary(self.session_context))
 
     async def _call_get_vendor_compliance_docs(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_compliance_docs(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_compliance_docs(vendor_id, self.session_context))
 
     async def _call_get_vendor_activity_report(self, vendor_id: int) -> str:
-        return json.dumps(
-            await get_vendor_activity_report(vendor_id, self.session_context)
-        )
+        return json.dumps(await get_vendor_activity_report(vendor_id, self.session_context))
 
-    async def _call_save_report(
-        self, title: str, content: str, report_type: str
-    ) -> str:
-        return json.dumps(
-            await save_report(title, content, report_type, self.session_context)
-        )
+    async def _call_save_report(self, title: str, content: str, report_type: str) -> str:
+        return json.dumps(await save_report(title, content, report_type, self.session_context))

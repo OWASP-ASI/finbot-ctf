@@ -180,9 +180,7 @@ async def flag_invoice_for_review(
         ):
             new_status = "rejected"
 
-        invoice = invoice_repo.update_invoice(
-            invoice_id, status=new_status, agent_notes=new_notes
-        )
+        invoice = invoice_repo.update_invoice(invoice_id, status=new_status, agent_notes=new_notes)
         if not invoice:
             raise ValueError("Invoice not found")
 

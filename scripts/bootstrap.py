@@ -52,7 +52,9 @@ def _run_migrations() -> None:
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"❌ Migration failed: {e}")
         print("   Falling back to create_tables()")
-        from finbot.core.data.database import create_tables  # pylint: disable=import-outside-toplevel
+        from finbot.core.data.database import (  # pylint: disable=import-outside-toplevel
+            create_tables,
+        )
 
         create_tables()
 
@@ -61,7 +63,9 @@ def _seed_cc_admins() -> None:
     if not settings.CC_ENABLED:
         return
     try:
-        from finbot.apps.cc.auth import seed_admins_from_env  # pylint: disable=import-outside-toplevel
+        from finbot.apps.cc.auth import (  # pylint: disable=import-outside-toplevel
+            seed_admins_from_env,
+        )
 
         seeded = seed_admins_from_env()
         if seeded > 0:
@@ -72,7 +76,9 @@ def _seed_cc_admins() -> None:
 
 def _cleanup_expired_sessions() -> None:
     try:
-        from finbot.core.auth.session import session_manager  # pylint: disable=import-outside-toplevel
+        from finbot.core.auth.session import (  # pylint: disable=import-outside-toplevel
+            session_manager,
+        )
 
         cleaned = session_manager.cleanup_expired_sessions()
         if cleaned > 0:
@@ -85,7 +91,9 @@ def _cleanup_old_analytics() -> None:
     if not settings.CC_ANALYTICS_ENABLED:
         return
     try:
-        from finbot.core.analytics.retention import cleanup_old_pageviews  # pylint: disable=import-outside-toplevel
+        from finbot.core.analytics.retention import (  # pylint: disable=import-outside-toplevel
+            cleanup_old_pageviews,
+        )
 
         cleaned = cleanup_old_pageviews()
         if cleaned > 0:
@@ -96,7 +104,9 @@ def _cleanup_old_analytics() -> None:
 
 def _load_ctf_definitions() -> None:
     try:
-        from finbot.ctf.definitions.loader import load_definitions_on_startup  # pylint: disable=import-outside-toplevel
+        from finbot.ctf.definitions.loader import (  # pylint: disable=import-outside-toplevel
+            load_definitions_on_startup,
+        )
 
         result = load_definitions_on_startup()
         print(

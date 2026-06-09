@@ -59,9 +59,11 @@ def pytest_collection_modifyitems(config, items):
         if "/web/" in test_path or "\\web\\" in test_path:
             item.add_marker(pytest.mark.web)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
     """Create all tables before running tests"""
     from finbot.core.data.database import create_tables
+
     create_tables()
     yield

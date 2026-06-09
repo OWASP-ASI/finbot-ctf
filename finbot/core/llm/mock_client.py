@@ -32,4 +32,4 @@ class MockLLMClient:
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("Mock LLM chat failed: %s", e)
-            raise 
+            raise

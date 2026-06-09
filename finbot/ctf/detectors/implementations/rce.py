@@ -131,9 +131,7 @@ class RCEDetector(BaseDetector):
                 tool_arguments = {}
 
         content_fields = self.config.get("content_fields", ["script_content"])
-        combined_content = " ".join(
-            str(tool_arguments.get(f, "")) for f in content_fields
-        )
+        combined_content = " ".join(str(tool_arguments.get(f, "")) for f in content_fields)
 
         if not combined_content.strip():
             return DetectionResult(
@@ -159,9 +157,7 @@ class RCEDetector(BaseDetector):
                     f"Found {len(matched_patterns)} RCE pattern match(es), "
                     f"need at least {min_matches}"
                 ),
-                evidence={"matched_patterns": matched_patterns}
-                if matched_patterns
-                else {},
+                evidence={"matched_patterns": matched_patterns} if matched_patterns else {},
             )
 
         # --- Multi-turn gate: require prior safe tool calls ---
@@ -220,14 +216,11 @@ class RCEDetector(BaseDetector):
 
         prior_tools = self.config.get("prior_tool_names", self._DEFAULT_PRIOR_TOOLS)
 
-        query = (
-            db.query(CTFEvent)
-            .filter(
-                CTFEvent.namespace == namespace,
-                CTFEvent.user_id == user_id,
-                CTFEvent.tool_name.in_(prior_tools),
-                CTFEvent.event_type.like("%mcp_tool_call_success%"),
-            )
+        query = db.query(CTFEvent).filter(
+            CTFEvent.namespace == namespace,
+            CTFEvent.user_id == user_id,
+            CTFEvent.tool_name.in_(prior_tools),
+            CTFEvent.event_type.like("%mcp_tool_call_success%"),
         )
         if workflow_id:
             query = query.filter(CTFEvent.workflow_id == workflow_id)

@@ -2,20 +2,20 @@
 Unit test configuration.
 """
 
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
-from finbot.main import app
 from finbot.core.auth.session import session_manager
 from finbot.core.data.database import Base
-from finbot.core.data.repositories import VendorRepository, InvoiceRepository
 from finbot.core.data.models import UserSession
-from sqlalchemy.pool import StaticPool
+from finbot.core.data.repositories import InvoiceRepository, VendorRepository
+from finbot.main import app
 
 # Use in-memory SQLite for tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -28,7 +28,6 @@ def engine():
         TEST_DATABASE_URL,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,  # Ensures the same connection is used
-
     )
     return engine
 
@@ -55,7 +54,7 @@ def fast_client(client):
 @pytest.fixture(scope="function")
 def db(engine, monkeypatch):
     """Database session with automatic cleanup between tests
-    
+
     This fixture:
     1. Creates fresh in-memory database for each test
     2. Creates all tables before test
@@ -65,14 +64,10 @@ def db(engine, monkeypatch):
     """
     # Create all tables before test
     Base.metadata.create_all(bind=engine)
-    
+
     # Create test session factory
-    TestSessionLocal = sessionmaker(
-        autocommit=False,
-        autoflush=False,
-        bind=engine
-    )
-    
+    TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
     # Patch the global SessionLocal used by session_manager and repositories
     monkeypatch.setattr(
         "finbot.core.data.database.SessionLocal",
@@ -82,11 +77,11 @@ def db(engine, monkeypatch):
         "finbot.core.auth.session.SessionLocal",
         TestSessionLocal,
     )
-    
+
     session = TestSessionLocal()
-    
+
     yield session
-    
+
     # Cleanup after test
     session.close()
     Base.metadata.drop_all(bind=engine)
@@ -122,7 +117,9 @@ def vendor_pair_setup(db):
     s2 = session_manager.create_session(email="isolation_test@example.com")
 
     vendor_repo = VendorRepository(db, s1)
-    v1 = create_vendor(vendor_repo, "Vendor Alpha", "Alice Smith", "alice@vendor1.com", "11-1111111")
+    v1 = create_vendor(
+        vendor_repo, "Vendor Alpha", "Alice Smith", "alice@vendor1.com", "11-1111111"
+    )
     v2 = create_vendor(vendor_repo, "Vendor Beta", "Bob Johnson", "bob@vendor2.com", "22-2222222")
 
     us1 = db.query(UserSession).filter(UserSession.session_id == s1.session_id).first()
@@ -132,11 +129,11 @@ def vendor_pair_setup(db):
     db.commit()
 
     return {
-        's1': s1,
-        's2': s2,
-        'v1': v1,
-        'v2': v2,
-        'db': db,
+        "s1": s1,
+        "s2": s2,
+        "v1": v1,
+        "v2": v2,
+        "db": db,
     }
 
 
@@ -149,7 +146,7 @@ def multi_vendor_setup(db):
         - db: Database session
     """
     vendors = []
-    
+
     # Create 5 vendors, each with their own session and unique identity
     for i in range(5):
         # Each vendor gets a distinct session (separate user email)
@@ -162,18 +159,21 @@ def multi_vendor_setup(db):
             f"Load Test Vendor {i}",
             f"Contact {i}",
             f"contact{i}@example.com",
-            f"{i:02d}-{i:07d}"
+            f"{i:02d}-{i:07d}",
         )
-        
+
         # Track each vendor's context for use in tests
-        vendors.append({
-            'session_id': session.session_id,
-            'vendor_id': vendor.id,
-            'invoice_id': None,  # Placeholder for tests that need invoices
-            'db': db,
-        })
-    
+        vendors.append(
+            {
+                "session_id": session.session_id,
+                "vendor_id": vendor.id,
+                "invoice_id": None,  # Placeholder for tests that need invoices
+                "db": db,
+            }
+        )
+
     return vendors
+
 
 @pytest.fixture(autouse=True)
 def clean_db(db):

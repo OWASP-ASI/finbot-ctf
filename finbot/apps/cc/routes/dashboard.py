@@ -21,9 +21,7 @@ def _get_pulse_stats() -> dict:
     # pylint: disable=not-callable
     db = SessionLocal()
     try:
-        today_start = datetime.now(UTC).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
 
         total_users = db.query(func.count(distinct(Vendor.namespace))).scalar() or 0
 
@@ -57,23 +55,88 @@ async def desktop(request: Request):
     pulse = _get_pulse_stats()
     apps = []
 
-    apps.append({"name": "Access", "description": "Manage CC maintainer allowlist", "url": "/cc/access", "icon": "users", "enabled": True})
+    apps.append(
+        {
+            "name": "Access",
+            "description": "Manage CC maintainer allowlist",
+            "url": "/cc/access",
+            "icon": "users",
+            "enabled": True,
+        }
+    )
 
     if settings.CC_ANALYTICS_ENABLED:
-        apps.append({"name": "Analytics", "description": "Traffic, funnels, CTF metrics", "url": "/cc/analytics", "icon": "chart", "enabled": True})
+        apps.append(
+            {
+                "name": "Analytics",
+                "description": "Traffic, funnels, CTF metrics",
+                "url": "/cc/analytics",
+                "icon": "chart",
+                "enabled": True,
+            }
+        )
 
-    apps.append({"name": "Audit", "description": "Platform event audit trail", "url": "/cc/audit", "icon": "log", "enabled": True})
+    apps.append(
+        {
+            "name": "Audit",
+            "description": "Platform event audit trail",
+            "url": "/cc/audit",
+            "icon": "log",
+            "enabled": True,
+        }
+    )
 
-    apps.append({"name": "Badges", "description": "Browse and manage CTF badges", "url": "/cc/badges", "icon": "badge", "enabled": True})
+    apps.append(
+        {
+            "name": "Badges",
+            "description": "Browse and manage CTF badges",
+            "url": "/cc/badges",
+            "icon": "badge",
+            "enabled": True,
+        }
+    )
 
     if settings.CC_CERTIFICATES_ENABLED:
-        apps.append({"name": "Certificates", "description": "Generate workshop certs", "url": "/cc/certificates", "icon": "certificate", "enabled": True})
+        apps.append(
+            {
+                "name": "Certificates",
+                "description": "Generate workshop certs",
+                "url": "/cc/certificates",
+                "icon": "certificate",
+                "enabled": True,
+            }
+        )
 
-    apps.append({"name": "Challenges", "description": "Browse and manage CTF challenges", "url": "/cc/challenges", "icon": "puzzle", "enabled": True})
+    apps.append(
+        {
+            "name": "Challenges",
+            "description": "Browse and manage CTF challenges",
+            "url": "/cc/challenges",
+            "icon": "puzzle",
+            "enabled": True,
+        }
+    )
 
-    apps.append({"name": "Health", "description": "Service status and latency", "url": "/cc/health", "icon": "health", "enabled": True, "new_tab": True})
+    apps.append(
+        {
+            "name": "Health",
+            "description": "Service status and latency",
+            "url": "/cc/health",
+            "icon": "health",
+            "enabled": True,
+            "new_tab": True,
+        }
+    )
 
-    apps.append({"name": "Users", "description": "User management and session admin", "url": "/cc/users", "icon": "user-mgmt", "enabled": True})
+    apps.append(
+        {
+            "name": "Users",
+            "description": "User management and session admin",
+            "url": "/cc/users",
+            "icon": "user-mgmt",
+            "enabled": True,
+        }
+    )
 
     return template_response(
         request,

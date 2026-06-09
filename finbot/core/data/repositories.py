@@ -166,9 +166,7 @@ class UserProfileRepository:
             self.db.refresh(profile)
         return profile
 
-    def is_username_available(
-        self, username: str, exclude_user_id: str | None = None
-    ) -> bool:
+    def is_username_available(self, username: str, exclude_user_id: str | None = None) -> bool:
         """Check if username is available"""
         is_valid, _ = validate_username(username)
         if not is_valid:
@@ -182,9 +180,7 @@ class UserProfileRepository:
 
         return query.first() is None
 
-    def claim_username(
-        self, user_id: str, username: str
-    ) -> tuple[UserProfile | None, str | None]:
+    def claim_username(self, user_id: str, username: str) -> tuple[UserProfile | None, str | None]:
         """Claim a username for a user.
 
         Returns (profile, error_message). If successful, error_message is None.
@@ -244,9 +240,7 @@ class UserProfileRepository:
 
         return profile
 
-    def set_featured_badges(
-        self, user_id: str, badge_ids: list[str]
-    ) -> UserProfile | None:
+    def set_featured_badges(self, user_id: str, badge_ids: list[str]) -> UserProfile | None:
         """Set featured badge IDs (max 6)"""
         profile = self.get_by_user_id(user_id)
         if not profile:
@@ -259,9 +253,7 @@ class UserProfileRepository:
 
         return profile
 
-    def get_public_profile_with_user(
-        self, username: str
-    ) -> tuple[UserProfile | None, User | None]:
+    def get_public_profile_with_user(self, username: str) -> tuple[UserProfile | None, User | None]:
         """Get public profile with associated user data"""
         profile = self.get_by_username(username)
         if not profile or not profile.is_public:
@@ -373,9 +365,7 @@ class VendorRepository(NamespacedRepository):
         # avoid circular import; pylint: disable=import-outside-toplevel
         from finbot.core.auth.session import session_manager
 
-        return session_manager.update_vendor_context(
-            self.session_context.session_id, vendor_id
-        )
+        return session_manager.update_vendor_context(self.session_context.session_id, vendor_id)
 
 
 # =============================================================================
@@ -391,9 +381,7 @@ class InvoiceRepository(NamespacedRepository):
         self.current_vendor_id = session_context.current_vendor_id
 
     # Vendor Scoped Methods for Vendor Portal
-    def list_invoices_for_current_vendor(
-        self, status: str | None = None
-    ) -> list[Invoice]:
+    def list_invoices_for_current_vendor(self, status: str | None = None) -> list[Invoice]:
         """Vendor portal: List invoices for current vendor only"""
         if not self.current_vendor_id:
             raise ValueError("Vendor context required for this operation")
@@ -433,22 +421,16 @@ class InvoiceRepository(NamespacedRepository):
         total_amount = query.with_entities(func.sum(Invoice.amount)).scalar() or 0
         paid_count = query.filter(Invoice.status == "paid").count()
         paid_amount = (
-            query.filter(Invoice.status == "paid")
-            .with_entities(func.sum(Invoice.amount))
-            .scalar()
+            query.filter(Invoice.status == "paid").with_entities(func.sum(Invoice.amount)).scalar()
             or 0
         )
 
         # Count overdue invoices (due date passed, not paid)
         now = datetime.now(UTC)
         overdue_query = self._add_namespace_filter(self.db.query(Invoice), Invoice)
-        overdue_query = overdue_query.filter(
-            Invoice.vendor_id == self.current_vendor_id
-        )
+        overdue_query = overdue_query.filter(Invoice.vendor_id == self.current_vendor_id)
         overdue_count = (
-            overdue_query.filter(Invoice.status != "paid")
-            .filter(Invoice.due_date < now)
-            .count()
+            overdue_query.filter(Invoice.status != "paid").filter(Invoice.due_date < now).count()
         )
 
         pending_count = total_count - paid_count
@@ -473,9 +455,7 @@ class InvoiceRepository(NamespacedRepository):
 
         return query.order_by(Invoice.created_at.desc()).all()
 
-    def list_invoices_by_vendor(
-        self, status: str | None = None
-    ) -> dict[int, list[Invoice]]:
+    def list_invoices_by_vendor(self, status: str | None = None) -> dict[int, list[Invoice]]:
         """Admin portal: Group invoices by vendor"""
         invoices = self.list_all_invoices_for_user(status)
 
@@ -495,12 +475,10 @@ class InvoiceRepository(NamespacedRepository):
                 Invoice.vendor_id,
                 func.count(Invoice.id).label("total_count"),
                 func.sum(Invoice.amount).label("total_amount"),
-                func.count(func.nullif(Invoice.status != "paid", True)).label(
-                    "paid_count"
+                func.count(func.nullif(Invoice.status != "paid", True)).label("paid_count"),
+                func.sum(func.case([(Invoice.status == "paid", Invoice.amount)], else_=0)).label(
+                    "paid_amount"
                 ),
-                func.sum(
-                    func.case([(Invoice.status == "paid", Invoice.amount)], else_=0)
-                ).label("paid_amount"),
             )
             .filter(Invoice.namespace == self.namespace)
             .group_by(Invoice.vendor_id)
@@ -514,8 +492,7 @@ class InvoiceRepository(NamespacedRepository):
                 "paid_count": stat.paid_count,
                 "paid_amount": float(stat.paid_amount or 0),
                 "pending_count": stat.total_count - stat.paid_count,
-                "pending_amount": float(stat.total_amount or 0)
-                - float(stat.paid_amount or 0),
+                "pending_amount": float(stat.total_amount or 0) - float(stat.paid_amount or 0),
             }
             for stat in stats
         }
@@ -528,9 +505,7 @@ class InvoiceRepository(NamespacedRepository):
         total_amount = query.with_entities(func.sum(Invoice.amount)).scalar() or 0
         paid_count = query.filter(Invoice.status == "paid").count()
         paid_amount = (
-            query.filter(Invoice.status == "paid")
-            .with_entities(func.sum(Invoice.amount))
-            .scalar()
+            query.filter(Invoice.status == "paid").with_entities(func.sum(Invoice.amount)).scalar()
             or 0
         )
 
@@ -639,9 +614,7 @@ class MCPServerConfigRepository(NamespacedRepository):
         self.db.refresh(config)
         return config
 
-    def update_config(
-        self, server_type: str, config_json: str
-    ) -> MCPServerConfig | None:
+    def update_config(self, server_type: str, config_json: str) -> MCPServerConfig | None:
         config = self.get_by_type(server_type)
         if config:
             config.config_json = config_json
@@ -720,24 +693,15 @@ class MCPActivityLogRepository(NamespacedRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> list[MCPActivityLog]:
-        query = self._add_namespace_filter(
-            self.db.query(MCPActivityLog), MCPActivityLog
-        )
+        query = self._add_namespace_filter(self.db.query(MCPActivityLog), MCPActivityLog)
         if server_type:
             query = query.filter(MCPActivityLog.server_type == server_type)
         if workflow_id:
             query = query.filter(MCPActivityLog.workflow_id == workflow_id)
-        return (
-            query.order_by(MCPActivityLog.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(MCPActivityLog.created_at.desc()).offset(offset).limit(limit).all()
 
     def get_activity_count(self, server_type: str | None = None) -> int:
-        query = self._add_namespace_filter(
-            self.db.query(MCPActivityLog), MCPActivityLog
-        )
+        query = self._add_namespace_filter(self.db.query(MCPActivityLog), MCPActivityLog)
         if server_type:
             query = query.filter(MCPActivityLog.server_type == server_type)
         return query.count()
@@ -791,10 +755,10 @@ class ChatMessageRepository(NamespacedRepository):
             query = query.filter(ChatMessage.vendor_id.is_(None))
 
         return (
-            query.order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
-            .limit(limit)
-            .all()
-        )[::-1]  # reverse to chronological order
+            query.order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc()).limit(limit).all()
+        )[
+            ::-1
+        ]  # reverse to chronological order
 
     def clear_history(self) -> int:
         now = datetime.now(UTC)
@@ -849,10 +813,7 @@ class ChallengeRepository:
     def get_categories(self) -> list[str]:
         """Get distinct challenge categories"""
         result = (
-            self.db.query(Challenge.category)
-            .filter(Challenge.is_active == True)
-            .distinct()
-            .all()
+            self.db.query(Challenge.category).filter(Challenge.is_active == True).distinct().all()
         )
         return [r[0] for r in result]
 
@@ -888,16 +849,12 @@ class ChallengeRepository:
         if not completed_progress:
             return 0
         challenge_ids = [p.challenge_id for p in completed_progress]
-        challenges = (
-            self.db.query(Challenge).filter(Challenge.id.in_(challenge_ids)).all()
-        )
+        challenges = self.db.query(Challenge).filter(Challenge.id.in_(challenge_ids)).all()
         points_map = {c.id: c.points for c in challenges}
         total = 0.0
         for p in completed_progress:
             base = points_map.get(p.challenge_id, 0)
-            total += base * (
-                p.points_modifier if p.points_modifier is not None else 1.0
-            )
+            total += base * (p.points_modifier if p.points_modifier is not None else 1.0)
         return int(total)
 
 
@@ -1080,12 +1037,7 @@ class BadgeRepository:
         """Get total points for given badge IDs"""
         if not badge_ids:
             return 0
-        return (
-            self.db.query(func.sum(Badge.points))
-            .filter(Badge.id.in_(badge_ids))
-            .scalar()
-            or 0
-        )
+        return self.db.query(func.sum(Badge.points)).filter(Badge.id.in_(badge_ids)).scalar() or 0
 
 
 # =============================================================================
@@ -1203,9 +1155,7 @@ class CTFEventRepository(NamespacedRepository):
         if vendor_id:
             query = query.filter(CTFEvent.vendor_id == vendor_id)
 
-        return (
-            query.order_by(CTFEvent.timestamp.desc()).offset(offset).limit(limit).all()
-        )
+        return query.order_by(CTFEvent.timestamp.desc()).offset(offset).limit(limit).all()
 
     def count_events(
         self,
@@ -1364,9 +1314,7 @@ class LabsGuardrailConfigRepository(NamespacedRepository):
 
     def get_for_current_user(self) -> LabsGuardrailConfig | None:
         return (
-            self._add_namespace_filter(
-                self.db.query(LabsGuardrailConfig), LabsGuardrailConfig
-            )
+            self._add_namespace_filter(self.db.query(LabsGuardrailConfig), LabsGuardrailConfig)
             .filter(
                 LabsGuardrailConfig.user_id == self.session_context.user_id,
             )

@@ -95,9 +95,7 @@ async def websocket_endpoint(
                         await manager.unsubscribe(connection_id, topic)
 
                 elif action == "ping":
-                    await manager.send_to_connection(
-                        connection_id, WSEvent(type=WSEventType.PONG)
-                    )
+                    await manager.send_to_connection(connection_id, WSEvent(type=WSEventType.PONG))
 
                 else:
                     await manager.send_to_connection(

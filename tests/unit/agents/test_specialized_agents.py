@@ -50,9 +50,10 @@
 #   SAI-GSI-001: Google Sheets Integration Verification
 # ==============================================================================
 
-import pytest
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from finbot.agents.specialized.invoice import InvoiceAgent
 from finbot.agents.specialized.onboarding import VendorOnboardingAgent
@@ -68,22 +69,26 @@ class TestSpecializedAgents:
         """Mock the event bus and LLM client to prevent external connections in unit tests."""
         mock_llm_response = LLMResponse(
             content=None,
-            tool_calls=[{
-                "name": "complete_task",
-                "call_id": "call_test_001",
-                "arguments": {
-                    "task_status": "success",
-                    "task_summary": "Task completed successfully in mock test",
-                },
-            }],
+            tool_calls=[
+                {
+                    "name": "complete_task",
+                    "call_id": "call_test_001",
+                    "arguments": {
+                        "task_status": "success",
+                        "task_summary": "Task completed successfully in mock test",
+                    },
+                }
+            ],
         )
-        with patch("finbot.agents.base.event_bus") as mock_bus, \
-             patch("finbot.core.llm.contextual_client.event_bus", mock_bus), \
-             patch(
-                 "finbot.core.llm.contextual_client.ContextualLLMClient.chat",
-                 new_callable=AsyncMock,
-                 return_value=mock_llm_response,
-             ):
+        with (
+            patch("finbot.agents.base.event_bus") as mock_bus,
+            patch("finbot.core.llm.contextual_client.event_bus", mock_bus),
+            patch(
+                "finbot.core.llm.contextual_client.ContextualLLMClient.chat",
+                new_callable=AsyncMock,
+                return_value=mock_llm_response,
+            ),
+        ):
             mock_bus.emit_agent_event = AsyncMock()
             mock_bus.emit_business_event = AsyncMock()
             yield mock_bus
@@ -283,7 +288,10 @@ class TestSpecializedAgents:
 
         workflow_status = result.get("status", result.get("task_status", "completed"))
         assert workflow_status in [
-            "completed", "in_progress", "processing", "success",
+            "completed",
+            "in_progress",
+            "processing",
+            "success",
         ], f"Unexpected workflow status: {workflow_status!r}"
 
         print(f"✓ SAI-INV-003: Workflow status: {workflow_status}")
@@ -344,10 +352,12 @@ class TestSpecializedAgents:
                 or result.get("status") == "failed"
                 or result.get("task_status") == "failed"
             )
-            assert error_status, (
-                f"Expected error/failed status, got result keys: {list(result.keys())}"
+            assert (
+                error_status
+            ), f"Expected error/failed status, got result keys: {list(result.keys())}"
+            print(
+                f"✓ SAI-INV-004: Error returned in result: {result.get('error', result.get('status'))}"
             )
-            print(f"✓ SAI-INV-004: Error returned in result: {result.get('error', result.get('status'))}")
 
         except Exception as e:
             # Agent chose to raise an exception — acceptable for invalid input
@@ -414,7 +424,9 @@ class TestSpecializedAgents:
             f"Expected successful task or audit entry; got task_status={task_status!r}, "
             f"keys: {list(result.keys())}"
         )
-        print(f"✓ SAI-INV-005: Agent completed, task_status={task_status!r}, audit_entry={audit_entry!r}")
+        print(
+            f"✓ SAI-INV-005: Agent completed, task_status={task_status!r}, audit_entry={audit_entry!r}"
+        )
 
         print(f"✓ SAI-INV-005: Invoice processed, audit trail verified")
 
@@ -1473,14 +1485,27 @@ class TestSpecializedAgents:
         10. Ready for export to Google Sheets
         """
         headers = [
-            "Agent Type", "Primary Metric", "Primary Value",
-            "Success Rate %", "Error Count", "Timestamp",
-            "Session ID", "Status", "Average Time",
-            "Total Volume", "Accuracy %", "Last Updated",
+            "Agent Type",
+            "Primary Metric",
+            "Primary Value",
+            "Success Rate %",
+            "Error Count",
+            "Timestamp",
+            "Session ID",
+            "Status",
+            "Average Time",
+            "Total Volume",
+            "Accuracy %",
+            "Last Updated",
         ]
 
         metrics_by_agent = {
-            "Invoice Processing": {"primary": "Transactions", "value": 150, "rate": 98.5, "errors": 2},
+            "Invoice Processing": {
+                "primary": "Transactions",
+                "value": 150,
+                "rate": 98.5,
+                "errors": 2,
+            },
             "Vendor Onboarding": {"primary": "Onboardings", "value": 25, "rate": 96.0, "errors": 1},
             "Fraud Detection": {"primary": "Scans", "value": 5000, "rate": 97.2, "errors": 5},
             "Payment Processing": {"primary": "Payments", "value": 320, "rate": 99.2, "errors": 3},
@@ -1490,11 +1515,22 @@ class TestSpecializedAgents:
         now = datetime.now(UTC).isoformat()
         rows = []
         for agent_type, m in metrics_by_agent.items():
-            rows.append([
-                agent_type, m["primary"], m["value"], m["rate"],
-                m["errors"], now, "n/a", "Active", "n/a",
-                m["value"], m["rate"], now,
-            ])
+            rows.append(
+                [
+                    agent_type,
+                    m["primary"],
+                    m["value"],
+                    m["rate"],
+                    m["errors"],
+                    now,
+                    "n/a",
+                    "Active",
+                    "n/a",
+                    m["value"],
+                    m["rate"],
+                    now,
+                ]
+            )
 
         assert len(headers) == 12
         assert len(rows) == 5

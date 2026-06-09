@@ -8,13 +8,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
-from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
 from finbot.core.data.repositories import (
     ChallengeRepository,
     UserChallengeProgressRepository,
 )
+from finbot.core.utils import to_utc_iso
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["challenges"])
@@ -88,9 +88,7 @@ def list_challenges(
 ):
     """List all challenges with optional filters"""
     challenge_repo = ChallengeRepository(db)
-    challenges = challenge_repo.list_challenges(
-        category=category, difficulty=difficulty
-    )
+    challenges = challenge_repo.list_challenges(category=category, difficulty=difficulty)
 
     # Get user progress
     progress_map = {}
@@ -144,9 +142,7 @@ def get_challenge(
     # Parse JSON fields
     hints = json.loads(challenge.hints) if challenge.hints else []
     labels = json.loads(challenge.labels) if challenge.labels else {}
-    prerequisites = (
-        json.loads(challenge.prerequisites) if challenge.prerequisites else []
-    )
+    prerequisites = json.loads(challenge.prerequisites) if challenge.prerequisites else []
     resources = json.loads(challenge.resources) if challenge.resources else []
 
     # Mask hints user hasn't unlocked
@@ -175,9 +171,7 @@ def get_challenge(
             pass
 
     modifier = (
-        progress.points_modifier
-        if progress and progress.points_modifier is not None
-        else 1.0
+        progress.points_modifier if progress and progress.points_modifier is not None else 1.0
     )
 
     return ChallengeDetail(
@@ -199,9 +193,9 @@ def get_challenge(
         hints_cost=progress.hints_cost if progress else 0,
         points_modifier=modifier,
         effective_points=int(challenge.points * modifier),
-        completed_at=to_utc_iso(progress.completed_at)
-        if progress and progress.completed_at
-        else None,
+        completed_at=(
+            to_utc_iso(progress.completed_at) if progress and progress.completed_at else None
+        ),
         completion_evidence=completion_evidence,
         last_attempt_result=last_attempt_result,
     )

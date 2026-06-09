@@ -41,9 +41,7 @@ class WSEvent:
         """Serialize to JSON"""
         return json.dumps(
             {
-                "type": self.type.value
-                if isinstance(self.type, WSEventType)
-                else self.type,
+                "type": self.type.value if isinstance(self.type, WSEventType) else self.type,
                 "data": self.data,
                 "timestamp": self.timestamp,
             }

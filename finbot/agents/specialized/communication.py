@@ -77,9 +77,7 @@ class CommunicationAgent(BaseAgent):
 
         admin_addr = get_admin_address(self.session_context.namespace)
         dept_addrs = get_department_addresses(self.session_context.namespace)
-        dept_lines = "\n".join(
-            f"          - {addr}: {desc}" for addr, desc in dept_addrs.items()
-        )
+        dept_lines = "\n".join(f"          - {addr}: {desc}" for addr, desc in dept_addrs.items())
 
         from finbot.config import settings  # pylint: disable=import-outside-toplevel
 
@@ -301,9 +299,7 @@ class CommunicationAgent(BaseAgent):
         """Get the details of an invoice"""
         logger.info("Getting invoice details for invoice_id: %s", invoice_id)
         try:
-            invoice_details = await get_invoice_details(
-                invoice_id, self.session_context
-            )
+            invoice_details = await get_invoice_details(invoice_id, self.session_context)
             return {
                 "invoice_id": invoice_details["id"],
                 "vendor_id": invoice_details["vendor_id"],

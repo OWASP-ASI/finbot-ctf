@@ -60,9 +60,7 @@ class GuardrailPreventionDetector(BaseDetector):
         valid_kinds = {"before_model", "after_model", "before_tool", "after_tool"}
         kind = self.config.get("required_hook_kind", "before_tool")
         if kind not in valid_kinds:
-            raise ValueError(
-                f"required_hook_kind must be one of {valid_kinds}, got '{kind}'"
-            )
+            raise ValueError(f"required_hook_kind must be one of {valid_kinds}, got '{kind}'")
 
         pii_categories = self.config.get("pii_categories")
         if pii_categories is not None:
@@ -80,9 +78,7 @@ class GuardrailPreventionDetector(BaseDetector):
         required_args = self.config.get("required_tool_arguments")
         if required_args is not None:
             if not isinstance(required_args, dict) or not required_args:
-                raise ValueError(
-                    "'required_tool_arguments' must be a non-empty dict when provided"
-                )
+                raise ValueError("'required_tool_arguments' must be a non-empty dict when provided")
 
         exfil_tools = self.config.get("exfil_tools")
         if exfil_tools is not None:
@@ -92,9 +88,7 @@ class GuardrailPreventionDetector(BaseDetector):
     def get_relevant_event_types(self) -> list[str]:
         return ["agent.guardrail.*"]
 
-    async def check_event(
-        self, event: dict[str, Any], db: Session
-    ) -> DetectionResult:
+    async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
         event_type = event.get("event_type", "")
 
         if not event_type.startswith("agent.guardrail."):
@@ -135,8 +129,7 @@ class GuardrailPreventionDetector(BaseDetector):
                     return DetectionResult(
                         detected=False,
                         message=(
-                            f"tool_arguments['{key}'] is '{actual}', "
-                            f"expected '{expected}'"
+                            f"tool_arguments['{key}'] is '{actual}', " f"expected '{expected}'"
                         ),
                     )
 
@@ -180,10 +173,13 @@ class GuardrailPreventionDetector(BaseDetector):
                 except (ValueError, TypeError):
                     tool_arguments = {}
 
-            combined_text = " ".join(
-                str(v) for v in tool_arguments.values()
-                if isinstance(v, (str, int, float))
-            ) if isinstance(tool_arguments, dict) else str(tool_arguments)
+            combined_text = (
+                " ".join(
+                    str(v) for v in tool_arguments.values() if isinstance(v, (str, int, float))
+                )
+                if isinstance(tool_arguments, dict)
+                else str(tool_arguments)
+            )
 
             min_pii = self.config.get("min_pii_matches", 1)
             pii_matches = scan_pii(combined_text, categories=pii_categories)
@@ -210,9 +206,7 @@ class GuardrailPreventionDetector(BaseDetector):
         context = (
             f" for tool '{tool_name}'"
             if is_tool_hook and tool_name
-            else f" on model '{event.get('model')}'"
-            if event.get("model")
-            else ""
+            else f" on model '{event.get('model')}'" if event.get("model") else ""
         )
 
         evidence: dict[str, Any] = {

@@ -83,9 +83,7 @@ def render_error_page(request: Request, status_code: int, template_name: str = N
 
 async def fastapi_http_exception_handler(request: Request, exc: HTTPException):
     """Handle FastAPI HTTP exceptions"""
-    starlette_exc = StarletteHTTPException(
-        status_code=exc.status_code, detail=exc.detail
-    )
+    starlette_exc = StarletteHTTPException(status_code=exc.status_code, detail=exc.detail)
     return await http_exception_handler(request, starlette_exc)
 
 

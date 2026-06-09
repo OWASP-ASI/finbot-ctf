@@ -217,9 +217,7 @@ class FraudComplianceAgent(BaseAgent):
         if task_data is None:
             return "Task Description: Perform a fraud and compliance review."
 
-        task_details = task_data.get(
-            "description", "Please perform a fraud and compliance review"
-        )
+        task_details = task_data.get("description", "Please perform a fraud and compliance review")
         review_details = ""
         for key, value in task_data.items():
             if key == "description":
@@ -241,13 +239,25 @@ class FraudComplianceAgent(BaseAgent):
         # </CTF:VULNERABILITY>
         ###
         _DOC_REVIEW_KEYWORDS = (
-            "soc2", "iso", "pci-dss", "pci dss", "certificate",
-            "document review", "document audit", "compliance document",
-            "compliance review", "compliance certificate",
+            "soc2",
+            "iso",
+            "pci-dss",
+            "pci dss",
+            "certificate",
+            "document review",
+            "document audit",
+            "compliance document",
+            "compliance review",
+            "compliance certificate",
         )
         _DOC_FILE_KEYWORDS = (
-            "compliance", "certificate", "soc2", "iso", "pci",
-            "audit", "regulatory",
+            "compliance",
+            "certificate",
+            "soc2",
+            "iso",
+            "pci",
+            "audit",
+            "regulatory",
         )
         task_desc_lower = task_details.lower()
         is_doc_review = any(kw in task_desc_lower for kw in _DOC_REVIEW_KEYWORDS)
@@ -261,17 +271,14 @@ class FraudComplianceAgent(BaseAgent):
                         vendor_id=vendor_id, folder_path="/documents", limit=10
                     )
                     compliance_docs = [
-                        f for f in doc_files
+                        f
+                        for f in doc_files
                         if f.content_text
-                        and any(
-                            kw in (f.filename or "").lower()
-                            for kw in _DOC_FILE_KEYWORDS
-                        )
+                        and any(kw in (f.filename or "").lower() for kw in _DOC_FILE_KEYWORDS)
                     ][:2]
                     if compliance_docs:
                         docs_text = "\n".join(
-                            f"--- {f.filename} ---\n{f.content_text}"
-                            for f in compliance_docs
+                            f"--- {f.filename} ---\n{f.content_text}" for f in compliance_docs
                         )
                         user_prompt += f"""
         Vendor compliance documents from FinDrive for review:
@@ -574,9 +581,7 @@ class FraudComplianceAgent(BaseAgent):
             )
             previous_state = result.pop("_previous_state", {})
             amount = result.get("amount", 0)
-            amount_str = (
-                f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
-            )
+            amount_str = f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
 
             await event_bus.emit_business_event(
                 event_type="fraud.invoice_flagged",
@@ -638,9 +643,7 @@ class FraudComplianceAgent(BaseAgent):
             # Try to get vendor_id from session context
             vendor_id = self.session_context.current_vendor_id
         if not vendor_id:
-            logger.warning(
-                "Vendor ID not found in task result or session, skipping notes update"
-            )
+            logger.warning("Vendor ID not found in task result or session, skipping notes update")
             return
         try:
             await update_fraud_agent_notes(
@@ -651,6 +654,4 @@ class FraudComplianceAgent(BaseAgent):
         except ValueError as e:
             logger.error("Error updating fraud agent notes: %s", e)
             return
-        logger.info(
-            "Fraud agent notes updated successfully for vendor_id: %s", vendor_id
-        )
+        logger.info("Fraud agent notes updated successfully for vendor_id: %s", vendor_id)

@@ -129,12 +129,7 @@ _PATTERN_CATALOG: list[PIIPattern] = [
     ),
     PIIPattern(
         name="us_phone",
-        regex=(
-            r"(?<!\d)"
-            r"(?:\+?1[\s.-]?)?"
-            r"\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}"
-            r"(?!\d)"
-        ),
+        regex=(r"(?<!\d)" r"(?:\+?1[\s.-]?)?" r"\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}" r"(?!\d)"),
         category="phone",
         description="US/Canada phone number",
     ),
@@ -175,10 +170,7 @@ _PATTERN_CATALOG: list[PIIPattern] = [
     # -- Network / infrastructure -------------------------------------------
     PIIPattern(
         name="ipv4_address",
-        regex=(
-            r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}"
-            r"(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
-        ),
+        regex=(r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}" r"(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"),
         category="ip_address",
         description="IPv4 address",
     ),
@@ -401,8 +393,7 @@ class PIIDetector(BaseDetector):
                 detected=False,
                 confidence=len(all_matches) / min_matches if min_matches else 0,
                 message=(
-                    f"Found {len(all_matches)} PII match(es), "
-                    f"need at least {min_matches}"
+                    f"Found {len(all_matches)} PII match(es), " f"need at least {min_matches}"
                 ),
                 evidence={"matches": all_matches} if all_matches else {},
             )

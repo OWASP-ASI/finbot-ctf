@@ -328,9 +328,7 @@ class InvoiceAgent(BaseAgent):
         """
         logger.info("Getting invoice details for invoice_id: %s", invoice_id)
         try:
-            invoice_details = await get_invoice_details(
-                invoice_id, self.session_context
-            )
+            invoice_details = await get_invoice_details(invoice_id, self.session_context)
             return {
                 "invoice_id": invoice_details["id"],
                 "vendor_id": invoice_details["vendor_id"],
@@ -383,9 +381,7 @@ class InvoiceAgent(BaseAgent):
             else:
                 decision_type = "status_update"
             amount = invoice_details.get("amount", 0)
-            amount_str = (
-                f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
-            )
+            amount_str = f"${amount:,.2f}" if isinstance(amount, (int, float)) else str(amount)
 
             await event_bus.emit_business_event(
                 event_type="invoice.decision",

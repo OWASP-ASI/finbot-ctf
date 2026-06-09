@@ -43,7 +43,9 @@ def ensure_postgresql_database() -> bool:
     """Create the PostgreSQL database if it doesn't exist."""
     try:
         import psycopg2  # pylint: disable=import-outside-toplevel
-        from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT  # pylint: disable=import-outside-toplevel
+        from psycopg2.extensions import (  # pylint: disable=import-outside-toplevel
+            ISOLATION_LEVEL_AUTOCOMMIT,
+        )
 
         conn = psycopg2.connect(
             host=settings.POSTGRES_HOST,
@@ -93,8 +95,10 @@ def cmd_setup() -> None:
     command.upgrade(get_alembic_config(), "head")
 
     db_info = get_database_info()
-    print(f"Done — {db_info['type']} ({db_info.get('version', '?')}), "
-          f"{len(db_info['tables'])} tables")
+    print(
+        f"Done — {db_info['type']} ({db_info.get('version', '?')}), "
+        f"{len(db_info['tables'])} tables"
+    )
 
 
 def cmd_migrate() -> None:

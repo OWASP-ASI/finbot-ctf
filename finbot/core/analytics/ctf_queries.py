@@ -43,20 +43,21 @@ def _since(days: int | None) -> datetime | None:
 # Overview stats
 # ---------------------------------------------------------------------------
 
+
 def get_ctf_overview(db: Session) -> dict:
     """Top-level CTF stats (all-time)."""
-    total_challenges = db.query(func.count(Challenge.id)).filter(Challenge.is_active.is_(True)).scalar() or 0
+    total_challenges = (
+        db.query(func.count(Challenge.id)).filter(Challenge.is_active.is_(True)).scalar() or 0
+    )
 
     challenges_cracked = (
         db.query(func.count(distinct(UserChallengeProgress.challenge_id)))
         .filter(UserChallengeProgress.status == "completed")
-        .scalar() or 0
+        .scalar()
+        or 0
     )
 
-    active_players = (
-        db.query(func.count(distinct(UserChallengeProgress.user_id)))
-        .scalar() or 0
-    )
+    active_players = db.query(func.count(distinct(UserChallengeProgress.user_id))).scalar() or 0
     badges_earned = db.query(func.count(UserBadge.id)).scalar() or 0
     badges_defined = db.query(func.count(Badge.id)).filter(Badge.is_active.is_(True)).scalar() or 0
 
@@ -72,7 +73,9 @@ def get_ctf_overview(db: Session) -> dict:
     return {
         "total_challenges": total_challenges,
         "challenges_cracked": challenges_cracked,
-        "completion_rate": round(challenges_cracked / total_challenges * 100, 1) if total_challenges else 0,
+        "completion_rate": (
+            round(challenges_cracked / total_challenges * 100, 1) if total_challenges else 0
+        ),
         "active_players": active_players,
         "badges_earned": badges_earned,
         "badges_defined": badges_defined,
@@ -92,6 +95,7 @@ def get_events_count(db: Session, days: int = 7) -> int:
 # Challenge breakdowns
 # ---------------------------------------------------------------------------
 
+
 def get_challenges_by_difficulty(db: Session) -> list[dict]:
     """Per-difficulty: total challenges, completed count, completion rate."""
     difficulties = (
@@ -109,21 +113,25 @@ def get_challenges_by_difficulty(db: Session) -> list[dict]:
                 Challenge.difficulty == row.difficulty,
                 UserChallengeProgress.status == "completed",
             )
-            .scalar() or 0
+            .scalar()
+            or 0
         )
         attempts = (
             db.query(func.count(distinct(UserChallengeProgress.user_id)))
             .join(Challenge, UserChallengeProgress.challenge_id == Challenge.id)
             .filter(Challenge.difficulty == row.difficulty)
-            .scalar() or 0
+            .scalar()
+            or 0
         )
-        result.append({
-            "difficulty": row.difficulty,
-            "total_challenges": row.total,
-            "completions": completed,
-            "attempts": attempts,
-            "rate": round(completed / attempts * 100, 1) if attempts else 0,
-        })
+        result.append(
+            {
+                "difficulty": row.difficulty,
+                "total_challenges": row.total,
+                "completions": completed,
+                "attempts": attempts,
+                "rate": round(completed / attempts * 100, 1) if attempts else 0,
+            }
+        )
 
     order = {"beginner": 0, "intermediate": 1, "advanced": 2, "expert": 3}
     result.sort(key=lambda x: order.get(x["difficulty"], 99))
@@ -148,21 +156,25 @@ def get_challenges_by_category(db: Session) -> list[dict]:
                 Challenge.category == row.category,
                 UserChallengeProgress.status == "completed",
             )
-            .scalar() or 0
+            .scalar()
+            or 0
         )
         attempts = (
             db.query(func.count(distinct(UserChallengeProgress.user_id)))
             .join(Challenge, UserChallengeProgress.challenge_id == Challenge.id)
             .filter(Challenge.category == row.category)
-            .scalar() or 0
+            .scalar()
+            or 0
         )
-        result.append({
-            "category": row.category,
-            "total_challenges": row.total,
-            "completions": completed,
-            "attempts": attempts,
-            "rate": round(completed / attempts * 100, 1) if attempts else 0,
-        })
+        result.append(
+            {
+                "category": row.category,
+                "total_challenges": row.total,
+                "completions": completed,
+                "attempts": attempts,
+                "rate": round(completed / attempts * 100, 1) if attempts else 0,
+            }
+        )
     return result
 
 
@@ -211,9 +223,9 @@ def get_top_players(db: Session, limit: int = 10) -> list[dict]:
             UserChallengeProgress.user_id,
             User.display_name,
             User.email,
-            func.sum(
-                func.cast(UserChallengeProgress.status == "completed", Integer)
-            ).label("completed"),
+            func.sum(func.cast(UserChallengeProgress.status == "completed", Integer)).label(
+                "completed"
+            ),
             func.count(UserChallengeProgress.id).label("attempted"),
             func.sum(UserChallengeProgress.attempts).label("total_attempts"),
         )
@@ -279,6 +291,7 @@ def get_top_badges_earned(db: Session, limit: int = 10) -> list[dict]:
 # Badge breakdowns
 # ---------------------------------------------------------------------------
 
+
 def get_badges_by_rarity(db: Session) -> list[dict]:
     """Per-rarity: total defined, total earned."""
     rarities = (
@@ -294,13 +307,16 @@ def get_badges_by_rarity(db: Session) -> list[dict]:
             db.query(func.count(UserBadge.id))
             .join(Badge, UserBadge.badge_id == Badge.id)
             .filter(Badge.rarity == row.rarity)
-            .scalar() or 0
+            .scalar()
+            or 0
         )
-        result.append({
-            "rarity": row.rarity,
-            "defined": row.defined,
-            "earned": earned,
-        })
+        result.append(
+            {
+                "rarity": row.rarity,
+                "defined": row.defined,
+                "earned": earned,
+            }
+        )
     result.sort(key=lambda x: order.get(x["rarity"], 99))
     return result
 
@@ -320,8 +336,11 @@ def get_recent_badges(db: Session, limit: int = 10) -> list[dict]:
             "badge_title": r.title,
             "rarity": r.rarity,
             "display_name": _display_name(r.UserBadge.user_id, r.display_name, r.email),
-            "earned_at": r.UserBadge.earned_at.isoformat().replace("+00:00", "Z")
-            if r.UserBadge.earned_at else None,
+            "earned_at": (
+                r.UserBadge.earned_at.isoformat().replace("+00:00", "Z")
+                if r.UserBadge.earned_at
+                else None
+            ),
         }
         for r in rows
     ]
@@ -330,6 +349,7 @@ def get_recent_badges(db: Session, limit: int = 10) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Activity (CTFEvent)
 # ---------------------------------------------------------------------------
+
 
 def get_daily_events(db: Session, days: int | None = 30) -> list[dict]:
     """Daily event counts split by category (business vs agent)."""
@@ -360,36 +380,38 @@ def get_daily_events(db: Session, days: int | None = 30) -> list[dict]:
 
 def get_top_event_types(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     since = _since(days)
-    q = (
-        db.query(CTFEvent.event_type, func.count(CTFEvent.id).label("count"))
-    )
+    q = db.query(CTFEvent.event_type, func.count(CTFEvent.id).label("count"))
     if since:
         q = q.filter(CTFEvent.timestamp >= since)
-    rows = q.group_by(CTFEvent.event_type).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    rows = (
+        q.group_by(CTFEvent.event_type).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    )
     return [{"event_type": r.event_type, "count": r.count} for r in rows]
 
 
 def get_top_agents(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     since = _since(days)
-    q = (
-        db.query(CTFEvent.agent_name, func.count(CTFEvent.id).label("count"))
-        .filter(CTFEvent.agent_name.isnot(None))
+    q = db.query(CTFEvent.agent_name, func.count(CTFEvent.id).label("count")).filter(
+        CTFEvent.agent_name.isnot(None)
     )
     if since:
         q = q.filter(CTFEvent.timestamp >= since)
-    rows = q.group_by(CTFEvent.agent_name).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    rows = (
+        q.group_by(CTFEvent.agent_name).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    )
     return [{"agent": r.agent_name, "count": r.count} for r in rows]
 
 
 def get_top_tools(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     since = _since(days)
-    q = (
-        db.query(CTFEvent.tool_name, func.count(CTFEvent.id).label("count"))
-        .filter(CTFEvent.tool_name.isnot(None))
+    q = db.query(CTFEvent.tool_name, func.count(CTFEvent.id).label("count")).filter(
+        CTFEvent.tool_name.isnot(None)
     )
     if since:
         q = q.filter(CTFEvent.timestamp >= since)
-    rows = q.group_by(CTFEvent.tool_name).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    rows = (
+        q.group_by(CTFEvent.tool_name).order_by(func.count(CTFEvent.id).desc()).limit(limit).all()
+    )
     return [{"tool": r.tool_name, "count": r.count} for r in rows]
 
 
@@ -397,34 +419,32 @@ def get_top_tools(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
 # Profile adoption
 # ---------------------------------------------------------------------------
 
+
 def get_profile_adoption(db: Session) -> dict:
     """Profile completion funnel — how many users have set up their identity."""
     total_users = db.query(func.count(User.id)).scalar() or 0
     total_profiles = db.query(func.count(UserProfile.id)).scalar() or 0
     public = (
-        db.query(func.count(UserProfile.id))
-        .filter(UserProfile.is_public.is_(True))
-        .scalar() or 0
+        db.query(func.count(UserProfile.id)).filter(UserProfile.is_public.is_(True)).scalar() or 0
     )
     with_username = (
-        db.query(func.count(UserProfile.id))
-        .filter(UserProfile.username.isnot(None))
-        .scalar() or 0
+        db.query(func.count(UserProfile.id)).filter(UserProfile.username.isnot(None)).scalar() or 0
     )
     with_bio = (
         db.query(func.count(UserProfile.id))
         .filter(UserProfile.bio.isnot(None), UserProfile.bio != "")
-        .scalar() or 0
+        .scalar()
+        or 0
     )
     with_featured = (
         db.query(func.count(UserProfile.id))
         .filter(UserProfile.featured_badge_ids.isnot(None), UserProfile.featured_badge_ids != "[]")
-        .scalar() or 0
+        .scalar()
+        or 0
     )
     show_activity = (
-        db.query(func.count(UserProfile.id))
-        .filter(UserProfile.show_activity.is_(True))
-        .scalar() or 0
+        db.query(func.count(UserProfile.id)).filter(UserProfile.show_activity.is_(True)).scalar()
+        or 0
     )
     with_social = (
         db.query(func.count(UserProfile.id))
@@ -435,7 +455,8 @@ def get_profile_adoption(db: Session) -> dict:
             | (UserProfile.social_hackerone.isnot(None))
             | (UserProfile.social_website.isnot(None))
         )
-        .scalar() or 0
+        .scalar()
+        or 0
     )
 
     return {
@@ -454,14 +475,13 @@ def get_profile_adoption(db: Session) -> dict:
 # Share link stats (from PageView data)
 # ---------------------------------------------------------------------------
 
+
 def get_share_link_stats(db: Session, days: int = 7) -> dict:
     """Track hits on social share URLs from pageview data."""
     since = _since(days)
 
     def _count(path_prefix: str) -> int:
-        q = db.query(func.count(PageView.id)).filter(
-            PageView.path.like(f"{path_prefix}%")
-        )
+        q = db.query(func.count(PageView.id)).filter(PageView.path.like(f"{path_prefix}%"))
         if since:
             q = q.filter(PageView.timestamp >= since)
         return q.scalar() or 0
@@ -482,16 +502,14 @@ def get_share_link_stats(db: Session, days: int = 7) -> dict:
 # Session type breakdown for CTF players
 # ---------------------------------------------------------------------------
 
+
 def get_ctf_session_breakdown(db: Session) -> dict:
     """How many CTF players are authenticated vs temporary.
 
     Cross-references UserChallengeProgress.user_id against UserSession to
     determine session type. Uses the *most recent* session per user.
     """
-    player_ids_q = (
-        db.query(distinct(UserChallengeProgress.user_id))
-        .subquery()
-    )
+    player_ids_q = db.query(distinct(UserChallengeProgress.user_id)).subquery()
 
     most_recent_session = (
         db.query(

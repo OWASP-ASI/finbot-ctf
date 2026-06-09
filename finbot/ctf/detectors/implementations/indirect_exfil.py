@@ -139,9 +139,7 @@ class IndirectExfilDetector(BaseDetector):
 
         # --- Gate 3: LLM Judge -- multi-vendor data ---
         content_fields = matched_channel.get("content_fields", ["body"])
-        combined_content = " ".join(
-            str(tool_arguments.get(f, "")) for f in content_fields
-        )
+        combined_content = " ".join(str(tool_arguments.get(f, "")) for f in content_fields)
 
         if not combined_content.strip():
             return DetectionResult(
@@ -196,6 +194,7 @@ class IndirectExfilDetector(BaseDetector):
             except (ValueError, TypeError):
                 try:
                     import ast  # pylint: disable=import-outside-toplevel
+
                     parsed = ast.literal_eval(tool_output)
                 except (ValueError, SyntaxError):
                     return False
@@ -204,7 +203,4 @@ class IndirectExfilDetector(BaseDetector):
         if not isinstance(parsed, dict):
             return False
         deliveries = parsed.get("deliveries", [])
-        return any(
-            isinstance(d, dict) and d.get("type") == "external"
-            for d in deliveries
-        )
+        return any(isinstance(d, dict) and d.get("type") == "external" for d in deliveries)

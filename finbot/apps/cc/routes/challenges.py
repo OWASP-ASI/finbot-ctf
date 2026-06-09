@@ -20,16 +20,12 @@ def _challenge_list_with_stats(db) -> list[dict]:
     registered_detectors = set(list_registered_detectors())
 
     challenges = (
-        db.query(Challenge)
-        .order_by(Challenge.order_index, Challenge.category, Challenge.id)
-        .all()
+        db.query(Challenge).order_by(Challenge.order_index, Challenge.category, Challenge.id).all()
     )
     result = []
     for c in challenges:
         progress_rows = (
-            db.query(UserChallengeProgress)
-            .filter(UserChallengeProgress.challenge_id == c.id)
-            .all()
+            db.query(UserChallengeProgress).filter(UserChallengeProgress.challenge_id == c.id).all()
         )
 
         completions = sum(1 for p in progress_rows if p.status == "completed")
@@ -37,10 +33,13 @@ def _challenge_list_with_stats(db) -> list[dict]:
         total_attempts = sum(p.attempts for p in progress_rows)
         hints_used = sum(p.hints_used for p in progress_rows)
 
-        completed_rows = [p for p in progress_rows if p.status == "completed" and p.completion_time_seconds]
+        completed_rows = [
+            p for p in progress_rows if p.status == "completed" and p.completion_time_seconds
+        ]
         avg_solve = (
             int(sum(p.completion_time_seconds for p in completed_rows) / len(completed_rows))
-            if completed_rows else None
+            if completed_rows
+            else None
         )
 
         prerequisites = json.loads(c.prerequisites) if c.prerequisites else []
@@ -49,26 +48,28 @@ def _challenge_list_with_stats(db) -> list[dict]:
 
         detector_valid = c.detector_class in registered_detectors
 
-        result.append({
-            "id": c.id,
-            "title": c.title,
-            "description": c.description,
-            "category": c.category,
-            "subcategory": c.subcategory,
-            "difficulty": c.difficulty,
-            "points": c.points,
-            "is_active": c.is_active,
-            "detector_class": c.detector_class,
-            "detector_valid": detector_valid,
-            "prerequisites": prerequisites,
-            "hints_count": len(hints),
-            "labels": labels,
-            "completions": completions,
-            "players": players,
-            "total_attempts": total_attempts,
-            "hints_used": hints_used,
-            "avg_solve_seconds": avg_solve,
-        })
+        result.append(
+            {
+                "id": c.id,
+                "title": c.title,
+                "description": c.description,
+                "category": c.category,
+                "subcategory": c.subcategory,
+                "difficulty": c.difficulty,
+                "points": c.points,
+                "is_active": c.is_active,
+                "detector_class": c.detector_class,
+                "detector_valid": detector_valid,
+                "prerequisites": prerequisites,
+                "hints_count": len(hints),
+                "labels": labels,
+                "completions": completions,
+                "players": players,
+                "total_attempts": total_attempts,
+                "hints_used": hints_used,
+                "avg_solve_seconds": avg_solve,
+            }
+        )
 
     return result
 
@@ -103,14 +104,15 @@ def _build_coverage_matrix(challenges: list[dict]) -> list[dict]:
         if key not in framework_labels:
             continue
         labels = sorted(framework_labels[key].keys())
-        result.append({
-            "key": key,
-            "name": FRAMEWORK_DISPLAY.get(key, key),
-            "labels": [
-                {"id": label, "challenges": framework_labels[key][label]}
-                for label in labels
-            ],
-        })
+        result.append(
+            {
+                "key": key,
+                "name": FRAMEWORK_DISPLAY.get(key, key),
+                "labels": [
+                    {"id": label, "challenges": framework_labels[key][label]} for label in labels
+                ],
+            }
+        )
     return result
 
 

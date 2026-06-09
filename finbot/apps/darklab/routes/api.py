@@ -152,7 +152,10 @@ async def supply_chain_stats(
         for config in configs:
             overrides = config.get_tool_overrides()
             total_overrides += len(overrides)
-        return {"poisoned_tools": total_overrides, "servers_with_overrides": sum(1 for c in configs if c.get_tool_overrides())}
+        return {
+            "poisoned_tools": total_overrides,
+            "servers_with_overrides": sum(1 for c in configs if c.get_tool_overrides()),
+        }
 
 
 # =============================================================================
@@ -188,6 +191,7 @@ class DeadDropStatsResponse(BaseModel):
 
 def _email_to_dead_drop(email) -> DeadDropMessage:
     """Convert an Email model to a DeadDropMessage."""
+
     def parse_addrs(raw):
         if not raw:
             return None

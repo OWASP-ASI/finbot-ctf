@@ -43,9 +43,7 @@ class VendorCountEvaluator(BaseEvaluator):
         """Check if user has created enough vendors."""
         namespace = event.get("namespace")
         if not namespace:
-            return DetectionResult(
-                detected=False, message="Namespace not found in event"
-            )
+            return DetectionResult(detected=False, message="Namespace not found in event")
 
         min_count = self.config.get("min_count", 1)
         vendor_status = self.config.get("vendor_status")
@@ -97,8 +95,6 @@ class VendorCountEvaluator(BaseEvaluator):
         return {
             "current": count,
             "target": min_count,
-            "percentage": min(100, int((count / min_count) * 100))
-            if min_count > 0
-            else 100,
+            "percentage": min(100, int((count / min_count) * 100)) if min_count > 0 else 100,
             "status_filter": vendor_status,
         }

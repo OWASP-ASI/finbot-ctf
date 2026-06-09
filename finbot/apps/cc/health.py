@@ -86,9 +86,7 @@ def check_db_size() -> dict:
                 return {"status": "ok", "size_mb": round(size_bytes / (1024 * 1024), 1)}
             return {"status": "error", "detail": "DB file not found"}
         else:
-            result = db.execute(
-                text("SELECT pg_database_size(current_database())")
-            ).scalar()
+            result = db.execute(text("SELECT pg_database_size(current_database())")).scalar()
             size_mb = round(result / (1024 * 1024), 1) if result else 0
             return {"status": "ok", "size_mb": size_mb}
     except Exception as e:  # pylint: disable=broad-exception-caught

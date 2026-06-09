@@ -80,14 +80,10 @@ class SessionMiddleware(BaseHTTPMiddleware):
         accept_encoding = request.headers.get("Accept-Encoding")
 
         current_strict_fingerprint = hashlib.sha256(
-            create_fingerprint_data(
-                user_agent, accept_language, accept_encoding, "strict"
-            ).encode()
+            create_fingerprint_data(user_agent, accept_language, accept_encoding, "strict").encode()
         ).hexdigest()[:16]
         current_loose_fingerprint = hashlib.sha256(
-            create_fingerprint_data(
-                user_agent, accept_language, accept_encoding, "loose"
-            ).encode()
+            create_fingerprint_data(user_agent, accept_language, accept_encoding, "loose").encode()
         ).hexdigest()[:16]
 
         fp_kwargs = dict(
@@ -98,15 +94,11 @@ class SessionMiddleware(BaseHTTPMiddleware):
 
         if session_id:
             if load_vendor_context:
-                session_context, status = (
-                    session_manager.get_session_with_vendor_context(
-                        session_id, **fp_kwargs
-                    )
-                )
-            else:
-                session_context, status = session_manager.get_session(
+                session_context, status = session_manager.get_session_with_vendor_context(
                     session_id, **fp_kwargs
                 )
+            else:
+                session_context, status = session_manager.get_session(session_id, **fp_kwargs)
 
             if session_context:
                 return session_context, status
@@ -124,9 +116,7 @@ class SessionMiddleware(BaseHTTPMiddleware):
 
         return new_session, "session_created"
 
-    def _set_secure_session_cookie(
-        self, response: Response, session_context: SessionContext
-    ):
+    def _set_secure_session_cookie(self, response: Response, session_context: SessionContext):
         """Automatically set secure session cookie"""
 
         max_age = (

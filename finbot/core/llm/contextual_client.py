@@ -8,6 +8,7 @@ import secrets
 import uuid
 from datetime import UTC, datetime
 from typing import Any
+
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.models import LLMRequest, LLMResponse
 from finbot.core.llm.client import LLMClient, get_llm_client
@@ -16,6 +17,7 @@ from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
 
 logger = logging.getLogger(__name__)
+
 
 class ContextualLLMClient:
     """
@@ -84,9 +86,7 @@ class ContextualLLMClient:
                 # Handle both string and list content (some APIs use list format)
                 if isinstance(content, list):
                     content = " ".join(
-                        item.get("text", "")
-                        for item in content
-                        if isinstance(item, dict)
+                        item.get("text", "") for item in content if isinstance(item, dict)
                     )
                 last_user_message = content
                 break
@@ -118,12 +118,12 @@ class ContextualLLMClient:
 
         resolved_model = request.model or self.llm_client.default_model
         resolved_temperature = (
-            self.llm_client.default_temperature 
-            if request.temperature is None 
+            self.llm_client.default_temperature
+            if request.temperature is None
             else request.temperature
         )
         user_message_info = self._extract_user_message_info(request.messages)
-        
+
         event_data = {
             "interaction_id": interaction_id,
             "model": resolved_model,

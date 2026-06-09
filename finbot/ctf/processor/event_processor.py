@@ -97,9 +97,7 @@ class CTFEventProcessor:
 
     async def _ensure_consumer_groups(self):
         """Create consumer groups if they don't exist"""
-        lookback_ms = int(time.time() * 1000) - (
-            self.default_lookback_hours * 3600 * 1000
-        )
+        lookback_ms = int(time.time() * 1000) - (self.default_lookback_hours * 3600 * 1000)
         start_id = f"{lookback_ms}-0"
         for stream in self.STREAMS:
             try:
@@ -188,13 +186,9 @@ class CTFEventProcessor:
         try:
             for stream_raw, messages in results:
                 # Decode stream name from bytes if needed
-                stream = (
-                    stream_raw.decode() if isinstance(stream_raw, bytes) else stream_raw
-                )
+                stream = stream_raw.decode() if isinstance(stream_raw, bytes) else stream_raw
                 for message_id, data in messages:
-                    success = await self._process_single_message(
-                        stream, message_id, data, db
-                    )
+                    success = await self._process_single_message(stream, message_id, data, db)
                     if success:
                         processed_ids.append((stream, message_id))
 
@@ -219,9 +213,7 @@ class CTFEventProcessor:
 
         Returns True if message was successfully processed (or should be dropped).
         """
-        msg_id_str = (
-            message_id.decode() if isinstance(message_id, bytes) else message_id
-        )
+        msg_id_str = message_id.decode() if isinstance(message_id, bytes) else message_id
 
         try:
             event = self._decode_event(data)
@@ -286,9 +278,7 @@ class CTFEventProcessor:
             logger.error("Failed to decode event: %s", e)
             return None
 
-    async def _process_single_event(
-        self, event: dict[str, Any], db: Session, stream: str
-    ):
+    async def _process_single_event(self, event: dict[str, Any], db: Session, stream: str):
         """Process a single event"""
         # Determine event category from stream
         if "agents" in stream:
@@ -302,23 +292,22 @@ class CTFEventProcessor:
         self._store_ctf_event(event, event_category, db)
 
         # Check for challenge completions
-        completed_challenges = await self.challenge_service.check_event_for_challenges(
-            event, db
-        )
+        completed_challenges = await self.challenge_service.check_event_for_challenges(event, db)
 
         # Check for badge awards
         awarded_badges = await self.badge_service.check_event_for_badges(event, db)
 
         # Push notification to WebSocket clients
         await self._push_to_websocket(
-            event, completed_challenges, awarded_badges, db,
+            event,
+            completed_challenges,
+            awarded_badges,
+            db,
             event_category=event_category,
         )
 
         if completed_challenges:
-            logger.info(
-                "Challenges completed: %s", [c[0] for c in completed_challenges]
-            )
+            logger.info("Challenges completed: %s", [c[0] for c in completed_challenges])
         if awarded_badges:
             logger.info("Badges awarded: %s", [b[0] for b in awarded_badges])
 
@@ -373,8 +362,7 @@ class CTFEventProcessor:
         """
         # Generate external event ID for idempotency
         external_id = (
-            event.get("event_id")
-            or f"{event.get('timestamp', '')}-{event.get('event_type', '')}"
+            event.get("event_id") or f"{event.get('timestamp', '')}-{event.get('event_type', '')}"
         )
 
         values = {
@@ -408,11 +396,7 @@ class CTFEventProcessor:
             stmt = stmt.on_conflict_do_nothing(index_elements=["external_event_id"])
         else:
             # Fallback: check exists first
-            existing = (
-                db.query(CTFEvent)
-                .filter(CTFEvent.external_event_id == external_id)
-                .first()
-            )
+            existing = db.query(CTFEvent).filter(CTFEvent.external_event_id == external_id).first()
             if existing:
                 return
             db.add(CTFEvent(**values))
@@ -485,9 +469,7 @@ class CTFEventProcessor:
         for badge_id, _ in awarded_badges:
             badge = db.query(Badge).get(badge_id)
             if badge:
-                ws_event = create_badge_earned_event(
-                    badge_id, badge.title, badge.rarity
-                )
+                ws_event = create_badge_earned_event(badge_id, badge.title, badge.rarity)
                 await ws_manager.send_to_user(namespace, user_id, ws_event)
 
 

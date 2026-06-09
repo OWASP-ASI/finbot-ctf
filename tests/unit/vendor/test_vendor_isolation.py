@@ -1,11 +1,11 @@
-import pytest
-from fastapi.testclient import TestClient
 from datetime import datetime, timedelta, timezone
 
-from finbot.core.auth.session import session_manager
-from finbot.core.data.repositories import InvoiceRepository
-from finbot.core.data.models import UserSession
+import pytest
+from fastapi.testclient import TestClient
 
+from finbot.core.auth.session import session_manager
+from finbot.core.data.models import UserSession
+from finbot.core.data.repositories import InvoiceRepository
 
 VENDOR_API_PREFIX = "/vendor/api/v1"
 
@@ -16,10 +16,10 @@ VENDOR_API_PREFIX = "/vendor/api/v1"
 @pytest.mark.unit
 def test_basic_data_read_write_isolation(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-001: Basic Data Read/Write Isolation
-    
-    Verify that data created by one vendor is invisible and inaccessible to a 
+
+    Verify that data created by one vendor is invisible and inaccessible to a
     second, simultaneously logged-in Vendor.
-    
+
     Test Steps:
     1. Create two vendor sessions (s1, s2) for different vendors (v1, v2)
     2. Using s1 session, create an invoice through InvoiceRepository with:
@@ -33,7 +33,7 @@ def test_basic_data_read_write_isolation(fast_client: TestClient, vendor_pair_se
     4. Query invoices API with s2 session cookie
        - Verify status code = 200
        - Verify total_count = 0 (s2 does not see s1's invoice)
-    
+
     Expected Results:
     1. Session s1 authenticated to vendor v1
     2. Invoice successfully created in v1's namespace
@@ -41,8 +41,8 @@ def test_basic_data_read_write_isolation(fast_client: TestClient, vendor_pair_se
     4. s2 sees 0 invoices (no data leakage)
     5. Data isolation maintained between simultaneously logged-in vendors
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice as vendor1
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -74,10 +74,10 @@ def test_basic_data_read_write_isolation(fast_client: TestClient, vendor_pair_se
 @pytest.mark.unit
 def test_data_manipulation_isolation(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-002: Data Manipulation Isolation
-    
-    Verify that one Vendor cannot approve or reject an invoice owned by a 
+
+    Verify that one Vendor cannot approve or reject an invoice owned by a
     different vendor.
-    
+
     Test Steps:
     1. Create two vendor sessions (s1, s2) for different vendors
     2. Using s1 session, create invoice with:
@@ -88,15 +88,15 @@ def test_data_manipulation_isolation(fast_client: TestClient, vendor_pair_setup)
        - Supply s2 session cookie (authenticated to v2)
        - Supply invoice_id (belongs to v1)
     4. Verify response status code = 403 (Forbidden)
-    
+
     Expected Results:
     1. Invoice successfully created in v1's namespace
     2. GET request from s2 (v2 vendor) receives 403 Forbidden
     3. Cross-vendor data access blocked at authorization layer
     4. No data leakage or error messages revealing invoice existence
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice as vendor1
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -112,8 +112,7 @@ def test_data_manipulation_isolation(fast_client: TestClient, vendor_pair_setup)
 
     # Vendor2 attempts to access vendor1's invoice -> should be 403
     r = fast_client.get(
-        f"{VENDOR_API_PREFIX}/invoices/{invoice_id}",
-        cookies={"finbot_session": s2.session_id}
+        f"{VENDOR_API_PREFIX}/invoices/{invoice_id}", cookies={"finbot_session": s2.session_id}
     )
     assert r.status_code == 403
 
@@ -126,10 +125,10 @@ def test_data_manipulation_isolation(fast_client: TestClient, vendor_pair_setup)
 @pytest.mark.unit
 def test_list_aggregate_data_integrity(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-003: List/Aggregate Data Integrity
-    
-    Verify that list views only contain invoices belonging to the active 
+
+    Verify that list views only contain invoices belonging to the active
     Vendor's namespace.
-    
+
     Test Steps:
     1. Using s1 session, create two invoices:
        - I1: invoice_number="I1", amount=10.0
@@ -142,7 +141,7 @@ def test_list_aggregate_data_integrity(fast_client: TestClient, vendor_pair_setu
     4. Query invoices list endpoint with s2 session
        - GET /invoices
        - Verify total_count = 1 (only I3)
-    
+
     Expected Results:
     1. v1 vendor creates 2 invoices successfully
     2. v2 vendor creates 1 invoice successfully
@@ -151,8 +150,8 @@ def test_list_aggregate_data_integrity(fast_client: TestClient, vendor_pair_setu
     5. Aggregate counts reflect vendor-scoped data only
     6. No cross-vendor data visible in list views
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoices for vendor1
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -202,10 +201,10 @@ def test_list_aggregate_data_integrity(fast_client: TestClient, vendor_pair_setu
 @pytest.mark.unit
 def test_cross_vendor_update_delete_attack(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-004: Cross-Vendor Update/Delete Attack
-    
-    Verify that vendor2 cannot UPDATE or DELETE vendor1's invoices even if 
+
+    Verify that vendor2 cannot UPDATE or DELETE vendor1's invoices even if
     they know the invoice ID.
-    
+
     Test Steps:
     1. Using s1 session, create invoice:
        - invoice_number = "INV-ATTACK-001"
@@ -223,7 +222,7 @@ def test_cross_vendor_update_delete_attack(fast_client: TestClient, vendor_pair_
        - Verify invoice still exists with original values
        - amount = 500.0
        - invoice_number = "INV-ATTACK-001"
-    
+
     Expected Results:
     1. Invoice created successfully in v1 namespace
     2. PATCH request from s2 receives 403 or 404 (authorization failure)
@@ -231,8 +230,8 @@ def test_cross_vendor_update_delete_attack(fast_client: TestClient, vendor_pair_
     4. Invoice remains in database unmodified
     5. Original data integrity maintained
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice as vendor1
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -250,21 +249,19 @@ def test_cross_vendor_update_delete_attack(fast_client: TestClient, vendor_pair_
     r_update = fast_client.patch(
         f"{VENDOR_API_PREFIX}/invoices/{invoice_id}",
         json={"amount": 999999.99, "description": "HACKED"},
-        cookies={"finbot_session": s2.session_id}
+        cookies={"finbot_session": s2.session_id},
     )
     assert r_update.status_code in [403, 404]
 
     # Vendor2 attempts to DELETE vendor1's invoice
     r_delete = fast_client.delete(
-        f"{VENDOR_API_PREFIX}/invoices/{invoice_id}",
-        cookies={"finbot_session": s2.session_id}
+        f"{VENDOR_API_PREFIX}/invoices/{invoice_id}", cookies={"finbot_session": s2.session_id}
     )
     assert r_delete.status_code in [403, 404]
 
     # Verify invoice still exists and unchanged
     r_verify = fast_client.get(
-        f"{VENDOR_API_PREFIX}/invoices",
-        cookies={"finbot_session": s1.session_id}
+        f"{VENDOR_API_PREFIX}/invoices", cookies={"finbot_session": s1.session_id}
     )
     assert r_verify.status_code == 200
     invoices = r_verify.json().get("invoices", [])
@@ -282,10 +279,10 @@ def test_cross_vendor_update_delete_attack(fast_client: TestClient, vendor_pair_
 @pytest.mark.unit
 def test_sql_injection_invoice_fields(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-005: SQL Injection via Invoice Fields
-    
+
     Verify that SQL injection attempts in invoice fields are properly sanitized
     and do not leak data or cause errors.
-    
+
     Test Steps:
     1. Using s2 session, create secret invoice:
        - invoice_number = "SECRET-INVOICE"
@@ -302,7 +299,7 @@ def test_sql_injection_invoice_fields(fast_client: TestClient, vendor_pair_setup
        - Verify response status in [200, 400]
        - If 200: extract invoices list
        - Verify "SECRET-INVOICE" is NOT in results
-    
+
     Expected Results:
     1. Secret invoice created in v2 namespace
     2. Each SQL injection query returns 200 or 400 status
@@ -311,8 +308,8 @@ def test_sql_injection_invoice_fields(fast_client: TestClient, vendor_pair_setup
     5. SQL injection payloads treated as literal search strings
     6. Data isolation maintained despite injection attempts
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create secret invoice for vendor2 (should remain hidden from vendor1)
     s2_ctx, _ = session_manager.get_session_with_vendor_context(s2.session_id)
@@ -338,16 +335,15 @@ def test_sql_injection_invoice_fields(fast_client: TestClient, vendor_pair_setup
         r = fast_client.get(
             f"{VENDOR_API_PREFIX}/invoices",
             params={"search": payload},
-            cookies={"finbot_session": s1.session_id}
+            cookies={"finbot_session": s1.session_id},
         )
-        
+
         assert r.status_code in [200, 400]
-        
+
         if r.status_code == 200:
             invoices = r.json().get("invoices", [])
             invoice_numbers = [inv.get("invoice_number") for inv in invoices]
-            assert "SECRET-INVOICE" not in invoice_numbers, \
-                f"SQL injection leaked data: {payload}"
+            assert "SECRET-INVOICE" not in invoice_numbers, f"SQL injection leaked data: {payload}"
 
     db.close()
 
@@ -358,10 +354,10 @@ def test_sql_injection_invoice_fields(fast_client: TestClient, vendor_pair_setup
 @pytest.mark.unit
 def test_unauthorized_field_modification(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-006: Unauthorized Field Modification
-    
+
     Verify that vendors cannot modify sensitive fields they don't own or
     manipulate metadata fields that should be immutable.
-    
+
     Test Steps:
     1. Using s2 session, create invoice:
        - invoice_number = "TEST-MOD-006"
@@ -377,7 +373,7 @@ def test_unauthorized_field_modification(fast_client: TestClient, vendor_pair_se
        - Verify invoice_number = "TEST-MOD-006"
        - Verify amount = 5000.00
        - Verify description = "Original Description"
-    
+
     Expected Results:
     1. Invoice created in v2 namespace with original values
     2. PUT request from s1 receives 403 or 404
@@ -385,8 +381,8 @@ def test_unauthorized_field_modification(fast_client: TestClient, vendor_pair_se
     4. All fields retain original values
     5. No partial updates allowed from unauthorized vendor
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice for vendor2
     s2_ctx, _ = session_manager.get_session_with_vendor_context(s2.session_id)
@@ -404,32 +400,36 @@ def test_unauthorized_field_modification(fast_client: TestClient, vendor_pair_se
     modify_payload = {
         "invoice_number": "HACKED-006",
         "amount": 99999.99,
-        "description": "Hacked by vendor1"
+        "description": "Hacked by vendor1",
     }
 
     r = fast_client.put(
         f"{VENDOR_API_PREFIX}/invoices/{invoice_id}",
         json=modify_payload,
-        cookies={"finbot_session": s1.session_id}
+        cookies={"finbot_session": s1.session_id},
     )
 
     # Should get 403 Forbidden or 404 Not Found
-    assert r.status_code in [403, 404], \
-        f"Vendor1 should not modify vendor2's invoice. Got status {r.status_code}"
+    assert r.status_code in [
+        403,
+        404,
+    ], f"Vendor1 should not modify vendor2's invoice. Got status {r.status_code}"
 
     # Verify invoice was NOT modified
     s2_ctx_refresh, _ = session_manager.get_session_with_vendor_context(s2.session_id)
     inv_repo_2_refresh = InvoiceRepository(db, s2_ctx_refresh)
     invoice_check = inv_repo_2_refresh.get_invoice(invoice_id)
 
-    assert invoice_check.invoice_number == "TEST-MOD-006", \
-        "Invoice number was modified by unauthorized vendor"
-    assert invoice_check.amount == 5000.00, \
-        "Invoice amount was modified by unauthorized vendor"
-    assert invoice_check.description == "Original Description", \
-        "Invoice description was modified by unauthorized vendor"
+    assert (
+        invoice_check.invoice_number == "TEST-MOD-006"
+    ), "Invoice number was modified by unauthorized vendor"
+    assert invoice_check.amount == 5000.00, "Invoice amount was modified by unauthorized vendor"
+    assert (
+        invoice_check.description == "Original Description"
+    ), "Invoice description was modified by unauthorized vendor"
 
     db.close()
+
 
 # ============================================================================
 # ISO-DAT-007: ID Enumeration Attack
@@ -437,10 +437,10 @@ def test_unauthorized_field_modification(fast_client: TestClient, vendor_pair_se
 @pytest.mark.unit
 def test_id_enumeration_attack(fast_client: TestClient, vendor_pair_setup):
     """ISO-DAT-007: ID Enumeration Attack
-    
+
     Verify that vendor cannot enumerate and access other vendors' invoices by
     guessing sequential IDs.
-    
+
     Test Steps:
     1. Using s1 session, create invoice:
        - invoice_number = "INV-ENUM-TEST"
@@ -452,7 +452,7 @@ def test_id_enumeration_attack(fast_client: TestClient, vendor_pair_setup):
        - GET /invoices/{test_id}
        - Verify status in [403, 404]
        - This should prevent enumeration of all IDs in range
-    
+
     Expected Results:
     1. Invoice created with specific ID in v1 namespace
     2. All 5 enumeration attempts return 403 or 404
@@ -460,8 +460,8 @@ def test_id_enumeration_attack(fast_client: TestClient, vendor_pair_setup):
     4. Enumeration attack prevented regardless of ID proximity
     5. Authorization checks applied before existence checks
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice as vendor1
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -480,11 +480,12 @@ def test_id_enumeration_attack(fast_client: TestClient, vendor_pair_setup):
 
     for test_id in test_ids:
         r = fast_client.get(
-            f"{VENDOR_API_PREFIX}/invoices/{test_id}",
-            cookies={"finbot_session": s2.session_id}
+            f"{VENDOR_API_PREFIX}/invoices/{test_id}", cookies={"finbot_session": s2.session_id}
         )
-        assert r.status_code in [403, 404], \
-            f"ID {test_id} returned {r.status_code} instead of 403/404"
+        assert r.status_code in [
+            403,
+            404,
+        ], f"ID {test_id} returned {r.status_code} instead of 403/404"
 
     db.close()
 
@@ -495,10 +496,10 @@ def test_id_enumeration_attack(fast_client: TestClient, vendor_pair_setup):
 @pytest.mark.unit
 def test_forced_logout_session_invalidation(fast_client: TestClient, vendor_pair_setup):
     """ISO-SES-001: Forced Logout / Session Invalidation
-    
-    Verify that a session cannot be reused after the user switches vendors 
+
+    Verify that a session cannot be reused after the user switches vendors
     (simulating logout/re-login).
-    
+
     Test Steps:
     1. Verify s1 session works with v1 vendor:
        - GET /invoices with s1.session_id
@@ -514,7 +515,7 @@ def test_forced_logout_session_invalidation(fast_client: TestClient, vendor_pair
     4. Query invoices with s1 session (now bound to v2):
        - GET /invoices with s1.session_id
        - Verify total_count = 0 (no invoices in v2 namespace)
-    
+
     Expected Results:
     1. s1 initially has access to v1 resources
     2. Invoice created in v1 namespace
@@ -523,9 +524,9 @@ def test_forced_logout_session_invalidation(fast_client: TestClient, vendor_pair
     5. v1's invoice no longer visible after context switch
     6. Vendor switching invalidates previous namespace view
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    v1, v2 = vendor_pair_setup['v1'], vendor_pair_setup['v2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    v1, v2 = vendor_pair_setup["v1"], vendor_pair_setup["v2"]
+    db = vendor_pair_setup["db"]
 
     # Verify s1 has access to vendor1's resources
     r = fast_client.get(f"{VENDOR_API_PREFIX}/invoices", cookies={"finbot_session": s1.session_id})
@@ -561,10 +562,10 @@ def test_forced_logout_session_invalidation(fast_client: TestClient, vendor_pair
 @pytest.mark.unit
 def test_concurrent_session_overlap(fast_client: TestClient, vendor_pair_setup):
     """ISO-SES-002: Concurrent Session Overlap
-    
-    Verify that two concurrent sessions for the same user do not interfere 
+
+    Verify that two concurrent sessions for the same user do not interfere
     with each other when accessing different vendor contexts.
-    
+
     Test Steps:
     1. Using s1 session (bound to v1), create invoice:
        - invoice_number = "OVERLAP-V1"
@@ -582,7 +583,7 @@ def test_concurrent_session_overlap(fast_client: TestClient, vendor_pair_setup):
        - GET /invoices
        - Verify status 200
        - Verify total_count = 1 (only OVERLAP-V2)
-    
+
     Expected Results:
     1. v1 invoice created successfully
     2. v2 invoice created successfully
@@ -591,9 +592,9 @@ def test_concurrent_session_overlap(fast_client: TestClient, vendor_pair_setup):
     5. Both sessions work independently without interference
     6. Concurrent operations do not cause data leakage
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    v1, v2 = vendor_pair_setup['v1'], vendor_pair_setup['v2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    v1, v2 = vendor_pair_setup["v1"], vendor_pair_setup["v2"]
+    db = vendor_pair_setup["db"]
 
     # Create invoice in vendor1's context
     s1_ctx, _ = session_manager.get_session_with_vendor_context(s1.session_id)
@@ -635,9 +636,9 @@ def test_concurrent_session_overlap(fast_client: TestClient, vendor_pair_setup):
 @pytest.mark.unit
 def test_namespace_integrity_checks(fast_client: TestClient, vendor_pair_setup):
     """ISO-NAM-001: Namespace Integrity Checks
-    
+
     Verify that each vendor's data is properly isolated by user namespace.
-    
+
     Test Steps:
     1. Verify vendors are different:
        - Assert v1.id != v2.id
@@ -656,7 +657,7 @@ def test_namespace_integrity_checks(fast_client: TestClient, vendor_pair_setup):
     5. Query invoices with s2 session:
        - GET /invoices
        - Verify total_count = 0
-    
+
     Expected Results:
     1. v1 and v2 are different vendors
     2. Both sessions belong to same user
@@ -665,9 +666,9 @@ def test_namespace_integrity_checks(fast_client: TestClient, vendor_pair_setup):
     5. s2 sees 0 invoices (no data leakage)
     6. Namespace isolation verified at session and vendor level
     """
-    s1, s2 = vendor_pair_setup['s1'], vendor_pair_setup['s2']
-    v1, v2 = vendor_pair_setup['v1'], vendor_pair_setup['v2']
-    db = vendor_pair_setup['db']
+    s1, s2 = vendor_pair_setup["s1"], vendor_pair_setup["s2"]
+    v1, v2 = vendor_pair_setup["v1"], vendor_pair_setup["v2"]
+    db = vendor_pair_setup["db"]
 
     # Verify vendors are different
     assert v1.id != v2.id
@@ -705,10 +706,10 @@ def test_namespace_integrity_checks(fast_client: TestClient, vendor_pair_setup):
 @pytest.mark.unit
 def test_peak_load_concurrent_interaction(fast_client: TestClient, multi_vendor_setup):
     """ISO-MUL-001: Peak Load / Concurrent Interactions
-    
-    Verify isolation holds under load with multiple vendors creating invoices 
+
+    Verify isolation holds under load with multiple vendors creating invoices
     concurrently.
-    
+
     Test Steps:
     1. For each vendor in multi_vendor_setup (3+ vendors):
        a. Get session_id from vendor_data
@@ -722,7 +723,7 @@ def test_peak_load_concurrent_interaction(fast_client: TestClient, multi_vendor_
        c. Extract invoices array from response
        d. Assert len(invoices) == 1 (only their own invoice)
        e. Assert invoices[0]['id'] == vendor_data['invoice_id'] (correct invoice)
-    
+
     Expected Results:
     1. All vendors successfully create invoices
     2. All vendors' list queries return status 200
@@ -733,11 +734,11 @@ def test_peak_load_concurrent_interaction(fast_client: TestClient, multi_vendor_
     7. Aggregate count = number of vendors created
     """
     vendors = multi_vendor_setup
-    db = vendors[0]['db']
+    db = vendors[0]["db"]
 
     # Create invoices for each vendor
     for vendor_data in vendors:
-        session_id = vendor_data['session_id']
+        session_id = vendor_data["session_id"]
         ctx, _ = session_manager.get_session_with_vendor_context(session_id)
         inv_repo = InvoiceRepository(db, ctx)
         invoice = inv_repo.create_invoice_for_current_vendor(
@@ -747,18 +748,19 @@ def test_peak_load_concurrent_interaction(fast_client: TestClient, multi_vendor_
             invoice_date=datetime.now(timezone.utc),
             due_date=datetime.now(timezone.utc) + timedelta(days=30),
         )
-        vendor_data['invoice_id'] = invoice.id
+        vendor_data["invoice_id"] = invoice.id
 
     # Verify each vendor sees only their own invoice
     for vendor_data in vendors:
         r = fast_client.get(
-            f"{VENDOR_API_PREFIX}/invoices",
-            cookies={"finbot_session": vendor_data['session_id']}
+            f"{VENDOR_API_PREFIX}/invoices", cookies={"finbot_session": vendor_data["session_id"]}
         )
         assert r.status_code == 200
-        invoices = r.json()['invoices']
-        assert len(invoices) == 1, f"Vendor {vendor_data['vendor_id']} sees {len(invoices)} invoices instead of 1"
-        assert invoices[0]['id'] == vendor_data['invoice_id']
+        invoices = r.json()["invoices"]
+        assert (
+            len(invoices) == 1
+        ), f"Vendor {vendor_data['vendor_id']} sees {len(invoices)} invoices instead of 1"
+        assert invoices[0]["id"] == vendor_data["invoice_id"]
 
     db.close()
 
@@ -769,10 +771,10 @@ def test_peak_load_concurrent_interaction(fast_client: TestClient, multi_vendor_
 @pytest.mark.unit
 def test_expired_session_rejection(fast_client: TestClient, db):
     """ISO-SES-003: Expired Session Rejection
-    
+
     Verify that expired sessions are properly rejected and cannot access
     protected resources.
-    
+
     Test Steps:
     1. Create new session for email "expiry_test@example.com"
     2. Create VendorRepository with new session
@@ -791,7 +793,7 @@ def test_expired_session_rejection(fast_client: TestClient, db):
     7. Attempt access with expired session:
        - GET /invoices with session.session_id
        - Expect status != 200 OR ValueError with "Vendor context required"
-    
+
     Expected Results:
     1. New session created successfully
     2. Vendor created and linked to session
@@ -803,7 +805,7 @@ def test_expired_session_rejection(fast_client: TestClient, db):
     6. Middleware/auth layer properly rejects expired sessions
     """
     from finbot.core.data.repositories import VendorRepository
-    
+
     # Create session and vendor
     session = session_manager.create_session(email="expiry_test@example.com")
     vendor_repo = VendorRepository(db, session)
@@ -820,38 +822,37 @@ def test_expired_session_rejection(fast_client: TestClient, db):
         bank_routing_number="999999999",
         bank_account_holder_name="Expiry Test Vendor",
     )
-    
+
     # Link vendor to session
     us = db.query(UserSession).filter(UserSession.session_id == session.session_id).first()
     us.current_vendor_id = vendor.id
     db.commit()
-    
+
     # Verify session works
     r = fast_client.get(
-        f"{VENDOR_API_PREFIX}/invoices",
-        cookies={"finbot_session": session.session_id}
+        f"{VENDOR_API_PREFIX}/invoices", cookies={"finbot_session": session.session_id}
     )
     assert r.status_code == 200
-    
+
     # Expire the session
     us.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
     db.commit()
-    
+
     # Attempt access with expired session - should fail
     # The expired session triggers middleware to delete it and create temp session
     # Temp session has no vendor context, causing ValueError or proper HTTP error
     try:
         r_expired = fast_client.get(
-            f"{VENDOR_API_PREFIX}/invoices",
-            cookies={"finbot_session": session.session_id}
+            f"{VENDOR_API_PREFIX}/invoices", cookies={"finbot_session": session.session_id}
         )
         # If we get here, check for non-200 status (401, 403, 500, etc)
-        assert r_expired.status_code != 200, \
-            f"Expired session should be rejected, got {r_expired.status_code}"
+        assert (
+            r_expired.status_code != 200
+        ), f"Expired session should be rejected, got {r_expired.status_code}"
     except ValueError as e:
         # ValueError "Vendor context required" is also a valid rejection
         assert "Vendor context required" in str(e)
-    
+
     db.close()
 
 
@@ -861,9 +862,9 @@ def test_expired_session_rejection(fast_client: TestClient, db):
 @pytest.mark.unit
 def test_automated_regression_suite_execution():
     """ISO-REG-001: Automated Regression Suite Execution
-    
+
     Ensure all isolation tests are properly configured for CI/CD execution.
-    
+
     Test Steps:
     1. Define expected_tests list with all isolation test function names:
        - 13 data isolation tests (ISO-DAT-001 through ISO-DAT-007)
@@ -883,7 +884,7 @@ def test_automated_regression_suite_execution():
        c. Verify 'unit' in markers list
        d. Assert each test has @pytest.mark.unit marker
     6. Print summary: f"{len(expected_tests)} isolation tests ready for CI/CD"
-    
+
     Expected Results:
     1. All 13 expected tests exist in module
     2. No missing test functions reported
@@ -893,22 +894,22 @@ def test_automated_regression_suite_execution():
     6. CI/CD pipeline can discover and execute all tests
     """
     expected_tests = [
-        'test_basic_data_read_write_isolation',          # ISO-DAT-001
-        'test_data_manipulation_isolation',              # ISO-DAT-002
-        'test_list_aggregate_data_integrity',            # ISO-DAT-003
-        'test_cross_vendor_update_delete_attack',        # ISO-DAT-004
-        'test_sql_injection_invoice_fields',             # ISO-DAT-005
-        'test_unauthorized_field_modification',          # ISO-DAT-006
-        'test_id_enumeration_attack',                    # ISO-DAT-007
-        'test_forced_logout_session_invalidation',       # ISO-SES-001
-        'test_concurrent_session_overlap',               # ISO-SES-002
-        'test_expired_session_rejection',                # ISO-SES-003
-        'test_namespace_integrity_checks',               # ISO-NAM-001
-        'test_peak_load_concurrent_interaction',         # ISO-MUL-001
-        
+        "test_basic_data_read_write_isolation",  # ISO-DAT-001
+        "test_data_manipulation_isolation",  # ISO-DAT-002
+        "test_list_aggregate_data_integrity",  # ISO-DAT-003
+        "test_cross_vendor_update_delete_attack",  # ISO-DAT-004
+        "test_sql_injection_invoice_fields",  # ISO-DAT-005
+        "test_unauthorized_field_modification",  # ISO-DAT-006
+        "test_id_enumeration_attack",  # ISO-DAT-007
+        "test_forced_logout_session_invalidation",  # ISO-SES-001
+        "test_concurrent_session_overlap",  # ISO-SES-002
+        "test_expired_session_rejection",  # ISO-SES-003
+        "test_namespace_integrity_checks",  # ISO-NAM-001
+        "test_peak_load_concurrent_interaction",  # ISO-MUL-001
     ]
 
     import sys
+
     current_module = sys.modules[__name__]
 
     # Verify all expected tests exist
@@ -922,10 +923,13 @@ def test_automated_regression_suite_execution():
     # Verify all tests are marked with @pytest.mark.unit
     for test_name in expected_tests:
         test_func = getattr(current_module, test_name)
-        markers = [mark.name for mark in test_func.pytestmark] if hasattr(test_func, 'pytestmark') else []
-        assert 'unit' in markers, f"Test {test_name} is missing @pytest.mark.unit marker"
+        markers = (
+            [mark.name for mark in test_func.pytestmark] if hasattr(test_func, "pytestmark") else []
+        )
+        assert "unit" in markers, f"Test {test_name} is missing @pytest.mark.unit marker"
 
     print(f"\n✓ Regression suite validated: {len(expected_tests)} isolation tests ready for CI/CD")
+
 
 # ============================================================================
 # ISO-GS-001: Google Sheets Integration Verification
@@ -933,16 +937,16 @@ def test_automated_regression_suite_execution():
 @pytest.mark.unit
 def test_google_sheets_integration_verification():
     """ISO-GS-001: Google Sheets Integration Verification
-    
+
     Verify that test results are properly recorded in Google Sheets.
-    
+
     Test Steps:
     1. Connect to Google Sheets using credentials
     2. Open the Summary worksheet
     3. Verify the latest row contains today's test run
     4. Check that passed/failed counts match expected values
     5. Verify the Isolation Testing Framework TCs worksheet has test markers
-    
+
     Expected Results:
     1. Google Sheets connection successful
     2. Summary sheet contains recent test run data
@@ -950,53 +954,53 @@ def test_google_sheets_integration_verification():
     4. Worksheet tab has automation_status updates
     """
     import os
+    from datetime import datetime
+
+    import gspread
     from dotenv import load_dotenv
     from google.oauth2.service_account import Credentials
-    import gspread
-    from datetime import datetime
-    
+
     load_dotenv()
-    
+
     sheet_id = os.getenv("GOOGLE_SHEETS_ID")
     creds_file = os.getenv("GOOGLE_CREDENTIALS_FILE", "google-credentials.json")
-    
+
     if not sheet_id or not os.path.exists(creds_file):
         pytest.skip("Google Sheets credentials not configured")
-    
+
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
-        
+
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
-        
+
         assert len(summary_data) > 1, "Summary sheet should have data"
-        
+
         # Verify headers
         headers = summary_data[0]
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
-        
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
+
         # Check Isolation Testing Framework TCs sheet
-        isolation_sheet = sheet.worksheet('Isolation Testing Framework TCs')
+        isolation_sheet = sheet.worksheet("Isolation Testing Framework TCs")
         isolation_data = isolation_sheet.get_all_values()
-        
+
         assert len(isolation_data) > 0, "Isolation Testing Framework TCs should have data"
-        
+
         # Verify automation_status column exists
         headers = isolation_data[0]
-        has_automation_status = any('automation' in h.lower() for h in headers)
+        has_automation_status = any("automation" in h.lower() for h in headers)
         assert has_automation_status, "Should have automation_status column"
-        
+
         print("✓ Google Sheets integration verified successfully")
-        
+
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")

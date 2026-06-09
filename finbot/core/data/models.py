@@ -8,6 +8,9 @@ from pydantic import BaseModel
 from sqlalchemy import (
     Boolean,
     Column,
+)
+from sqlalchemy import DateTime as _DateTime
+from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
@@ -16,7 +19,6 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy import DateTime as _DateTime
 from sqlalchemy.orm import relationship
 
 from finbot.core.data.database import Base
@@ -39,9 +41,7 @@ class User(Base):
     display_name = Column[str](String(100), nullable=True)
     namespace = Column[str](String(64), nullable=False, index=True)
 
-    created_at = Column[datetime](
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC), nullable=False)
     last_login = Column[datetime](DateTime, nullable=True)
     is_active = Column[bool](Boolean, default=True)
 
@@ -71,12 +71,8 @@ class UserProfile(Base):
     username = Column[str](String(32), unique=True, nullable=True, index=True)
     bio = Column[str](String(300), nullable=True)
     avatar_emoji = Column[str](String(10), default="🦊")
-    avatar_type = Column[str](
-        String(10), default="emoji"
-    )  # "emoji" | "gravatar" | "url"
-    avatar_url = Column[str](
-        String(500), nullable=True
-    )  # only for avatar_type == "url"
+    avatar_type = Column[str](String(10), default="emoji")  # "emoji" | "gravatar" | "url"
+    avatar_url = Column[str](String(500), nullable=True)  # only for avatar_type == "url"
 
     # Social links
     social_github = Column(String(200), nullable=True)
@@ -133,9 +129,9 @@ class UserProfile(Base):
             "show_activity": self.show_activity,
             "featured_badge_ids": self.get_featured_badge_ids(),
             "created_at": self.created_at.isoformat().replace("+00:00", "Z"),
-            "updated_at": self.updated_at.isoformat().replace("+00:00", "Z")
-            if self.updated_at
-            else None,
+            "updated_at": (
+                self.updated_at.isoformat().replace("+00:00", "Z") if self.updated_at else None
+            ),
         }
 
 
@@ -165,16 +161,10 @@ class UserSession(Base):
     loose_fingerprint = Column[str](String(32), nullable=True)
     original_ip = Column[str](String(45), nullable=True)
     current_ip = Column[str](String(45), nullable=True)
-    current_vendor_id = Column[int](
-        Integer, ForeignKey("vendors.id"), nullable=True, index=True
-    )
+    current_vendor_id = Column[int](Integer, ForeignKey("vendors.id"), nullable=True, index=True)
 
-    created_at = Column[datetime](
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
-    last_accessed = Column[datetime](
-        DateTime, default=lambda: datetime.now(UTC), nullable=False
-    )
+    created_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    last_accessed = Column[datetime](DateTime, default=lambda: datetime.now(UTC), nullable=False)
     expires_at = Column[datetime](DateTime, nullable=False)
 
     current_vendor = relationship(
@@ -198,9 +188,7 @@ class UserSession(Base):
         now = datetime.now(UTC)
         # Ensure expires_at is timezone-aware
         expires_at = (
-            self.expires_at
-            if self.expires_at.tzinfo
-            else self.expires_at.replace(tzinfo=UTC)
+            self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=UTC)
         )
         return now > expires_at
 
@@ -240,17 +228,13 @@ class MagicLinkToken(Base):
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<MagicLinkToken(email='{self.email}', used={self.used_at is not None})>"
-        )
+        return f"<MagicLinkToken(email='{self.email}', used={self.used_at is not None})>"
 
     def is_expired(self) -> bool:
         """Check if token is expired"""
         now = datetime.now(UTC)
         expires_at = (
-            self.expires_at
-            if self.expires_at.tzinfo
-            else self.expires_at.replace(tzinfo=UTC)
+            self.expires_at if self.expires_at.tzinfo else self.expires_at.replace(tzinfo=UTC)
         )
         return now > expires_at
 
@@ -287,9 +271,7 @@ class Vendor(Base):
     bank_account_holder_name = Column[str](String(255), nullable=False)
 
     # Metadata
-    status = Column[Literal["pending", "active", "inactive"]](
-        String(50), default="pending"
-    )
+    status = Column[Literal["pending", "active", "inactive"]](String(50), default="pending")
     trust_level = Column[Literal["low", "standard", "high"]](String(20), default="low")
     risk_level = Column[Literal["low", "medium", "high"]](String(20), default="high")
 
@@ -451,9 +433,9 @@ class ChatMessage(Base):
             "role": self.role,
             "content": self.content,
             "workflow_id": self.workflow_id,
-            "created_at": self.created_at.isoformat().replace("+00:00", "Z")
-            if self.created_at
-            else None,
+            "created_at": (
+                self.created_at.isoformat().replace("+00:00", "Z") if self.created_at else None
+            ),
         }
 
 
@@ -472,9 +454,7 @@ class MCPServerConfig(Base):
     id = Column[int](Integer, primary_key=True, autoincrement=True)
     namespace = Column[str](String(64), nullable=False, index=True)
 
-    server_type = Column[str](
-        String(50), nullable=False
-    )  # "finstripe", "gdrive", "taxcalc"
+    server_type = Column[str](String(50), nullable=False)  # "finstripe", "gdrive", "taxcalc"
     display_name = Column[str](String(255), nullable=False)
     enabled = Column[bool](Boolean, default=True, nullable=False)
 
@@ -532,18 +512,14 @@ class MCPActivityLog(Base):
 
     server_type = Column[str](String(50), nullable=False)
     direction = Column[str](String(10), nullable=False)  # "request" or "response"
-    method = Column[str](
-        String(100), nullable=False
-    )  # "tools/list", "tools/call", etc.
+    method = Column[str](String(100), nullable=False)  # "tools/list", "tools/call", etc.
     tool_name = Column[str](String(100), nullable=True)
     payload_json = Column[str](Text, nullable=True)
 
     workflow_id = Column[str](String(64), nullable=True, index=True)
     duration_ms = Column[float](Float, nullable=True)
 
-    created_at = Column[datetime](
-        DateTime, default=lambda: datetime.now(UTC), index=True
-    )
+    created_at = Column[datetime](DateTime, default=lambda: datetime.now(UTC), index=True)
 
     __table_args__ = (
         Index("idx_mcp_activity_namespace", "namespace"),
@@ -596,18 +572,12 @@ class Challenge(Base):
     # Rich metadata (stored as JSON strings)
     image_url = Column[str](String(500), nullable=True)
     hints = Column[str](Text, nullable=True)  # JSON: [{"cost": 10, "text": "..."}]
-    labels = Column[str](
-        Text, nullable=True
-    )  # JSON: {"owasp_llm": ["LLM01"], "cwe": ["CWE-77"]}
+    labels = Column[str](Text, nullable=True)  # JSON: {"owasp_llm": ["LLM01"], "cwe": ["CWE-77"]}
     prerequisites = Column[str](Text, nullable=True)  # JSON: ["challenge-id-1"]
-    resources = Column[str](
-        Text, nullable=True
-    )  # JSON: [{"title": "...", "url": "..."}]
+    resources = Column[str](Text, nullable=True)  # JSON: [{"title": "...", "url": "..."}]
 
     # Detector configuration
-    detector_class = Column[str](
-        String(100), nullable=False
-    )  # e.g., "PromptInjectionDetector"
+    detector_class = Column[str](String(100), nullable=False)  # e.g., "PromptInjectionDetector"
     detector_config = Column[str](Text, nullable=True)  # JSON: detector-specific config
 
     # Scoring modifiers (penalties/bonuses applied on completion)
@@ -646,9 +616,7 @@ class Challenge(Base):
             "image_url": self.image_url,
             "hints": json.loads(self.hints) if self.hints else [],
             "labels": json.loads(self.labels) if self.labels else {},
-            "prerequisites": json.loads(self.prerequisites)
-            if self.prerequisites
-            else [],
+            "prerequisites": json.loads(self.prerequisites) if self.prerequisites else [],
             "resources": json.loads(self.resources) if self.resources else [],
             "detector_class": self.detector_class,
             "scoring": json.loads(self.scoring) if self.scoring else None,
@@ -690,9 +658,7 @@ class UserChallengeProgress(Base):
     points_modifier = Column[float](Float, default=1.0, nullable=False)
 
     # Evidence (for audit/display)
-    completion_evidence = Column[str](
-        Text, nullable=True
-    )  # JSON: events that triggered completion
+    completion_evidence = Column[str](Text, nullable=True)  # JSON: events that triggered completion
     completion_workflow_id = Column[str](String(64), nullable=True)
 
     # Last attempt result (for progress tracking / CTF feedback)
@@ -710,9 +676,7 @@ class UserChallengeProgress(Base):
         Index("idx_ucp_namespace_user", "namespace", "user_id"),
         Index("idx_ucp_namespace_challenge", "namespace", "challenge_id"),
         Index("idx_ucp_namespace_user_status", "namespace", "user_id", "status"),
-        UniqueConstraint(
-            "namespace", "user_id", "challenge_id", name="uq_user_challenge"
-        ),
+        UniqueConstraint("namespace", "user_id", "challenge_id", name="uq_user_challenge"),
     )
 
     def __repr__(self) -> str:
@@ -732,20 +696,22 @@ class UserChallengeProgress(Base):
             "hints_used": self.hints_used,
             "hints_cost": self.hints_cost,
             "points_modifier": self.points_modifier,
-            "first_attempt_at": self.first_attempt_at.isoformat().replace("+00:00", "Z")
-            if self.first_attempt_at
-            else None,
-            "completed_at": self.completed_at.isoformat().replace("+00:00", "Z")
-            if self.completed_at
-            else None,
+            "first_attempt_at": (
+                self.first_attempt_at.isoformat().replace("+00:00", "Z")
+                if self.first_attempt_at
+                else None
+            ),
+            "completed_at": (
+                self.completed_at.isoformat().replace("+00:00", "Z") if self.completed_at else None
+            ),
             "completion_time_seconds": self.completion_time_seconds,
-            "completion_evidence": json.loads(self.completion_evidence)
-            if self.completion_evidence
-            else None,
+            "completion_evidence": (
+                json.loads(self.completion_evidence) if self.completion_evidence else None
+            ),
             "completion_workflow_id": self.completion_workflow_id,
-            "last_attempt_result": json.loads(self.last_attempt_result)
-            if self.last_attempt_result
-            else None,
+            "last_attempt_result": (
+                json.loads(self.last_attempt_result) if self.last_attempt_result else None
+            ),
         }
 
 
@@ -754,28 +720,18 @@ class Badge(Base):
 
     __tablename__ = "badges"
 
-    id = Column[str](
-        String(64), primary_key=True
-    )  # e.g., "first-blood", "vendor-master"
+    id = Column[str](String(64), primary_key=True)  # e.g., "first-blood", "vendor-master"
     title = Column[str](String(200), nullable=False)
     description = Column[str](Text, nullable=False)
-    category = Column[str](
-        String(50), nullable=False
-    )  # "achievement", "milestone", "special"
+    category = Column[str](String(50), nullable=False)  # "achievement", "milestone", "special"
 
     icon_url = Column[str](String(500), nullable=True)
-    rarity = Column[str](
-        String(20), default="common"
-    )  # "common", "rare", "epic", "legendary"
+    rarity = Column[str](String(20), default="common")  # "common", "rare", "epic", "legendary"
     points = Column[int](Integer, default=10)
 
     # Evaluator configuration
-    evaluator_class = Column[str](
-        String(100), nullable=False
-    )  # e.g., "VendorCountEvaluator"
-    evaluator_config = Column[str](
-        Text, nullable=True
-    )  # JSON: evaluator-specific config
+    evaluator_class = Column[str](String(100), nullable=False)  # e.g., "VendorCountEvaluator"
+    evaluator_config = Column[str](Text, nullable=True)  # JSON: evaluator-specific config
 
     is_active = Column[bool](Boolean, default=True)
     is_secret = Column[bool](Boolean, default=False)  # Hidden until earned
@@ -804,9 +760,9 @@ class Badge(Base):
             "rarity": self.rarity,
             "points": self.points,
             "evaluator_class": self.evaluator_class,
-            "evaluator_config": json.loads(self.evaluator_config)
-            if self.evaluator_config
-            else None,
+            "evaluator_config": (
+                json.loads(self.evaluator_config) if self.evaluator_config else None
+            ),
             "is_active": self.is_active,
             "is_secret": self.is_secret,
         }
@@ -846,9 +802,7 @@ class UserBadge(Base):
             "user_id": self.user_id,
             "badge_id": self.badge_id,
             "earned_at": self.earned_at.isoformat().replace("+00:00", "Z"),
-            "earning_context": json.loads(self.earning_context)
-            if self.earning_context
-            else None,
+            "earning_context": json.loads(self.earning_context) if self.earning_context else None,
             "earning_workflow_id": self.earning_workflow_id,
         }
 
@@ -859,9 +813,7 @@ class CTFEvent(Base):
     __tablename__ = "ctf_events"
 
     id = Column[int](Integer, primary_key=True, autoincrement=True)
-    external_event_id = Column[str](
-        String(128), unique=True, nullable=False
-    )  # For idempotency
+    external_event_id = Column[str](String(128), unique=True, nullable=False)  # For idempotency
 
     namespace = Column[str](String(64), nullable=False, index=True)
     user_id = Column[str](String(32), nullable=False, index=True)
@@ -870,20 +822,14 @@ class CTFEvent(Base):
     vendor_id = Column[int](Integer, nullable=True)  # For vendor-scoped events
 
     # Event classification
-    event_category = Column[str](
-        String(50), nullable=False
-    )  # "business", "agent", "ctf"
-    event_type = Column[str](
-        String(100), nullable=False
-    )  # e.g., "vendor.created", "task_start"
+    event_category = Column[str](String(50), nullable=False)  # "business", "agent", "ctf"
+    event_type = Column[str](String(100), nullable=False)  # e.g., "vendor.created", "task_start"
     event_subtype = Column[str](String(100), nullable=True)
 
     # Display info
     summary = Column[str](String(500), nullable=False)  # Human-readable summary
     details = Column[str](Text, nullable=True)  # JSON: full event data
-    severity = Column[str](
-        String(20), default="info"
-    )  # "info", "warning", "success", "danger"
+    severity = Column[str](String(20), default="info")  # "info", "warning", "success", "danger"
 
     # Agent-specific fields (for rich visualization)
     agent_name = Column[str](String(100), nullable=True)
@@ -891,9 +837,7 @@ class CTFEvent(Base):
     llm_model = Column[str](String(100), nullable=True)
     duration_ms = Column[int](Integer, nullable=True)
 
-    timestamp = Column[datetime](
-        DateTime, default=lambda: datetime.now(UTC), index=True
-    )
+    timestamp = Column[datetime](DateTime, default=lambda: datetime.now(UTC), index=True)
 
     __table_args__ = (
         Index("idx_ctf_event_ns_user_ts", "namespace", "user_id", "timestamp"),
@@ -903,9 +847,7 @@ class CTFEvent(Base):
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<CTFEvent(id={self.id}, type='{self.event_type}', user='{self.user_id}')>"
-        )
+        return f"<CTFEvent(id={self.id}, type='{self.event_type}', user='{self.user_id}')>"
 
     def to_dict(self) -> dict:
         """Convert event to dictionary"""
@@ -964,9 +906,7 @@ class LabsGuardrailConfig(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint(
-            "namespace", "user_id", name="uq_labs_guardrail_namespace_user"
-        ),
+        UniqueConstraint("namespace", "user_id", name="uq_labs_guardrail_namespace_user"),
         Index("idx_labs_guardrail_namespace", "namespace"),
         Index("idx_labs_guardrail_user", "user_id"),
     )
@@ -996,12 +936,12 @@ class LabsGuardrailConfig(Base):
             "enabled": self.enabled,
             "hooks": self.get_hooks(),
             "timeout_seconds": self.timeout_seconds,
-            "created_at": self.created_at.isoformat().replace("+00:00", "Z")
-            if self.created_at
-            else None,
-            "updated_at": self.updated_at.isoformat().replace("+00:00", "Z")
-            if self.updated_at
-            else None,
+            "created_at": (
+                self.created_at.isoformat().replace("+00:00", "Z") if self.created_at else None
+            ),
+            "updated_at": (
+                self.updated_at.isoformat().replace("+00:00", "Z") if self.updated_at else None
+            ),
         }
 
 

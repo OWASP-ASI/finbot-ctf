@@ -37,10 +37,7 @@ DEPARTMENT_DIRECTORY: dict[str, str] = {
 
 def get_department_addresses(namespace: str) -> dict[str, str]:
     """Return a mapping of department email addresses to descriptions."""
-    return {
-        f"{dept}@{namespace}.finbot": desc
-        for dept, desc in DEPARTMENT_DIRECTORY.items()
-    }
+    return {f"{dept}@{namespace}.finbot": desc for dept, desc in DEPARTMENT_DIRECTORY.items()}
 
 
 def _is_internal_address(email_addr: str, namespace: str) -> bool:
@@ -74,12 +71,14 @@ def route_and_deliver(
     deliveries: list[dict] = []
 
     for role, addresses in [("to", to), ("cc", cc), ("bcc", bcc)]:
-        for email_addr in (addresses or []):
+        for email_addr in addresses or []:
             visible_bcc = bcc_json if role == "bcc" else None
 
             vendor = (
                 db.query(Vendor)
-                .filter(Vendor.namespace == namespace, func.lower(Vendor.email) == email_addr.lower())
+                .filter(
+                    Vendor.namespace == namespace, func.lower(Vendor.email) == email_addr.lower()
+                )
                 .first()
             )
             if vendor:
@@ -99,7 +98,9 @@ def route_and_deliver(
                     bcc_addresses=visible_bcc,
                     recipient_role=role,
                 )
-                deliveries.append({"type": "vendor", "vendor_id": vendor.id, "email": email_addr, "role": role})
+                deliveries.append(
+                    {"type": "vendor", "vendor_id": vendor.id, "email": email_addr, "role": role}
+                )
                 continue
 
             if email_addr.lower() == get_admin_address(namespace).lower():
@@ -164,7 +165,9 @@ def route_and_deliver(
                 deliveries.append({"type": "admin", "email": email_addr, "role": role})
                 continue
 
-            logger.warning("External address: %s in namespace %s — storing in dead drop", email_addr, namespace)
+            logger.warning(
+                "External address: %s in namespace %s — storing in dead drop", email_addr, namespace
+            )
             repo.create_email(
                 inbox_type="external",
                 subject=subject,
@@ -186,5 +189,7 @@ def route_and_deliver(
         "sent": True,
         "subject": subject,
         "deliveries": deliveries,
-        "delivery_count": len([d for d in deliveries if d["type"] not in ("undeliverable", "external")]),
+        "delivery_count": len(
+            [d for d in deliveries if d["type"] not in ("undeliverable", "external")]
+        ),
     }

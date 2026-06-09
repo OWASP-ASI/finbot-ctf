@@ -56,9 +56,7 @@ async def ctf_challenges(
     )
 
 
-@router.get(
-    "/challenges/{challenge_id}", response_class=HTMLResponse, name="ctf_challenge"
-)
+@router.get("/challenges/{challenge_id}", response_class=HTMLResponse, name="ctf_challenge")
 async def ctf_challenge(
     request: Request,
     challenge_id: str,
@@ -99,9 +97,7 @@ async def ctf_badges(
     )
 
 
-@router.get(
-    "/profile/settings", response_class=HTMLResponse, name="ctf_profile_settings"
-)
+@router.get("/profile/settings", response_class=HTMLResponse, name="ctf_profile_settings")
 async def ctf_profile_settings(
     request: Request,
     session_context: SessionContext = Depends(get_authenticated_session_context),
@@ -170,9 +166,7 @@ async def ctf_public_profile(
         bio = profile.bio or "AI Security Enthusiast"
 
         og_data["og_title"] = f"@{username} · {level_title} | FinBot CTF"
-        og_data["og_description"] = (
-            f"{bio} | {completed_count} challenges · {badge_count} badges"
-        )
+        og_data["og_description"] = f"{bio} | {completed_count} challenges · {badge_count} badges"
 
     return template_response(
         request,

@@ -40,14 +40,24 @@ async def stats(request: Request):
     from finbot.config import settings as _settings  # pylint: disable=import-outside-toplevel
 
     if not _settings.CC_PUBLIC_STATS_ENABLED:
-        return finbot_templates(request, "stats.html", {
-            "coming_soon": True,
-            "total_users": 0, "active_week": 0, "active_month": 0,
-            "challenges_completed": 0, "badges_earned": 0,
-            "vendors_registered": 0, "categories": [],
-        })
+        return finbot_templates(
+            request,
+            "stats.html",
+            {
+                "coming_soon": True,
+                "total_users": 0,
+                "active_week": 0,
+                "active_month": 0,
+                "challenges_completed": 0,
+                "badges_earned": 0,
+                "vendors_registered": 0,
+                "categories": [],
+            },
+        )
 
-    from finbot.core.analytics.public_stats import get_public_stats  # pylint: disable=import-outside-toplevel
+    from finbot.core.analytics.public_stats import (  # pylint: disable=import-outside-toplevel
+        get_public_stats,
+    )
     from finbot.core.data.database import SessionLocal  # pylint: disable=import-outside-toplevel
 
     db = SessionLocal()
@@ -68,7 +78,9 @@ async def pulse():
     if not _settings.CC_PUBLIC_STATS_ENABLED:
         return JSONResponse({"enabled": False})
 
-    from finbot.core.analytics.public_stats import get_public_stats  # pylint: disable=import-outside-toplevel
+    from finbot.core.analytics.public_stats import (  # pylint: disable=import-outside-toplevel
+        get_public_stats,
+    )
     from finbot.core.data.database import SessionLocal  # pylint: disable=import-outside-toplevel
 
     db = SessionLocal()
@@ -77,12 +89,14 @@ async def pulse():
     finally:
         db.close()
 
-    return JSONResponse({
-        "enabled": True,
-        "challenges_completed": data["challenges_completed"],
-        "badges_earned": data["badges_earned"],
-        "total_users": data["total_users"],
-    })
+    return JSONResponse(
+        {
+            "enabled": True,
+            "challenges_completed": data["challenges_completed"],
+            "badges_earned": data["badges_earned"],
+            "total_users": data["total_users"],
+        }
+    )
 
 
 # Error page test routes (for development/testing)

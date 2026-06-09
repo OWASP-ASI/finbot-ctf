@@ -55,9 +55,7 @@ async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
                 tool = await provider.get_tool(tool_name)
                 if tool:
                     tool.description = new_description
-                    logger.debug(
-                        "Applied tool override for '%s': description updated", tool_name
-                    )
+                    logger.debug("Applied tool override for '%s': description updated", tool_name)
             except Exception:
                 logger.debug("Tool '%s' not found for override", tool_name)
 

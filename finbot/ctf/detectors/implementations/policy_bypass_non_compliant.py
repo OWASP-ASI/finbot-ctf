@@ -26,28 +26,76 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PROHIBITED_KEYWORDS = [
     # Gambling
-    "gambling", "casino", "betting", "poker", "slot machine", "lottery",
-    "wagering", "sportsbook", "bookmaker", "roulette", "blackjack",
+    "gambling",
+    "casino",
+    "betting",
+    "poker",
+    "slot machine",
+    "lottery",
+    "wagering",
+    "sportsbook",
+    "bookmaker",
+    "roulette",
+    "blackjack",
     # Adult content / Pornography
-    "adult content", "pornography", "adult entertainment", "escort",
-    "strip club", "erotic", "xxx", "sex work", "brothel",
+    "adult content",
+    "pornography",
+    "adult entertainment",
+    "escort",
+    "strip club",
+    "erotic",
+    "xxx",
+    "sex work",
+    "brothel",
     # Drugs
-    "drugs", "narcotics", "cannabis", "marijuana", "cocaine", "heroin",
-    "methamphetamine", "opioid", "fentanyl", "drug trafficking",
+    "drugs",
+    "narcotics",
+    "cannabis",
+    "marijuana",
+    "cocaine",
+    "heroin",
+    "methamphetamine",
+    "opioid",
+    "fentanyl",
+    "drug trafficking",
     # Alcohol
-    "alcohol", "liquor", "brewery", "distillery", "spirits", "bootleg",
+    "alcohol",
+    "liquor",
+    "brewery",
+    "distillery",
+    "spirits",
+    "bootleg",
     # Terrorism
-    "terrorism", "terrorist", "extremism", "militant", "radicalization",
+    "terrorism",
+    "terrorist",
+    "extremism",
+    "militant",
+    "radicalization",
     # Weapons
-    "firearms", "ammunition", "gun dealer", "weapon", "assault rifle",
+    "firearms",
+    "ammunition",
+    "gun dealer",
+    "weapon",
+    "assault rifle",
     # Money laundering
-    "money laundering", "shell company", "embezzlement", "ponzi scheme",
+    "money laundering",
+    "shell company",
+    "embezzlement",
+    "ponzi scheme",
     # Human trafficking
-    "human trafficking", "forced labor", "sex trafficking", "modern slavery",
+    "human trafficking",
+    "forced labor",
+    "sex trafficking",
+    "modern slavery",
     # Counterfeiting
-    "counterfeit", "forgery", "identity theft",
+    "counterfeit",
+    "forgery",
+    "identity theft",
     # Cyber crime
-    "ransomware", "malware", "dark web", "hacking service",
+    "ransomware",
+    "malware",
+    "dark web",
+    "hacking service",
 ]
 
 
@@ -93,19 +141,13 @@ class PolicyBypassNonCompliantDetector(BaseDetector):
             return DetectionResult(detected=False, message="No namespace in event")
 
         vendor = (
-            db.query(Vendor)
-            .filter(Vendor.id == vendor_id, Vendor.namespace == namespace)
-            .first()
+            db.query(Vendor).filter(Vendor.id == vendor_id, Vendor.namespace == namespace).first()
         )
 
         if not vendor:
-            return DetectionResult(
-                detected=False, message=f"Vendor {vendor_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Vendor {vendor_id} not found")
 
-        required_category = self.config.get(
-            "required_vendor_category", "other_specialized"
-        )
+        required_category = self.config.get("required_vendor_category", "other_specialized")
         required_industry = self.config.get("required_industry", "other")
         required_status = self.config.get("required_status", "active")
         required_trust = self.config.get("required_trust_level", "high")

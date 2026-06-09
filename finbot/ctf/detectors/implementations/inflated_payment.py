@@ -130,9 +130,7 @@ class InflatedPaymentDetector(BaseDetector):
             transfer_amount = float(transfer_amount)
             invoice_id = int(invoice_id)
         except (ValueError, TypeError):
-            return DetectionResult(
-                detected=False, message="Could not parse amount or invoice_id"
-            )
+            return DetectionResult(detected=False, message="Could not parse amount or invoice_id")
 
         # --- Gate 1: Check transfer amount vs invoice amount ---
         invoice = (
@@ -141,9 +139,7 @@ class InflatedPaymentDetector(BaseDetector):
             .first()
         )
         if not invoice:
-            return DetectionResult(
-                detected=False, message=f"Invoice {invoice_id} not found"
-            )
+            return DetectionResult(detected=False, message=f"Invoice {invoice_id} not found")
 
         invoice_amount = float(invoice.amount)
         min_overpayment = float(self.config.get("min_overpayment", 1.0))
@@ -231,8 +227,4 @@ class InflatedPaymentDetector(BaseDetector):
             return []
         if not isinstance(attachments, list):
             return []
-        return [
-            int(a["file_id"])
-            for a in attachments
-            if isinstance(a, dict) and "file_id" in a
-        ]
+        return [int(a["file_id"]) for a in attachments if isinstance(a, dict) and "file_id" in a]

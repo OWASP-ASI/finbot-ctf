@@ -6,7 +6,6 @@ import json
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse
-
 from sqlalchemy import distinct
 
 from finbot.core.data.database import SessionLocal
@@ -23,17 +22,21 @@ PAGE_SIZE = 50
 def _get_filter_options(db) -> dict:
     """Get distinct values for filter dropdowns."""
     categories = [
-        r[0] for r in db.query(distinct(CTFEvent.event_category)).order_by(CTFEvent.event_category).all()
+        r[0]
+        for r in db.query(distinct(CTFEvent.event_category)).order_by(CTFEvent.event_category).all()
         if r[0]
     ]
     severities = [
-        r[0] for r in db.query(distinct(CTFEvent.severity)).order_by(CTFEvent.severity).all()
+        r[0]
+        for r in db.query(distinct(CTFEvent.severity)).order_by(CTFEvent.severity).all()
         if r[0]
     ]
     agents = [
-        r[0] for r in db.query(distinct(CTFEvent.agent_name))
+        r[0]
+        for r in db.query(distinct(CTFEvent.agent_name))
         .filter(CTFEvent.agent_name.isnot(None))
-        .order_by(CTFEvent.agent_name).all()
+        .order_by(CTFEvent.agent_name)
+        .all()
     ]
     return {"categories": categories, "severities": severities, "agents": agents}
 
@@ -61,12 +64,7 @@ def _query_events(db, *, category=None, severity=None, agent=None, search=None, 
     total = q.count()
     offset = (page - 1) * PAGE_SIZE
 
-    rows = (
-        q.order_by(CTFEvent.timestamp.desc())
-        .offset(offset)
-        .limit(PAGE_SIZE)
-        .all()
-    )
+    rows = q.order_by(CTFEvent.timestamp.desc()).offset(offset).limit(PAGE_SIZE).all()
 
     events = []
     for row in rows:
@@ -78,25 +76,27 @@ def _query_events(db, *, category=None, severity=None, agent=None, search=None, 
             except (ValueError, TypeError):
                 details = e.details
 
-        events.append({
-            "id": e.id,
-            "timestamp": e.timestamp,
-            "event_category": e.event_category,
-            "event_type": e.event_type,
-            "event_subtype": e.event_subtype,
-            "summary": e.summary,
-            "details": details,
-            "severity": e.severity,
-            "user_id": e.user_id,
-            "display_name": row.display_name or row.email or (e.user_id[:8] + "..."),
-            "agent_name": e.agent_name,
-            "tool_name": e.tool_name,
-            "llm_model": e.llm_model,
-            "duration_ms": e.duration_ms,
-            "namespace": e.namespace,
-            "vendor_id": e.vendor_id,
-            "workflow_id": e.workflow_id,
-        })
+        events.append(
+            {
+                "id": e.id,
+                "timestamp": e.timestamp,
+                "event_category": e.event_category,
+                "event_type": e.event_type,
+                "event_subtype": e.event_subtype,
+                "summary": e.summary,
+                "details": details,
+                "severity": e.severity,
+                "user_id": e.user_id,
+                "display_name": row.display_name or row.email or (e.user_id[:8] + "..."),
+                "agent_name": e.agent_name,
+                "tool_name": e.tool_name,
+                "llm_model": e.llm_model,
+                "duration_ms": e.duration_ms,
+                "namespace": e.namespace,
+                "vendor_id": e.vendor_id,
+                "workflow_id": e.workflow_id,
+            }
+        )
 
     total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
 

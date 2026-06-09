@@ -18,14 +18,15 @@ GitHub Issue: #11
 """
 
 import json
-import pytest
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from finbot.core.messaging.events import EventBus
-from finbot.core.auth.session import session_manager, SessionContext
+import pytest
+
 from finbot.agents.specialized.invoice import InvoiceAgent
 from finbot.agents.specialized.onboarding import VendorOnboardingAgent
+from finbot.core.auth.session import SessionContext, session_manager
+from finbot.core.messaging.events import EventBus
 
 
 class TestRedisMessageStreams:
@@ -281,14 +282,19 @@ class TestRedisMessageStreams:
         session_context = self._create_session_context("stream_test@example.com")
         agent = InvoiceAgent(session_context=session_context)
 
-        task_data = {"action": "process", "invoice": {"invoice_id": "INV-STREAM-001", "amount": 500}}
+        task_data = {
+            "action": "process",
+            "invoice": {"invoice_id": "INV-STREAM-001", "amount": 500},
+        }
         result = await agent.process(task_data)
 
         assert result is not None
         assert mock_event_bus.emit_agent_event.called
         assert "session_context" in mock_event_bus.emit_agent_event.call_args_list[0].kwargs
 
-        print(f"✓ RDS-RED-004: emit_agent_event called {mock_event_bus.emit_agent_event.call_count}x")
+        print(
+            f"✓ RDS-RED-004: emit_agent_event called {mock_event_bus.emit_agent_event.call_count}x"
+        )
         print(f"✓ RDS-RED-004: Event includes session context")
 
     @pytest.mark.unit
@@ -395,7 +401,9 @@ class TestRedisMessageStreams:
 
         assert invoice_agent.agent_name != vendor_agent.agent_name
 
-        print(f"✓ RDS-REG-001: Invoice='{invoice_agent.agent_name}', Vendor='{vendor_agent.agent_name}'")
+        print(
+            f"✓ RDS-REG-001: Invoice='{invoice_agent.agent_name}', Vendor='{vendor_agent.agent_name}'"
+        )
         print(f"✓ RDS-REG-001: Agent names unique, both discoverable")
 
     @pytest.mark.unit
@@ -627,12 +635,18 @@ class TestRedisMessageStreams:
         """
         session_context = self._create_session_context("routing@example.com")
 
-        invoice_task = {"action": "process", "invoice": {"invoice_id": "INV-ROUTE-001", "amount": 1000}}
+        invoice_task = {
+            "action": "process",
+            "invoice": {"invoice_id": "INV-ROUTE-001", "amount": 1000},
+        }
         invoice_agent = InvoiceAgent(session_context=session_context)
         invoice_result = await invoice_agent.process(invoice_task)
         assert invoice_result is not None
 
-        vendor_task = {"action": "collect_vendor_info", "vendor_data": {"company_name": "RouteCorp"}}
+        vendor_task = {
+            "action": "collect_vendor_info",
+            "vendor_data": {"company_name": "RouteCorp"},
+        }
         vendor_agent = VendorOnboardingAgent(session_context=session_context)
         vendor_result = await vendor_agent.process(vendor_task)
         assert vendor_result is not None
@@ -721,8 +735,12 @@ class TestRedisMessageStreams:
         session_context = self._create_session_context("correlation@example.com")
         shared_workflow_id = "wf_pipeline_001"
 
-        invoice_agent = InvoiceAgent(session_context=session_context, workflow_id=shared_workflow_id)
-        vendor_agent = VendorOnboardingAgent(session_context=session_context, workflow_id=shared_workflow_id)
+        invoice_agent = InvoiceAgent(
+            session_context=session_context, workflow_id=shared_workflow_id
+        )
+        vendor_agent = VendorOnboardingAgent(
+            session_context=session_context, workflow_id=shared_workflow_id
+        )
 
         assert invoice_agent.workflow_id == shared_workflow_id
         assert vendor_agent.workflow_id == shared_workflow_id
@@ -1253,8 +1271,12 @@ class TestRedisMessageStreams:
         assert settings.REDIS_RESULT_TTL > 0
         assert settings.EVENT_BUFFER_SIZE > 0
 
-        print(f"✓ RDS-HEA-003: MAX_LEN={settings.REDIS_STREAM_MAX_LEN}, TIMEOUT={settings.REDIS_CONSUMER_TIMEOUT}ms")
-        print(f"✓ RDS-HEA-003: TTL={settings.REDIS_RESULT_TTL}s, BUFFER={settings.EVENT_BUFFER_SIZE}")
+        print(
+            f"✓ RDS-HEA-003: MAX_LEN={settings.REDIS_STREAM_MAX_LEN}, TIMEOUT={settings.REDIS_CONSUMER_TIMEOUT}ms"
+        )
+        print(
+            f"✓ RDS-HEA-003: TTL={settings.REDIS_RESULT_TTL}s, BUFFER={settings.EVENT_BUFFER_SIZE}"
+        )
 
     @pytest.mark.unit
     def test_rds_hea_004_agent_max_iterations_health(self):
@@ -1338,7 +1360,14 @@ class TestRedisMessageStreams:
         await agent.log_task_start(task_data={"action": "sig_test"})
 
         call_kwargs = mock_event_bus.emit_agent_event.call_args.kwargs
-        required_keys = {"agent_name", "event_type", "event_subtype", "event_data", "session_context", "workflow_id"}
+        required_keys = {
+            "agent_name",
+            "event_type",
+            "event_subtype",
+            "event_data",
+            "session_context",
+            "workflow_id",
+        }
         missing = required_keys - set(call_kwargs.keys())
         assert not missing, f"emit_agent_event missing kwargs: {missing}"
 
@@ -1380,11 +1409,31 @@ class TestRedisMessageStreams:
         10. Ready for Google Sheets upload
         """
         metrics = {
-            "Redis Streams (RDS-RED)": {"tests": 5, "status": "implemented", "coverage": "encoding/decoding/emission/buffering"},
-            "Agent Registration (RDS-REG)": {"tests": 5, "status": "implemented", "coverage": "naming/discovery/tools/config/context"},
-            "Task Routing (RDS-ROU)": {"tests": 5, "status": "implemented", "coverage": "domain routing/workflow ID/correlation/iterations/control flow"},
-            "Message Persistence (RDS-PER)": {"tests": 5, "status": "implemented", "coverage": "structure/completion/subscription/enrichment/separation"},
-            "Health Monitoring (RDS-HEA)": {"tests": 5, "status": "implemented", "coverage": "context/lifecycle/config/iterations/event signature"},
+            "Redis Streams (RDS-RED)": {
+                "tests": 5,
+                "status": "implemented",
+                "coverage": "encoding/decoding/emission/buffering",
+            },
+            "Agent Registration (RDS-REG)": {
+                "tests": 5,
+                "status": "implemented",
+                "coverage": "naming/discovery/tools/config/context",
+            },
+            "Task Routing (RDS-ROU)": {
+                "tests": 5,
+                "status": "implemented",
+                "coverage": "domain routing/workflow ID/correlation/iterations/control flow",
+            },
+            "Message Persistence (RDS-PER)": {
+                "tests": 5,
+                "status": "implemented",
+                "coverage": "structure/completion/subscription/enrichment/separation",
+            },
+            "Health Monitoring (RDS-HEA)": {
+                "tests": 5,
+                "status": "implemented",
+                "coverage": "context/lifecycle/config/iterations/event signature",
+            },
         }
 
         assert len(metrics) == 5

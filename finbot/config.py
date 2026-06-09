@@ -143,9 +143,7 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str = "noreply@owasp-finbot-ctf.org"
     EMAIL_FROM_NAME: str = "OWASP FinBot CTF"
 
-    model_config = ConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False
-    )
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 
     @model_validator(mode="after")
     def validate_model(self):

@@ -23,17 +23,19 @@
 #   LLM-MOCK-GSI-001: Google Sheets Integration Verification
 # ==============================================================================
 
-import pytest
+import os
 from unittest.mock import patch
 
-from finbot.core.llm.mock_client import MockLLMClient
-from finbot.core.data.models import LLMRequest
-import os
+import gspread
+import pytest
 from dotenv import load_dotenv
 from google.oauth2.service_account import Credentials
-import gspread
+
+from finbot.core.data.models import LLMRequest
+from finbot.core.llm.mock_client import MockLLMClient
 
 load_dotenv()
+
 
 # ============================================================================
 # LLM-MOCK-001: Basic Mock Response
@@ -64,9 +66,7 @@ async def test_basic_mock_response():
     """
     client = MockLLMClient()
 
-    request = LLMRequest(
-        messages=[{"role": "user", "content": "Test message"}]
-    )
+    request = LLMRequest(messages=[{"role": "user", "content": "Test message"}])
 
     response = await client.chat(request)
 
@@ -115,11 +115,11 @@ async def test_mock_client_with_custom_parameters():
         messages=[
             {"role": "user", "content": "Message 1"},
             {"role": "assistant", "content": "Response 1"},
-            {"role": "user", "content": "Message 2"}
+            {"role": "user", "content": "Message 2"},
         ],
         model="custom-model",
         temperature=0.9,
-        tools=[{"type": "function", "function": {"name": "test_tool"}}]
+        tools=[{"type": "function", "function": {"name": "test_tool"}}],
     )
 
     response = await client.chat(request)
@@ -265,12 +265,12 @@ async def test_mock_response_tool_calls_is_empty():
         tools=[{"type": "function", "function": {"name": "get_balance"}}],
     )
     response = await client.chat(request)
-    assert response.tool_calls is not None, (
-        "Bug: response.tool_calls is None. Callers that iterate over tool_calls will crash."
-    )
-    assert isinstance(response.tool_calls, list), (
-        f"Bug: response.tool_calls is {type(response.tool_calls).__name__}, expected list."
-    )
+    assert (
+        response.tool_calls is not None
+    ), "Bug: response.tool_calls is None. Callers that iterate over tool_calls will crash."
+    assert isinstance(
+        response.tool_calls, list
+    ), f"Bug: response.tool_calls is {type(response.tool_calls).__name__}, expected list."
 
 
 # ============================================================================
@@ -309,7 +309,9 @@ async def test_exception_wrapping_loses_original_type():
 
     # Patch LLMResponse constructor to raise ValueError *inside* the try block —
     # this lets the real chat() run and triggers the except handler in mock_client.py
-    with patch("finbot.core.llm.mock_client.LLMResponse", side_effect=ValueError("bad input value")):
+    with patch(
+        "finbot.core.llm.mock_client.LLMResponse", side_effect=ValueError("bad input value")
+    ):
         with pytest.raises(Exception) as exc_info:
             await client.chat(LLMRequest(messages=[{"role": "user", "content": "test"}]))
 
@@ -319,9 +321,9 @@ async def test_exception_wrapping_loses_original_type():
             f"Expected ValueError but got {type(exc_info.value).__name__}. "
             "mock_client.py should re-raise the original exception type."
         )
-        assert "bad input value" in str(exc_info.value), (
-            "The original error message must be preserved."
-        )
+        assert "bad input value" in str(
+            exc_info.value
+        ), "The original error message must be preserved."
 
 
 # ============================================================================
@@ -361,35 +363,34 @@ def test_google_sheets_integration_verification():
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
 
         # Check Summary sheet exists
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         assert len(summary_data) > 1, "Summary sheet should have data"
 
         # Verify headers
         headers = summary_data[0]
-        assert 'timestamp' in headers
-        assert 'total_tests' in headers
-        assert 'passed' in headers
-        assert 'failed' in headers
+        assert "timestamp" in headers
+        assert "total_tests" in headers
+        assert "passed" in headers
+        assert "failed" in headers
 
         # Check LLM Integration Testing worksheet (optional - may not exist yet)
         try:
-            llm_sheet = sheet.worksheet('LLM Integration Testing')
+            llm_sheet = sheet.worksheet("LLM Integration Testing")
             llm_data = llm_sheet.get_all_values()
 
             assert len(llm_data) > 0, "LLM Integration Testing worksheet should have data"
 
             # Verify automation_status column exists
             headers = llm_data[0]
-            has_automation_status = any('automation' in h.lower() for h in headers)
+            has_automation_status = any("automation" in h.lower() for h in headers)
             assert has_automation_status, "Should have automation_status column"
         except gspread.exceptions.WorksheetNotFound:
             # Worksheet doesn't exist yet - skip this check
@@ -399,5 +400,3 @@ def test_google_sheets_integration_verification():
 
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")
-
-

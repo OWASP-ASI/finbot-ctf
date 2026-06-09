@@ -37,7 +37,7 @@ def _matches_pattern(
             return False, None
         except re.error:
             pass
-            
+
     search_text = text if case_sensitive else text.lower()
     search_pattern = pattern if case_sensitive else pattern.lower()
     if search_pattern in search_text:
@@ -91,9 +91,7 @@ def run_pattern_match(
     matches = []
     for pattern_config in patterns:
         pattern, is_regex = _parse_pattern(pattern_config)
-        matched, matched_text = _matches_pattern(
-            text, pattern, case_sensitive, is_regex
-        )
+        matched, matched_text = _matches_pattern(text, pattern, case_sensitive, is_regex)
         if matched and matched_text:
             match_start = (
                 text.find(matched_text)

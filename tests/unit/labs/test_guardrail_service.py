@@ -44,6 +44,7 @@ def service(session):
 class TestConfigCaching:
     def test_no_config_returns_no_config_outcome(self, service):
         import asyncio
+
         outcome = asyncio.get_event_loop().run_until_complete(
             service.invoke(HookKind.before_tool, tool_name="test_tool")
         )
@@ -52,12 +53,17 @@ class TestConfigCaching:
     def test_disabled_hook_returns_hook_disabled(self, db, session, config_repo):
         config_repo.upsert(
             webhook_url="https://example.com/hook",
-            hooks={"before_tool": False, "after_tool": True,
-                   "before_model": True, "after_model": True},
+            hooks={
+                "before_tool": False,
+                "after_tool": True,
+                "before_model": True,
+                "after_model": True,
+            },
         )
         svc = GuardrailHookService(session_context=session, workflow_id="wf_test")
 
         import asyncio
+
         outcome = asyncio.get_event_loop().run_until_complete(
             svc.invoke(HookKind.before_tool, tool_name="test_tool")
         )
@@ -67,9 +73,7 @@ class TestConfigCaching:
         """Config DB query happens only once (cached)."""
         svc = GuardrailHookService(session_context=session, workflow_id="wf_test")
 
-        with patch.object(
-            LabsGuardrailConfigRepository, "get_for_current_user"
-        ) as mock_get:
+        with patch.object(LabsGuardrailConfigRepository, "get_for_current_user") as mock_get:
             mock_get.return_value = None
             svc._load_config()
             svc._load_config()
@@ -123,9 +127,7 @@ class TestWebhookInvocation:
         self.db = db
 
     def _make_service(self):
-        return GuardrailHookService(
-            session_context=self.session, workflow_id="wf_test"
-        )
+        return GuardrailHookService(session_context=self.session, workflow_id="wf_test")
 
     @pytest.mark.asyncio
     @patch("finbot.guardrails.service.event_bus")
@@ -155,9 +157,7 @@ class TestWebhookInvocation:
         resp = httpx.Response(200, json={"verdict": "block", "reason": "suspicious"})
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=resp):
             svc = self._make_service()
-            outcome = await svc.invoke(
-                HookKind.before_tool, tool_name="approve_invoice"
-            )
+            outcome = await svc.invoke(HookKind.before_tool, tool_name="approve_invoice")
 
         assert outcome == HookOutcome.completed
         call_kwargs = mock_bus.emit_agent_event.call_args.kwargs
@@ -241,7 +241,9 @@ class TestWebhookInvocation:
         mock_bus.emit_agent_event = AsyncMock()
 
         resp = httpx.Response(200, json={"verdict": "allow"})
-        with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=resp) as mock_post:
+        with patch(
+            "httpx.AsyncClient.post", new_callable=AsyncMock, return_value=resp
+        ) as mock_post:
             svc = self._make_service()
             await svc.invoke(HookKind.before_tool, tool_name="test")
 

@@ -43,9 +43,7 @@ class InvoiceAmountEvaluator(BaseEvaluator):
         """Check if user has reached the target invoice amount."""
         namespace = event.get("namespace")
         if not namespace:
-            return DetectionResult(
-                detected=False, message="Namespace not found in event"
-            )
+            return DetectionResult(detected=False, message="Namespace not found in event")
 
         min_amount = self.config.get("min_amount", 0)
         invoice_status = self.config.get("invoice_status")
@@ -84,15 +82,11 @@ class InvoiceAmountEvaluator(BaseEvaluator):
         return {
             "current": total,
             "target": min_amount,
-            "percentage": min(100, int((total / min_amount) * 100))
-            if min_amount > 0
-            else 100,
+            "percentage": min(100, int((total / min_amount) * 100)) if min_amount > 0 else 100,
             "status_filter": invoice_status,
         }
 
-    def _sum_invoices(
-        self, db: Session, namespace: str, invoice_status: str | None
-    ) -> float:
+    def _sum_invoices(self, db: Session, namespace: str, invoice_status: str | None) -> float:
         # pylint: disable=not-callable
         query = db.query(func.coalesce(func.sum(Invoice.amount), 0)).filter(
             Invoice.namespace == namespace

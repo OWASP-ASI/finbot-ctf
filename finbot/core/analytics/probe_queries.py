@@ -72,12 +72,7 @@ def get_top_probed_paths(db: Session, days: int = 7, limit: int = 15) -> list[di
     )
     if since:
         q = q.filter(ProbeLog.date >= since.date())
-    rows = (
-        q.group_by(ProbeLog.path)
-        .order_by(func.sum(ProbeLog.hits).desc())
-        .limit(limit)
-        .all()
-    )
+    rows = q.group_by(ProbeLog.path).order_by(func.sum(ProbeLog.hits).desc()).limit(limit).all()
     return [{"path": r.path, "hits": int(r.hits)} for r in rows]
 
 
@@ -90,12 +85,7 @@ def get_top_sources(db: Session, days: int = 7, limit: int = 10) -> list[dict]:
     )
     if since:
         q = q.filter(ProbeLog.date >= since.date())
-    rows = (
-        q.group_by(ProbeLog.source)
-        .order_by(func.sum(ProbeLog.hits).desc())
-        .limit(limit)
-        .all()
-    )
+    rows = q.group_by(ProbeLog.source).order_by(func.sum(ProbeLog.hits).desc()).limit(limit).all()
     return [{"source": r.source or "unknown", "hits": int(r.hits)} for r in rows]
 
 
@@ -123,13 +113,39 @@ def get_probe_categories(db: Session, days: int = 7) -> list[dict]:
         hits = int(r.hits)
         if any(w in p for w in ("wp-", "wordpress", "xmlrpc")):
             categories["CMS / WordPress"] += hits
-        elif any(w in p for w in (".env", ".git", "config", ".htaccess", ".htpasswd", ".ini", ".conf", ".yaml", ".yml")):
+        elif any(
+            w in p
+            for w in (
+                ".env",
+                ".git",
+                "config",
+                ".htaccess",
+                ".htpasswd",
+                ".ini",
+                ".conf",
+                ".yaml",
+                ".yml",
+            )
+        ):
             categories["Config / Secrets"] += hits
         elif any(w in p for w in ("admin", "phpmyadmin", "manager", "cpanel", "panel")):
             categories["Admin Panels"] += hits
-        elif any(w in p for w in ("server-status", "server-info", "actuator", "health", "metrics", "debug", "info")):
+        elif any(
+            w in p
+            for w in (
+                "server-status",
+                "server-info",
+                "actuator",
+                "health",
+                "metrics",
+                "debug",
+                "info",
+            )
+        ):
             categories["Server Info"] += hits
-        elif any(w in p for w in ("shell", "cmd", "console", "cgi", "exec", ".php", ".asp", ".jsp")):
+        elif any(
+            w in p for w in ("shell", "cmd", "console", "cgi", "exec", ".php", ".asp", ".jsp")
+        ):
             categories["Code Execution"] += hits
         elif any(w in p for w in ("sql", "dump", "backup", "database", "db")):
             categories["Database"] += hits
@@ -160,12 +176,8 @@ def get_bot_traffic_overview(db: Session, days: int = 7) -> dict:
         base = base.filter(PageView.timestamp >= since)
 
     total_hits = base.count()
-    unique_pages = (
-        base.with_entities(func.count(distinct(PageView.path))).scalar() or 0
-    )
-    unique_agents = (
-        base.with_entities(func.count(distinct(PageView.browser))).scalar() or 0
-    )
+    unique_pages = base.with_entities(func.count(distinct(PageView.path))).scalar() or 0
+    unique_agents = base.with_entities(func.count(distinct(PageView.browser))).scalar() or 0
     return {
         "total_hits": total_hits,
         "unique_pages": unique_pages,
@@ -174,60 +186,43 @@ def get_bot_traffic_overview(db: Session, days: int = 7) -> dict:
 
 
 def get_top_bot_crawled_pages(
-    db: Session, days: int = 7, limit: int = 10,
+    db: Session,
+    days: int = 7,
+    limit: int = 10,
 ) -> list[dict]:
     """App routes most frequently hit by bots."""
     since = _since(days)
-    q = (
-        db.query(PageView.path, func.count(PageView.id).label("hits"))
-        .filter(_BOT)
-    )
+    q = db.query(PageView.path, func.count(PageView.id).label("hits")).filter(_BOT)
     if since:
         q = q.filter(PageView.timestamp >= since)
-    rows = (
-        q.group_by(PageView.path)
-        .order_by(func.count(PageView.id).desc())
-        .limit(limit)
-        .all()
-    )
+    rows = q.group_by(PageView.path).order_by(func.count(PageView.id).desc()).limit(limit).all()
     return [{"path": r.path, "hits": r.hits} for r in rows]
 
 
 def get_bot_ua_breakdown(
-    db: Session, days: int = 7, limit: int = 10,
+    db: Session,
+    days: int = 7,
+    limit: int = 10,
 ) -> list[dict]:
     """Which bot types are crawling valid routes."""
     since = _since(days)
-    q = (
-        db.query(PageView.browser, func.count(PageView.id).label("hits"))
-        .filter(_BOT, PageView.browser.isnot(None))
+    q = db.query(PageView.browser, func.count(PageView.id).label("hits")).filter(
+        _BOT, PageView.browser.isnot(None)
     )
     if since:
         q = q.filter(PageView.timestamp >= since)
-    rows = (
-        q.group_by(PageView.browser)
-        .order_by(func.count(PageView.id).desc())
-        .limit(limit)
-        .all()
-    )
+    rows = q.group_by(PageView.browser).order_by(func.count(PageView.id).desc()).limit(limit).all()
     return [{"agent": r.browser, "hits": r.hits} for r in rows]
 
 
 def get_daily_bot_traffic(db: Session, days: int | None = 30) -> list[dict]:
     """Daily bot crawl volume on valid routes."""
     since = _since(days)
-    q = (
-        db.query(
-            func.date(PageView.timestamp).label("day"),
-            func.count(PageView.id).label("hits"),
-        )
-        .filter(_BOT)
-    )
+    q = db.query(
+        func.date(PageView.timestamp).label("day"),
+        func.count(PageView.id).label("hits"),
+    ).filter(_BOT)
     if since:
         q = q.filter(PageView.timestamp >= since)
-    rows = (
-        q.group_by(func.date(PageView.timestamp))
-        .order_by(func.date(PageView.timestamp))
-        .all()
-    )
+    rows = q.group_by(func.date(PageView.timestamp)).order_by(func.date(PageView.timestamp)).all()
     return [{"day": str(r.day), "hits": r.hits} for r in rows]

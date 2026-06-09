@@ -17,9 +17,7 @@ router = APIRouter(tags=["vendor-web"])
 
 
 @router.get("/", response_class=HTMLResponse, name="vendor_home")
-async def vendor_home(
-    _: Request, session_context: SessionContext = Depends(get_session_context)
-):
+async def vendor_home(_: Request, session_context: SessionContext = Depends(get_session_context)):
     """Vendor portal home with vendor context routing"""
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)

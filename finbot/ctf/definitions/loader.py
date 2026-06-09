@@ -99,12 +99,10 @@ class DefinitionLoader:
             "prerequisites": json.dumps(challenge.prerequisites),
             "resources": json.dumps([r.model_dump() for r in challenge.resources]),
             "detector_class": challenge.detector_class,
-            "detector_config": json.dumps(challenge.detector_config)
-            if challenge.detector_config
-            else None,
-            "scoring": json.dumps(challenge.scoring.model_dump())
-            if challenge.scoring
-            else None,
+            "detector_config": (
+                json.dumps(challenge.detector_config) if challenge.detector_config else None
+            ),
+            "scoring": json.dumps(challenge.scoring.model_dump()) if challenge.scoring else None,
             "is_active": challenge.is_active,
             "order_index": challenge.order_index,
         }
@@ -121,9 +119,9 @@ class DefinitionLoader:
             "points": badge.points,
             "icon_url": badge.icon_url,
             "evaluator_class": badge.evaluator_class,
-            "evaluator_config": json.dumps(badge.evaluator_config)
-            if badge.evaluator_config
-            else None,
+            "evaluator_config": (
+                json.dumps(badge.evaluator_config) if badge.evaluator_config else None
+            ),
             "is_active": badge.is_active,
             "is_secret": badge.is_secret,
         }

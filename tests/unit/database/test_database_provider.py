@@ -15,9 +15,9 @@ Acceptance Criteria:
 """
 
 import os
-import pytest
 from unittest.mock import patch
 
+import pytest
 from pydantic import ValidationError
 
 from finbot.config import Settings
@@ -492,6 +492,7 @@ def test_create_tables_sqlite(db):
     4. Schema migration was applied successfully
     """
     from sqlalchemy.inspection import inspect as sa_inspect
+
     from finbot.core.data.database import engine
 
     inspector = sa_inspect(engine)
@@ -699,9 +700,9 @@ def test_google_sheets_integration_verification():
     5. Multi-DB-Support sheet exists with correct headers
     6. Both 'Summary' and 'Multi-DB-Support' worksheets exist
     """
+    import gspread
     from dotenv import load_dotenv
     from google.oauth2.service_account import Credentials
-    import gspread
 
     load_dotenv()
 
@@ -714,8 +715,7 @@ def test_google_sheets_integration_verification():
     try:
         # Connect to Google Sheets
         creds = Credentials.from_service_account_file(
-            creds_file,
-            scopes=['https://www.googleapis.com/auth/spreadsheets']
+            creds_file, scopes=["https://www.googleapis.com/auth/spreadsheets"]
         )
         client = gspread.authorize(creds)
         sheet = client.open_by_key(sheet_id)
@@ -723,46 +723,38 @@ def test_google_sheets_integration_verification():
         # ==================================================================
         # Verify Summary worksheet
         # ==================================================================
-        summary_sheet = sheet.worksheet('Summary')
+        summary_sheet = sheet.worksheet("Summary")
         summary_data = summary_sheet.get_all_values()
 
         assert len(summary_data) > 1, "Summary sheet should have test execution data"
 
         summary_headers = summary_data[0]
-        for col in ['timestamp', 'total_tests', 'passed', 'failed']:
-            assert col in summary_headers, \
-                f"Summary sheet missing required column: {col}"
+        for col in ["timestamp", "total_tests", "passed", "failed"]:
+            assert col in summary_headers, f"Summary sheet missing required column: {col}"
 
         # ==================================================================
         # Verify Multi-DB-Support worksheet
         # ==================================================================
-        mdb_sheet = sheet.worksheet('Multi-DB-Support')
+        mdb_sheet = sheet.worksheet("Multi-DB-Support")
         mdb_data = mdb_sheet.get_all_values()
 
-        assert len(mdb_data) >= 1, \
-            "Multi-DB-Support sheet should have at least a header row"
+        assert len(mdb_data) >= 1, "Multi-DB-Support sheet should have at least a header row"
 
         mdb_headers = mdb_data[0]
-        for col in ['US ID', 'Title', 'Description']:
-            assert col in mdb_headers, \
-                f"Multi-DB-Support sheet missing required column: {col}"
+        for col in ["US ID", "Title", "Description"]:
+            assert col in mdb_headers, f"Multi-DB-Support sheet missing required column: {col}"
         # ==================================================================
         # Verify both tabs present in worksheet list
         # ==================================================================
         worksheet_titles = [ws.title for ws in sheet.worksheets()]
-        assert 'Summary' in worksheet_titles, \
-            "Summary worksheet should exist"
-        assert 'Multi-DB-Support' in worksheet_titles, \
-            "Multi-DB-Support worksheet should exist"
+        assert "Summary" in worksheet_titles, "Summary worksheet should exist"
+        assert "Multi-DB-Support" in worksheet_titles, "Multi-DB-Support worksheet should exist"
 
         print(f"✓ Google Sheets verified. Worksheets: {worksheet_titles}")
         print("✓ Summary data is being recorded correctly")
         print("✓ Multi-DB-Support tab found with correct headers")
 
     except gspread.exceptions.WorksheetNotFound as e:
-        pytest.fail(
-            f"Worksheet not found: {e}. "
-            f"Verify the tab exists in the spreadsheet."
-        )
+        pytest.fail(f"Worksheet not found: {e}. " f"Verify the tab exists in the spreadsheet.")
     except Exception as e:
         pytest.fail(f"Google Sheets verification failed: {e}")
