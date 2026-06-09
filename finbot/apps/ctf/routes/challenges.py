@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from finbot.core.auth.middleware import get_session_context
+from finbot.core.auth.middleware import get_authenticated_session_context, get_session_context
 from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
@@ -210,7 +210,7 @@ def get_challenge(
 @router.post("/challenges/{challenge_id}/check", response_model=CheckResult)
 def check_challenge(
     challenge_id: str,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
     db: Session = Depends(get_db),
 ):
     """On-demand challenge progress check.
@@ -218,9 +218,10 @@ def check_challenge(
     Returns current progress status from the database. Detection happens
     in real-time through the event pipeline — this endpoint just reflects
     what has already been detected.
+
+    Requires a persistent (email-bound) session — temporary sessions receive
+    HTTP 401 via get_authenticated_session_context.
     """
-    if not session_context:
-        raise HTTPException(status_code=401, detail="Authentication required")
 
     challenge_repo = ChallengeRepository(db)
     challenge = challenge_repo.get_challenge(challenge_id)
@@ -261,12 +262,14 @@ def check_challenge(
 @router.post("/challenges/{challenge_id}/hint", response_model=HintResponse)
 def use_hint(
     challenge_id: str,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
     db: Session = Depends(get_db),
 ):
-    """Use the next available hint"""
-    if not session_context:
-        raise HTTPException(status_code=401, detail="Authentication required")
+    """Use the next available hint.
+
+    Requires a persistent (email-bound) session — temporary sessions receive
+    HTTP 401 via get_authenticated_session_context.
+    """
 
     challenge_repo = ChallengeRepository(db)
     challenge = challenge_repo.get_challenge(challenge_id)
