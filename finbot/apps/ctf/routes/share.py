@@ -90,14 +90,27 @@ def get_cache_path(cache_key: str) -> Path:
     return CACHE_DIR / f"{cache_key}.png"
 
 
+from urllib.parse import urlparse
+from finbot.apps.ctf.routes.profile import get_safe_ssrf_ip
+
 async def _fetch_avatar_b64(url: str) -> str:
     """Fetch a remote avatar image and return it as a base64 data URI.
 
     Returns empty string on any failure (timeout, bad content type, too large).
     """
+    safe_ip = get_safe_ssrf_ip(url)
+    if not safe_ip:
+        return ""
+        
+    parsed = urlparse(url)
+    new_url = f"https://{safe_ip}{parsed.path}"
+    if parsed.query:
+        new_url += f"?{parsed.query}"
+
     try:
-        async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
-            resp = await client.get(url)
+        # verify=False is required because the TLS certificate belongs to the hostname, not the IP
+        async with httpx.AsyncClient(timeout=5.0, follow_redirects=False, verify=False) as client:
+            resp = await client.get(new_url, headers={"Host": parsed.hostname})
             if resp.status_code != 200:
                 return ""
             content_type = resp.headers.get("content-type", "")

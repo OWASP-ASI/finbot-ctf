@@ -1,7 +1,10 @@
 """Profile API Routes - Social features for authenticated users"""
 
 import hashlib
+import ipaddress
 import logging
+import socket
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
@@ -20,6 +23,49 @@ from finbot.core.data.repositories import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/profile", tags=["profile"])
+
+BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),    # loopback
+    ipaddress.ip_network("169.254.0.0/16"), # link-local (AWS metadata)
+    ipaddress.ip_network("10.0.0.0/8"),     # RFC-1918 private
+    ipaddress.ip_network("172.16.0.0/12"),  # RFC-1918 private
+    ipaddress.ip_network("192.168.0.0/16"), # RFC-1918 private
+    ipaddress.ip_network("::1/128"),        # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),       # IPv6 ULA
+    ipaddress.ip_network("fe80::/10"),      # IPv6 link-local
+]
+
+def get_safe_ssrf_ip(url: str) -> str | None:
+    """Resolve a URL to a safe IP address, preventing SSRF."""
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        return None
+    try:
+        host = parsed.hostname
+        if not host:
+            return None
+            
+        # Use getaddrinfo to get all IPv4 and IPv6 addresses
+        addr_info = socket.getaddrinfo(host, 443, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        
+        # Extract unique IP address strings
+        ips = {info[4][0] for info in addr_info}
+        
+        safe_ip = None
+        for ip_str in ips:
+            ip_obj = ipaddress.ip_address(ip_str)
+            # If ANY resolved IP is in a blocked network, abort completely
+            if any(ip_obj in net for net in BLOCKED_NETWORKS):
+                return None
+            safe_ip = ip_str
+            
+        return safe_ip
+    except Exception:
+        return None  # fail closed
+
+def is_ssrf_safe(url: str) -> bool:
+    """Wrapper that returns True if the URL resolves to a safe IP."""
+    return get_safe_ssrf_ip(url) is not None
 
 
 # =============================================================================
@@ -339,10 +385,17 @@ async def update_profile(
         if error:
             raise HTTPException(status_code=400, detail=error)
 
-    # Validate avatar_url if switching to url type
-    if request.avatar_type == "url" and request.avatar_url:
-        if not request.avatar_url.startswith("https://"):
-            raise HTTPException(status_code=400, detail="Avatar URL must use HTTPS")
+    # Fetch current profile to validate the state transition securely
+    profile = profile_repo.get_by_user_id(session_context.user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Validate avatar_url if switching to/retaining url type
+    effective_avatar_type = request.avatar_type if request.avatar_type is not None else profile.avatar_type
+    effective_avatar_url = request.avatar_url if request.avatar_url is not None else profile.avatar_url
+    if effective_avatar_type == "url" and effective_avatar_url:
+        if not is_ssrf_safe(effective_avatar_url):
+            raise HTTPException(status_code=400, detail="Invalid Avatar URL: Only public HTTPS URLs are allowed")
 
     # Update other fields
     profile = profile_repo.update_profile(
