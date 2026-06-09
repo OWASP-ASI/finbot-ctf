@@ -35,18 +35,37 @@ BLOCKED_NETWORKS = [
     ipaddress.ip_network("fe80::/10"),      # IPv6 link-local
 ]
 
-def is_ssrf_safe(url: str) -> bool:
+def get_safe_ssrf_ip(url: str) -> str | None:
+    """Resolve a URL to a safe IP address, preventing SSRF."""
     parsed = urlparse(url)
     if parsed.scheme != "https":
-        return False
+        return None
     try:
         host = parsed.hostname
         if not host:
-            return False
-        ip = ipaddress.ip_address(socket.gethostbyname(host))
-        return not any(ip in net for net in BLOCKED_NETWORKS)
+            return None
+            
+        # Use getaddrinfo to get all IPv4 and IPv6 addresses
+        addr_info = socket.getaddrinfo(host, 443, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        
+        # Extract unique IP address strings
+        ips = {info[4][0] for info in addr_info}
+        
+        safe_ip = None
+        for ip_str in ips:
+            ip_obj = ipaddress.ip_address(ip_str)
+            # If ANY resolved IP is in a blocked network, abort completely
+            if any(ip_obj in net for net in BLOCKED_NETWORKS):
+                return None
+            safe_ip = ip_str
+            
+        return safe_ip
     except Exception:
-        return False  # fail closed
+        return None  # fail closed
+
+def is_ssrf_safe(url: str) -> bool:
+    """Wrapper that returns True if the URL resolves to a safe IP."""
+    return get_safe_ssrf_ip(url) is not None
 
 
 # =============================================================================
