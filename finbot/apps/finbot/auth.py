@@ -8,7 +8,7 @@ from threading import Lock
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from pydantic import EmailStr
+from pydantic import EmailStr, TypeAdapter, ValidationError
 
 from finbot.config import settings
 from finbot.core.auth.session import session_manager
@@ -21,6 +21,8 @@ template_response = TemplateResponse("finbot/apps/finbot/templates")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+email_adapter = TypeAdapter(EmailStr)
+
 # ---------------------------------------------------------------------------
 # Per-IP rate limiter — 5 requests / 60 s on the magic-link endpoint.
 # Stdlib only; no new dependencies. For multi-worker deployments swap for
@@ -28,6 +30,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # ---------------------------------------------------------------------------
 _RATE_LIMIT_WINDOW = 60  # seconds
 _RATE_LIMIT_MAX = 5       # requests per window
+_MAX_STORE_SIZE = 10000   # Max IPs to track before eviction
 _rate_store: dict[str, list[float]] = defaultdict(list)
 _rate_lock = Lock()
 
@@ -37,6 +40,16 @@ def _is_rate_limited(ip: str) -> bool:
     now = time.monotonic()
     cutoff = now - _RATE_LIMIT_WINDOW
     with _rate_lock:
+        if len(_rate_store) >= _MAX_STORE_SIZE:
+            # Simple eviction: clear expired entries
+            for k in list(_rate_store.keys()):
+                _rate_store[k] = [t for t in _rate_store[k] if t > cutoff]
+                if not _rate_store[k]:
+                    del _rate_store[k]
+            # If still full, clear the entire store to prevent memory leak
+            if len(_rate_store) >= _MAX_STORE_SIZE:
+                _rate_store.clear()
+
         _rate_store[ip] = [t for t in _rate_store[ip] if t > cutoff]
         if len(_rate_store[ip]) >= _RATE_LIMIT_MAX:
             return True
@@ -63,8 +76,8 @@ async def request_magic_link(
 
     # --- Email format validation ---
     try:
-        EmailStr._validate(email)
-    except Exception:  # pydantic v2 raises PydanticCustomError for bad addresses
+        email_adapter.validate_python(email)
+    except ValidationError:
         return template_response(
             request,
             "auth-error.html",
@@ -72,6 +85,7 @@ async def request_magic_link(
                 "error": "Invalid email",
                 "message": "Please enter a valid email address.",
             },
+            status_code=400
         )
 
     # --- Per-IP rate limiting ---
@@ -84,6 +98,7 @@ async def request_magic_link(
                 "error": "Too many requests",
                 "message": "Please wait a moment before requesting another sign-in link.",
             },
+            status_code=429
         )
 
     db = SessionLocal()
