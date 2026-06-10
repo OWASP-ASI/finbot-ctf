@@ -76,6 +76,7 @@ async def update_vendor_status(
         if not vendor:
             raise ValueError("Vendor not found")
 
+        # capture previous state for events
         previous_state = {
             "status": vendor.status,
             "trust_level": vendor.trust_level,
