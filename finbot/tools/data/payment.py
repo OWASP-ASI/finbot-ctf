@@ -63,6 +63,11 @@ async def process_payment(
     Returns:
         Dictionary containing payment result
     """
+    if not payment_method or not isinstance(payment_method, str) or not payment_method.strip():
+        raise ValueError("payment_method is required and cannot be empty")
+    if payment_reference is None:
+        raise ValueError("payment_reference is required")
+
     logger.info(
         "Processing payment for invoice_id: %s, method: %s, ref: %s",
         invoice_id,
@@ -175,6 +180,9 @@ async def update_payment_agent_notes(
     Returns:
         Dictionary containing updated invoice
     """
+    if agent_notes is None:
+        raise ValueError("agent_notes is required and cannot be None")
+
     logger.info(
         "Updating payment agent notes for invoice_id: %s. Agent notes: %s",
         invoice_id,
