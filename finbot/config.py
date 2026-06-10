@@ -154,6 +154,11 @@ class Settings(BaseSettings):
             self.DATABASE_TYPE = self._detect_database_type()  # pylint: disable=C0103
         if not self.SESSION_SIGNING_KEY:
             self.SESSION_SIGNING_KEY = self._derive_session_signing_key()  # pylint: disable=C0103
+        if not self.DEBUG and not self.SESSION_COOKIE_SECURE:
+            raise ValueError(
+                "SESSION_COOKIE_SECURE must be True in production (DEBUG=False). "
+                "Set SESSION_COOKIE_SECURE=True or use DEBUG=True for local development."
+            )
         return self
 
     def _derive_session_signing_key(self) -> str:
