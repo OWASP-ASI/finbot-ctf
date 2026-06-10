@@ -61,7 +61,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
         # Validate CSRF token
         try:
-            self._validate_csrf_token(request)
+            await self._validate_csrf_token(request)
         except HTTPException as e:
             logger.warning(
                 "CSRF validation failed for %s %s from %s: %s",
@@ -81,7 +81,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         """Check if path is exempt from CSRF protection"""
         return any(path.startswith(exempt) for exempt in self.EXEMPT_PATHS)
 
-    def _validate_csrf_token(self, request: Request) -> None:
+    async def _validate_csrf_token(self, request: Request) -> None:
         """Validate CSRF token from request"""
 
         # Get session context (should be set by SessionMiddleware)
@@ -99,7 +99,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             raise HTTPException(status_code=403, detail="No CSRF token in session")
 
         # Get CSRF token from request
-        request_token = self._extract_csrf_token(request)
+        request_token = await self._extract_csrf_token(request)
         if not request_token:
             raise HTTPException(
                 status_code=403, detail="CSRF token missing from request"
@@ -113,7 +113,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             "CSRF validation successful for %s %s", request.method, request.url.path
         )
 
-    def _extract_csrf_token(self, request: Request) -> str | None:
+    async def _extract_csrf_token(self, request: Request) -> str | None:
         """Extract CSRF token from request headers or form data"""
 
         # Try header first (for AJAX requests)
@@ -122,19 +122,15 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
             return token
 
         # Try form data (for regular form submissions)
-        # Note: Form parsing in middleware is complex, so we primarily rely on header-based CSRF
-        # Form-based CSRF tokens are handled by JavaScript submission or custom form parsing
-
-        # For content-type application/x-www-form-urlencoded or multipart/form-data
         content_type = request.headers.get("content-type", "").lower()
         if (
             "application/x-www-form-urlencoded" in content_type
             or "multipart/form-data" in content_type
         ):
-            # We'll need to parse form data, but this is tricky in middleware
-            # For now, rely on header-based CSRF for API endpoints
-            # Form-based CSRF will be handled by template injection
-            pass
+            form = await request.form()
+            token = form.get(settings.CSRF_TOKEN_NAME)
+            if token:
+                return token
 
         return None
 
