@@ -404,8 +404,12 @@ class Invoice(Base):
             "invoice_number": self.invoice_number,
             "amount": self.amount,
             "description": self.description,
-            "invoice_date": self.invoice_date.isoformat().replace("+00:00", "Z"),
-            "due_date": self.due_date.isoformat().replace("+00:00", "Z"),
+            "invoice_date": self.invoice_date.isoformat().replace("+00:00", "Z")
+            if self.invoice_date
+            else None,
+            "due_date": self.due_date.isoformat().replace("+00:00", "Z")
+            if self.due_date
+            else None,
             "status": self.status,
             "agent_notes": self.agent_notes,
             "attachments": attachments,
