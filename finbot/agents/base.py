@@ -1,5 +1,6 @@
 """Base Agent class for the FinBot platform"""
 
+import asyncio
 import json
 import logging
 import secrets
@@ -161,8 +162,9 @@ class BaseAgent(ABC):
                                         tool_call_name,
                                         tool_call["arguments"],
                                     )
-                                    function_output = await callable_fn(
-                                        **tool_call["arguments"]
+                                    function_output = await asyncio.wait_for(
+                                        callable_fn(**tool_call["arguments"]),
+                                        timeout=settings.AGENT_TOOL_TIMEOUT,
                                     )
                                     logger.debug("Function output: %s", function_output)
                                     if tool_call_name == "complete_task":
@@ -172,6 +174,16 @@ class BaseAgent(ABC):
                                             task_result=function_output
                                         )
                                         return function_output
+                                except asyncio.TimeoutError:
+                                    logger.error(
+                                        "Tool call %s timed out after %ds",
+                                        tool_call_name,
+                                        settings.AGENT_TOOL_TIMEOUT,
+                                    )
+                                    function_output = {
+                                        "error": f"Tool {tool_call_name} timed out "
+                                        f"after {settings.AGENT_TOOL_TIMEOUT}s",
+                                    }
                                 except Exception as e:  # pylint: disable=broad-exception-caught
                                     logger.error(
                                         "Tool call %s failed: %s", tool_call["name"], e

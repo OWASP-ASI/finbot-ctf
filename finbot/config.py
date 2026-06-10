@@ -105,6 +105,7 @@ class Settings(BaseSettings):
 
     # Agent Config
     AGENT_MAX_ITERATIONS: int = 10
+    AGENT_TOOL_TIMEOUT: int = 60  # seconds
 
     # OpenAI Config
     OPENAI_API_KEY: str = ""
