@@ -1,0 +1,36 @@
+name: Security Issue
+description: Report a security vulnerability or concern
+labels: ["type: security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **If this is a critical vulnerability, please report it privately via GitHub Security Advisories instead of opening a public issue.**
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the security issue.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the potential impact?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How can this be triggered?
+    validations:
+      required: false
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested Fix
+      description: Any ideas on how to address this?
+    validations:
+      required: false

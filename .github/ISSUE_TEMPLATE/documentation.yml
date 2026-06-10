@@ -1,0 +1,23 @@
+name: Documentation
+description: Report a docs issue or suggest improvements
+labels: ["type: documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve the documentation.
+  - type: textarea
+    id: description
+    attributes:
+      label: What needs to change?
+      description: Describe the docs issue or improvement.
+      placeholder: The section on X is missing / unclear / outdated ...
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Change
+      description: How should it read? Include links if relevant.
+    validations:
+      required: false

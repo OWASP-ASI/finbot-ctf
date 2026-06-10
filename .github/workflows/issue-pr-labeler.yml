@@ -1,0 +1,166 @@
+name: Issue and PR Content Labeler
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request_target:
+    types: [opened, edited]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  content_labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply Content Labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            let itemNumber, title, body;
+            if (context.payload.pull_request) {
+              const pr = context.payload.pull_request;
+              itemNumber = pr.number;
+              title = pr.title || '';
+              body = pr.body || '';
+            } else if (context.payload.issue) {
+              const issue = context.payload.issue;
+              itemNumber = issue.number;
+              title = issue.title || '';
+              body = issue.body || '';
+            } else {
+              core.info('No issue or pull_request in context. Skipping.');
+              return;
+            }
+
+            const text = `${title} ${body}`.toLowerCase();
+
+            // --- Type labels (what kind of issue/PR) ---
+            const typeRules = [
+              { label: 'type: bug',           color: 'd73a4a', keywords: ['bug', 'crash', 'error', 'fix', 'broken', 'failing', 'steps to reproduce', 'expected behavior', 'actual behavior'] },
+              { label: 'type: enhancement',   color: 'a2eeef', keywords: ['enhancement', 'feature', 'proposal', 'improve', 'request', 'add support', 'would be nice'] },
+              { label: 'type: documentation', color: '0075ca', keywords: ['documentation', 'docs', 'readme', 'typo', 'spelling', 'clarify'] },
+              { label: 'type: question',      color: 'd876e3', keywords: ['question', 'how to', 'how do', 'is it possible', 'help wanted', 'confused'] },
+              { label: 'type: security',      color: 'e11d48', keywords: ['security', 'injection', 'csrf', 'attack', 'prompt injection', 'vulnerability', 'cve'] },
+            ];
+
+            // --- Priority labels (mutually exclusive) ---
+            const priorityRules = [
+              { label: 'priority: high',   color: 'b60205', keywords: ['urgent', 'critical', 'blocker', 'production down', 'p0', 'p1'] },
+              { label: 'priority: medium', color: 'fbca04', keywords: ['important', 'should fix', 'p2'] },
+              { label: 'priority: low',    color: 'c5def5', keywords: ['nice to have', 'low priority', 'minor', 'p3', 'cosmetic'] },
+            ];
+
+            // --- Contributor signal labels ---
+            const contributorRules = [
+              { label: 'good first issue', color: '7057ff', keywords: ['good first issue', 'beginner', 'starter', 'easy fix', 'newcomer'] },
+              { label: 'help wanted',      color: '008672', keywords: ['help wanted', 'looking for help', 'contributors welcome', 'need help'] },
+            ];
+
+            // --- Area/Scope labels (which part of the codebase) ---
+            const areaRules = [
+              { label: 'area: ctf',       color: '7c3aed', keywords: ['ctf', 'challenge', 'detector', 'evaluator'] },
+              { label: 'area: agents',    color: '1d4ed8', keywords: ['agent', 'base.py', 'orchestrator'] },
+              { label: 'area: tools',     color: '0891b2', keywords: ['tool', 'vendor', 'invoice'] },
+              { label: 'area: tests',     color: '16a34a', keywords: ['test', 'pytest', 'coverage'] },
+              { label: 'area: frontend',  color: 'f59e0b', keywords: ['frontend', 'ui', 'css', 'sidebar'] },
+              { label: 'area: build',     color: '6b7280', keywords: ['docker', 'ci', 'workflow', 'build'] },
+              { label: 'area: database',  color: '92400e', keywords: ['database', 'migration', 'alembic', 'model'] },
+              { label: 'area: admin',     color: '5319e7', keywords: ['admin', 'dashboard', 'admin portal'] },
+              { label: 'area: web',       color: '1f6feb', keywords: ['web app', 'web portal', 'landing'] },
+            ];
+
+            // --- Status label (auto-apply "needs triage" to new issues) ---
+            const isIssue = !!context.payload.issue;
+            const isNew = context.payload.action === 'opened';
+
+            // Combine all keyword-based rules
+            const labelRules = [...typeRules, ...contributorRules, ...areaRules];
+
+            // Ensure a label exists, creating it if missing
+            async function ensureLabelExists(name, color) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name,
+                    color,
+                    description: `Auto-applied: content matches "${name}" keywords`,
+                  });
+                  core.info(`Created label "${name}"`);
+                } else {
+                  throw e;
+                }
+              }
+            }
+
+            // Get current labels
+            const { data: current } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: itemNumber,
+              per_page: 100
+            });
+            const currentNames = new Set(current.map(l => l.name));
+
+            const labelsToAdd = [];
+
+            for (const rule of labelRules) {
+              const matched = rule.keywords.some(kw => text.includes(kw));
+              if (matched && !currentNames.has(rule.label)) {
+                await ensureLabelExists(rule.label, rule.color);
+                labelsToAdd.push(rule.label);
+                core.info(`Matched label "${rule.label}" for #${itemNumber}`);
+              }
+            }
+
+            // Handle priority labels (mutually exclusive - pick highest match)
+            const priorityPrefix = 'priority: ';
+            const matchedPriority = priorityRules.find(rule =>
+              rule.keywords.some(kw => text.includes(kw))
+            );
+
+            if (matchedPriority && !currentNames.has(matchedPriority.label)) {
+              // Remove any existing priority labels first
+              for (const cl of current) {
+                if (cl.name.startsWith(priorityPrefix) && cl.name !== matchedPriority.label) {
+                  await github.rest.issues.removeLabel({
+                    owner, repo, issue_number: itemNumber, name: cl.name
+                  });
+                  core.info(`Removed conflicting label "${cl.name}"`);
+                }
+              }
+              await ensureLabelExists(matchedPriority.label, matchedPriority.color);
+              labelsToAdd.push(matchedPriority.label);
+            }
+
+            // Auto-apply "status: needs triage" to new issues
+            if (isIssue && isNew) {
+              const triageLabel = 'status: needs triage';
+              const triageColor = 'ededed';
+              if (!currentNames.has(triageLabel)) {
+                await ensureLabelExists(triageLabel, triageColor);
+                labelsToAdd.push(triageLabel);
+                core.info(`Applied "${triageLabel}" to new issue #${itemNumber}`);
+              }
+            }
+
+            if (labelsToAdd.length > 0) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: itemNumber,
+                labels: labelsToAdd
+              });
+              core.info(`Applied ${labelsToAdd.length} label(s) to #${itemNumber}: ${labelsToAdd.join(', ')}`);
+            } else {
+              core.info(`No new content labels matched for #${itemNumber}`);
+            }

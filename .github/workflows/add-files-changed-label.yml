@@ -1,0 +1,123 @@
+name: Add Files Changed Label
+
+# Uses pull_request_target so it runs with base repo permissions for forked PRs.
+# SECURITY: We do NOT check out or execute PR code. We only use the GitHub API.
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  add_files_changed_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Files Changed Label
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('No pull_request in context. Skipping.');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = pr.number;
+
+            // Get all files (with pagination) and count them
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+            const count = files.length;
+
+            // Determine the size label and color based on file count
+            let newLabel, labelColor, description;
+            if (count <= 1) {
+              newLabel = 'size: small';
+              labelColor = '0e8a16'; // Green
+              description = 'PR changes 1 file';
+            } else if (count <= 5) {
+              newLabel = 'size: medium';
+              labelColor = 'fbca04'; // Yellow
+              description = `PR changes ${count} files`;
+            } else if (count <= 10) {
+              newLabel = 'size: large';
+              labelColor = 'ff9800'; // Orange
+              description = `PR changes ${count} files`;
+            } else {
+              newLabel = 'size: very large';
+              labelColor = 'e74c3c'; // Red
+              description = `PR changes ${count} files`;
+            }
+
+            // Get current labels on the PR
+            const { data: current } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: pull_number,
+              per_page: 100
+            });
+            const currentNames = new Set(current.map(l => l.name));
+
+            // Remove any existing size labels
+            const sizeRegex = /^size:/i;
+            for (const name of currentNames) {
+              if (sizeRegex.test(name) && name !== newLabel) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: pull_number,
+                    name
+                  });
+                  core.info(`Removed label ${name}`);
+                } catch (err) {
+                  core.warning(`Failed to remove label ${name}: ${err.message}`);
+                }
+              }
+            }
+
+            // Ensure the new label exists (create if missing)
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: newLabel });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: newLabel,
+                  color: labelColor,
+                  description: description,
+                });
+                core.info(`Created label ${newLabel}`);
+              } else {
+                throw e;
+              }
+            }
+
+            // Add the label if it isn't already present
+            if (!currentNames.has(newLabel)) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pull_number,
+                labels: [newLabel]
+              });
+              core.info(`Applied label ${newLabel} to PR #${pull_number}`);
+            } else {
+              core.info(`Label ${newLabel} already present on PR #${pull_number}`);
+            }
+
+            core.info(`PR #${pull_number} has ${count} changed file(s) → ${newLabel}`);

@@ -1,0 +1,133 @@
+name: Add Last Active Label
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Runs daily at 06:00 UTC
+  issues:
+    types: [opened, edited, reopened]
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  add_activity_label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label Activity Status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const activityLabels = [
+              { name: 'activity: active',         color: '0e8a16', maxDays: 2   },
+              { name: 'activity: getting stale',   color: 'fbca04', maxDays: 7   },
+              { name: 'activity: stale',           color: 'ff9800', maxDays: 14  },
+              { name: 'activity: abandoned',       color: 'e74c3c', maxDays: Infinity },
+            ];
+
+            const allActivityNames = activityLabels.map(l => l.name);
+
+            // Ensure all activity labels exist
+            for (const label of activityLabels) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name: label.name,
+                    color: label.color,
+                    description: `Item activity status`,
+                  });
+                  core.info(`Created label ${label.name}`);
+                }
+              }
+            }
+
+            function getActivityLabel(daysSinceUpdate) {
+              if (daysSinceUpdate <= 2) return 'activity: active';
+              if (daysSinceUpdate <= 7) return 'activity: getting stale';
+              if (daysSinceUpdate <= 14) return 'activity: stale';
+              return 'activity: abandoned';
+            }
+
+            async function applyActivityLabel(issueNumber, updatedAt) {
+              const now = new Date();
+              const updated = new Date(updatedAt);
+              const daysSince = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
+              const newLabel = getActivityLabel(daysSince);
+
+              const { data: current } = await github.rest.issues.listLabelsOnIssue({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                per_page: 100
+              });
+              const currentNames = new Set(current.map(l => l.name));
+
+              // Remove old activity labels
+              for (const name of currentNames) {
+                if (allActivityNames.includes(name) && name !== newLabel) {
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner,
+                      repo,
+                      issue_number: issueNumber,
+                      name
+                    });
+                    core.info(`Removed ${name} from #${issueNumber}`);
+                  } catch (err) {
+                    if (err.status !== 404) {
+                      core.warning(`Failed to remove ${name}: ${err.message}`);
+                    }
+                  }
+                }
+              }
+
+              // Add new label if not already present
+              if (!currentNames.has(newLabel)) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  labels: [newLabel]
+                });
+                core.info(`Applied ${newLabel} to #${issueNumber} (${daysSince} days since update)`);
+              }
+            }
+
+            // If triggered by a specific event, only update that item
+            if (context.payload.pull_request) {
+              const pr = context.payload.pull_request;
+              await applyActivityLabel(pr.number, pr.updated_at);
+              return;
+            }
+            if (context.payload.issue) {
+              const issue = context.payload.issue;
+              await applyActivityLabel(issue.number, issue.updated_at);
+              return;
+            }
+
+            // Scheduled run: process all open issues and PRs
+            core.info('Scheduled run: processing all open issues and PRs...');
+
+            // Process open issues
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+
+            for (const issue of issues) {
+              await applyActivityLabel(issue.number, issue.updated_at);
+            }
+
+            core.info(`Processed ${issues.length} open issues/PRs.`);

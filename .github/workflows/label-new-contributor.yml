@@ -1,0 +1,82 @@
+name: Label New Contributor
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  label_new_contributor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for First Contribution
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('No pull_request in context. Skipping.');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = pr.number;
+            const author = pr.user.login;
+
+            const labelName = 'first contribution';
+            const labelColor = '7c3aed'; // Purple
+            const labelDescription = 'First-time contributor to this repo';
+
+            // Search for prior merged PRs by this author
+            const { data: searchResult } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} type:pr author:${author} is:merged`,
+              per_page: 1,
+            });
+
+            if (searchResult.total_count > 0) {
+              core.info(`${author} has ${searchResult.total_count} prior merged PR(s). Not a new contributor.`);
+              return;
+            }
+
+            core.info(`${author} has no prior merged PRs. Labeling as first contribution.`);
+
+            // Ensure the label exists
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: labelName });
+            } catch (e) {
+              if (e.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: labelName,
+                  color: labelColor,
+                  description: labelDescription,
+                });
+                core.info(`Created label "${labelName}"`);
+              } else {
+                throw e;
+              }
+            }
+
+            // Add the label
+            const { data: current } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number: pull_number,
+              per_page: 100
+            });
+
+            if (!current.some(l => l.name === labelName)) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pull_number,
+                labels: [labelName]
+              });
+              core.info(`Applied "${labelName}" to PR #${pull_number}`);
+            }
