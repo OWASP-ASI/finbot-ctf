@@ -187,15 +187,20 @@ class ToolCallDetector(BaseDetector):
             if op == "not_in":
                 return actual not in expected
             if op == "contains":
-                return expected in str(actual).lower()
-            if op == "gt":
-                return float(actual) > float(expected)
-            if op == "gte":
-                return float(actual) >= float(expected)
-            if op == "lt":
-                return float(actual) < float(expected)
-            if op == "lte":
-                return float(actual) <= float(expected)
+                return str(expected).lower() in str(actual).lower()
+            if op in ("gt", "gte", "lt", "lte"):
+                try:
+                    actual_f = float(actual)
+                    expected_f = float(expected)
+                except (ValueError, TypeError):
+                    return False
+                if op == "gt":
+                    return actual_f > expected_f
+                if op == "gte":
+                    return actual_f >= expected_f
+                if op == "lt":
+                    return actual_f < expected_f
+                return actual_f <= expected_f
             if op == "matches":
                 return bool(re.search(expected, str(actual), re.IGNORECASE))
 

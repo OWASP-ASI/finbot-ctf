@@ -56,7 +56,7 @@ def create_detector(
     try:
         detector_class = get_detector_class(detector_class_name)
         return detector_class(challenge_id=challenge_id, config=config)
-    except ValueError as e:
+    except (ValueError, TypeError) as e:
         logger.error("Failed to create detector: %s", e)
         return None
 
