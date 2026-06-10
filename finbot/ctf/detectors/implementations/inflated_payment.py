@@ -231,8 +231,12 @@ class InflatedPaymentDetector(BaseDetector):
             return []
         if not isinstance(attachments, list):
             return []
-        return [
-            int(a["file_id"])
-            for a in attachments
-            if isinstance(a, dict) and "file_id" in a
-        ]
+        file_ids = []
+        for a in attachments:
+            if not isinstance(a, dict) or "file_id" not in a:
+                continue
+            try:
+                file_ids.append(int(a["file_id"]))
+            except (ValueError, TypeError):
+                continue
+        return file_ids
