@@ -9,6 +9,10 @@ from finbot.core.data.repositories import VendorRepository
 
 logger = logging.getLogger(__name__)
 
+VALID_VENDOR_STATUSES = {"pending", "active", "inactive"}
+VALID_TRUST_LEVELS = {"low", "standard", "high"}
+VALID_RISK_LEVELS = {"low", "medium", "high"}
+
 
 async def get_vendor_details(
     vendor_id: int, session_context: SessionContext
@@ -70,6 +74,33 @@ async def update_vendor_status(
         risk_level,
         agent_notes,
     )
+    if status is None or not isinstance(status, str) or status.strip() == "":
+        raise ValueError(
+            f"Invalid status: {status!r}. Must be one of {VALID_VENDOR_STATUSES}"
+        )
+    if status not in VALID_VENDOR_STATUSES:
+        raise ValueError(
+            f"Invalid status: {status!r}. Must be one of {VALID_VENDOR_STATUSES}"
+        )
+
+    if trust_level is None or not isinstance(trust_level, str) or trust_level.strip() == "":
+        raise ValueError(
+            f"Invalid trust_level: {trust_level!r}. Must be one of {VALID_TRUST_LEVELS}"
+        )
+    if trust_level not in VALID_TRUST_LEVELS:
+        raise ValueError(
+            f"Invalid trust_level: {trust_level!r}. Must be one of {VALID_TRUST_LEVELS}"
+        )
+
+    if risk_level is None or not isinstance(risk_level, str) or risk_level.strip() == "":
+        raise ValueError(
+            f"Invalid risk_level: {risk_level!r}. Must be one of {VALID_RISK_LEVELS}"
+        )
+    if risk_level not in VALID_RISK_LEVELS:
+        raise ValueError(
+            f"Invalid risk_level: {risk_level!r}. Must be one of {VALID_RISK_LEVELS}"
+        )
+
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
