@@ -189,6 +189,25 @@ async def vendor_profile(
     )
 
 
+@router.get("/cascade", response_class=HTMLResponse, name="vendor_cascade")
+async def vendor_cascade(
+    request: Request, session_context: SessionContext = Depends(get_session_context)
+):
+    """Cascade Lab: interactive multi-agent cascading-failure demo."""
+    if not session_context.has_vendor_context():
+        return RedirectResponse(url="/vendor/select-vendor", status_code=302)
+
+    return template_response(
+        request,
+        "pages/cascade.html",
+        {
+            "request": request,
+            "vendor_context": session_context.current_vendor,
+            "is_multi_vendor": session_context.is_multi_vendor_user(),
+        },
+    )
+
+
 @router.get("/assistant", response_class=HTMLResponse, name="vendor_assistant")
 async def vendor_assistant(
     request: Request, session_context: SessionContext = Depends(get_session_context)

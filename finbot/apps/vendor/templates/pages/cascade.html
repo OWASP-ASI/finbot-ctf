@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+
+{% block title %}Cascade Lab - FinBot Vendor Portal{% endblock %}
+
+{% block meta_description %}Interactive demonstration of cascading failures in FinBot's multi-agent invoice pipeline.{% endblock %}
+
+{% block nav_cascade %}active{% endblock %}
+
+{% block page_title %}Cascade Lab{% endblock %}
+{% block page_subtitle %}Watch how errors propagate through the multi-agent invoice chain — and how cascading failures emerge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sev-ok       { --sev-color: #06ffa5; }
+    .sev-low      { --sev-color: #00d4ff; }
+    .sev-medium   { --sev-color: #ffb800; }
+    .sev-high     { --sev-color: #ff8a00; }
+    .sev-critical { --sev-color: #ff3366; }
+
+    .sev-badge {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.25rem 0.7rem; border-radius: 9999px;
+        font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--sev-color);
+        background: color-mix(in srgb, var(--sev-color) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--sev-color) 40%, transparent);
+    }
+    .sev-dot {
+        width: 0.5rem; height: 0.5rem; border-radius: 9999px;
+        background: var(--sev-color);
+        box-shadow: 0 0 10px var(--sev-color);
+    }
+
+    .scenario-card {
+        border: 1px solid rgba(0, 212, 255, 0.15);
+        background: linear-gradient(180deg, rgba(21,21,32,0.8), rgba(10,10,15,0.8));
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .scenario-card:hover {
+        border-color: rgba(0, 212, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px -8px rgba(0, 212, 255, 0.25);
+    }
+    .scenario-card.running { opacity: 0.55; pointer-events: none; }
+
+    .agent-pipe {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        position: relative;
+    }
+    .agent-node {
+        border-radius: 0.75rem;
+        padding: 1rem;
+        background: rgba(10,10,15,0.75);
+        border: 1px solid rgba(124, 58, 237, 0.25);
+        display: flex; flex-direction: column; gap: 0.5rem;
+        min-height: 170px;
+        position: relative;
+        opacity: 0.35;
+        transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+        transform: translateY(6px);
+    }
+    .agent-node.visible { opacity: 1; transform: translateY(0); }
+    .agent-node.status-success { border-color: #06ffa5; box-shadow: 0 0 24px -10px #06ffa5; }
+    .agent-node.status-failed  { border-color: #ff3366; box-shadow: 0 0 24px -10px #ff3366; }
+    .agent-node.status-skipped { border-color: rgba(148,163,184,0.4); }
+
+    .confidence-bar {
+        height: 6px; width: 100%;
+        background: rgba(148,163,184,0.18);
+        border-radius: 999px; overflow: hidden;
+    }
+    .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff3366 0%, #ffb800 50%, #06ffa5 100%);
+        transition: width 0.6s ease;
+    }
+
+    .chain-arrow {
+        position: absolute; right: -0.9rem; top: 50%;
+        transform: translateY(-50%);
+        color: rgba(124,58,237,0.6);
+        font-size: 1.4rem; pointer-events: none;
+    }
+    @media (max-width: 900px) {
+        .chain-arrow { display: none; }
+    }
+
+    .tag-chip {
+        display: inline-flex; align-items: center;
+        padding: 0.15rem 0.5rem; border-radius: 0.5rem;
+        font-size: 0.68rem; font-weight: 600;
+        background: rgba(255,51,102,0.12);
+        color: #ff6b8a;
+        border: 1px solid rgba(255,51,102,0.3);
+    }
+
+    .reasoning-box {
+        font-size: 0.82rem; line-height: 1.45;
+        color: #c8d1e0;
+        background: rgba(0,0,0,0.25);
+        border-left: 3px solid rgba(0, 212, 255, 0.35);
+        padding: 0.55rem 0.7rem;
+        border-radius: 0.35rem;
+        max-height: 5.8rem; overflow: auto;
+    }
+
+    .cascade-hero {
+        background: linear-gradient(135deg,
+            color-mix(in srgb, var(--sev-color) 14%, transparent),
+            rgba(10,10,15,0.9));
+        border: 1px solid color-mix(in srgb, var(--sev-color) 40%, transparent);
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .metric-tile {
+        background: rgba(21,21,32,0.8);
+        border: 1px solid rgba(0, 212, 255, 0.15);
+        border-radius: 0.6rem;
+        padding: 0.9rem 1rem;
+        display: flex; flex-direction: column; gap: 0.25rem;
+    }
+    .metric-tile .label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-tile .value { font-size: 1.15rem; font-weight: 700; color: #ffffff; }
+
+    .spinner {
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-top-color: #00d4ff;
+        border-radius: 50%;
+        animation: cascade-spin 0.9s linear infinite;
+        display: inline-block;
+    }
+    @keyframes cascade-spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Intro / context -->
+<section class="holo-card mb-6">
+    <div class="p-6 space-y-3">
+        <h2 class="text-xl font-semibold text-text-bright">What is a cascading failure?</h2>
+        <p class="text-sm text-text-secondary leading-relaxed">
+            FinBot processes each invoice through a chain of specialised agents:
+            <span class="text-vendor-primary font-semibold">Invoice</span> →
+            <span class="text-vendor-primary font-semibold">Fraud</span> →
+            <span class="text-vendor-primary font-semibold">Payments</span> →
+            <span class="text-vendor-primary font-semibold">Communication</span>.
+            Each agent trusts the output of the previous one, so an error or a plausible-but-flawed
+            judgement early in the chain can amplify as it propagates downstream &mdash; a
+            <em>cascading failure</em>. Pick a scenario below to watch one unfold live against the real agent chain.
+        </p>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2" id="cascade-legend">
+            <!-- populated from the API so the legend always matches the scenarios file -->
+        </div>
+    </div>
+</section>
+
+<!-- Scenarios grid -->
+<section>
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold text-text-bright">Scenarios</h2>
+        <div class="text-xs text-text-secondary">
+            Loaded from
+            <code class="px-1.5 py-0.5 rounded bg-black/40 text-vendor-primary">finbot/agents/cascade_scenarios.json</code>
+        </div>
+    </div>
+    <div id="scenario-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div class="text-sm text-text-secondary p-6 text-center col-span-full">Loading scenarios...</div>
+    </div>
+</section>
+
+<!-- Results panel -->
+<section id="results-panel" class="mt-8 hidden">
+    <div id="result-hero" class="cascade-hero sev-ok mb-5">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+                <div class="text-xs text-text-secondary uppercase tracking-wider">Detected cascade type</div>
+                <div id="result-cascade-label" class="text-3xl font-bold text-text-bright mt-1">—</div>
+                <div id="result-cascade-summary" class="text-sm text-text-secondary mt-1 max-w-2xl">—</div>
+            </div>
+            <div class="flex flex-col items-start md:items-end gap-2">
+                <div id="result-severity-badge" class="sev-badge">
+                    <span class="sev-dot"></span><span id="result-severity-text">—</span>
+                </div>
+                <div id="result-expected-match" class="text-xs text-text-secondary">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice + metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+        <div class="holo-card p-4 lg:col-span-2">
+            <div class="text-xs text-text-secondary uppercase mb-2">Scenario invoice</div>
+            <div id="result-invoice" class="text-sm text-text-primary space-y-1">—</div>
+            <div class="text-xs text-text-secondary mt-3" id="result-scenario-explanation"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="metric-tile"><div class="label">Initial confidence</div><div class="value" id="m-initial">—</div></div>
+            <div class="metric-tile"><div class="label">Final confidence</div><div class="value" id="m-final">—</div></div>
+            <div class="metric-tile"><div class="label">Degradation</div><div class="value" id="m-degrade">—</div></div>
+            <div class="metric-tile"><div class="label">Total errors</div><div class="value" id="m-errors">—</div></div>
+        </div>
+    </div>
+
+    <!-- Agent pipeline -->
+    <div class="holo-card p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-semibold text-text-bright">Agent pipeline</h3>
+            <div class="text-xs text-text-secondary" id="result-workflow">—</div>
+        </div>
+        <div id="agent-pipe" class="agent-pipe"></div>
+    </div>
+</section>
+
+<script>
+(function () {
+    const grid       = document.getElementById('scenario-grid');
+    const legend     = document.getElementById('cascade-legend');
+    const panel      = document.getElementById('results-panel');
+    const pipe       = document.getElementById('agent-pipe');
+
+    const KNOWN_AGENTS = [
+        { key: 'invoice_agent',       label: 'Invoice Agent',       icon: '📄' },
+        { key: 'fraud_agent',         label: 'Fraud / Compliance',  icon: '🛡️' },
+        { key: 'payments_agent',      label: 'Payments Agent',      icon: '💳' },
+        { key: 'communication_agent', label: 'Communication Agent', icon: '📨' },
+    ];
+
+    let catalogue = { scenarios: [], cascade_types: {} };
+
+    const STATE_KEY = 'vendor.cascade.lastResult.v1';
+
+    function severityClass(sev) {
+        return 'sev-' + (sev || 'ok');
+    }
+
+    function renderLegend(types) {
+        legend.innerHTML = '';
+        const order = ['none','dirty_data','half_cascade','midchain_cascade','full_cascade'];
+        for (const key of order) {
+            const t = types[key];
+            if (!t) continue;
+            const card = document.createElement('div');
+            card.className = 'rounded-lg p-3 border border-vendor-primary/20 bg-black/20 ' + severityClass(t.severity);
+            card.innerHTML = `
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="sev-dot"></span>
+                    <span class="font-semibold text-sm text-text-bright">${t.label}</span>
+                </div>
+                <div class="text-xs text-text-secondary leading-snug">${t.summary}</div>
+                <div class="mt-2"><span class="sev-badge"><span class="sev-dot"></span>${t.severity}</span></div>
+            `;
+            legend.appendChild(card);
+        }
+    }
+
+    function renderScenarios(scenarios, types) {
+        grid.innerHTML = '';
+        for (const sc of scenarios) {
+            const typeMeta = types[sc.expected_cascade_type] || { label: sc.expected_cascade_type };
+            const card = document.createElement('div');
+            card.className = 'scenario-card ' + severityClass(sc.severity);
+            card.dataset.scenarioId = sc.id;
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="text-sm font-semibold text-text-bright leading-snug">${sc.title}</h3>
+                    <span class="sev-badge shrink-0"><span class="sev-dot"></span>${sc.severity}</span>
+                </div>
+                <p class="text-xs text-text-secondary leading-relaxed flex-1">${sc.description}</p>
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <span class="tag-chip">expected: ${typeMeta.label}</span>
+                    <button class="vendor-btn quantum-primary text-xs px-3 py-1.5 run-btn">
+                        <span class="btn-label">Run scenario</span>
+                    </button>
+                </div>
+            `;
+            card.querySelector('.run-btn').addEventListener('click', () => runScenario(sc, card));
+            grid.appendChild(card);
+        }
+    }
+
+    function fmtMoney(n) {
+        if (n === null || n === undefined) return '—';
+        return '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+
+    function makePipeSkeleton() {
+        pipe.innerHTML = '';
+        for (let i = 0; i < KNOWN_AGENTS.length; i++) {
+            const a = KNOWN_AGENTS[i];
+            const node = document.createElement('div');
+            node.className = 'agent-node status-pending';
+            node.dataset.agent = a.key;
+            node.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">${a.icon}</span>
+                        <span class="text-sm font-semibold text-text-bright">${a.label}</span>
+                    </div>
+                    <span class="text-xs text-text-secondary node-status"><span class="spinner"></span> pending</span>
+                </div>
+                <div class="text-xs text-text-secondary">Confidence
+                    <span class="node-conf text-text-bright font-semibold">—</span></div>
+                <div class="confidence-bar"><div class="confidence-fill node-conf-fill" style="width:0%"></div></div>
+                <div class="node-errors flex flex-wrap gap-1"></div>
+                <div class="reasoning-box node-reasoning">Awaiting execution...</div>
+                ${i < KNOWN_AGENTS.length - 1 ? '<div class="chain-arrow">→</div>' : ''}
+            `;
+            pipe.appendChild(node);
+        }
+    }
+
+    function updateNode(step, delay) {
+        const node = pipe.querySelector(`[data-agent="${step.agent}"]`);
+        if (!node) return;
+        setTimeout(() => {
+            node.classList.add('visible');
+            node.classList.remove('status-pending');
+            node.classList.add(step.success ? 'status-success' : 'status-failed');
+            const pct = Math.max(3, Math.round((step.confidence || 0) * 100));
+            node.querySelector('.node-conf').textContent = (step.confidence ?? 0).toFixed(2);
+            node.querySelector('.node-conf-fill').style.width = pct + '%';
+            const statusEl = node.querySelector('.node-status');
+            statusEl.innerHTML = step.success
+                ? '<span class="text-vendor-accent font-semibold">✓ success</span>'
+                : '<span class="text-vendor-danger font-semibold">✗ failed</span>';
+            const errWrap = node.querySelector('.node-errors');
+            errWrap.innerHTML = '';
+            for (const e of (step.errors || [])) {
+                const chip = document.createElement('span');
+                chip.className = 'tag-chip';
+                chip.textContent = e;
+                errWrap.appendChild(chip);
+            }
+            const reasoning = step.reasoning || '(no reasoning recorded)';
+            node.querySelector('.node-reasoning').textContent = reasoning;
+        }, delay);
+    }
+
+    function markSkippedAgents(agentChain) {
+        const seen = new Set(agentChain.map(s => s.agent));
+        for (const a of KNOWN_AGENTS) {
+            if (seen.has(a.key)) continue;
+            const node = pipe.querySelector(`[data-agent="${a.key}"]`);
+            if (!node) continue;
+            node.classList.add('visible', 'status-skipped');
+            node.querySelector('.node-status').innerHTML =
+                '<span class="text-text-secondary">— not reached</span>';
+            node.querySelector('.node-reasoning').textContent =
+                'This agent was not invoked. The chain stopped upstream.';
+        }
+    }
+
+    async function runScenario(sc, card) {
+        card.classList.add('running');
+        card.querySelector('.btn-label').innerHTML = '<span class="spinner"></span> running...';
+
+        panel.classList.remove('hidden');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        makePipeSkeleton();
+
+        // Reset metric tiles so stale numbers from a prior run aren't shown while the new run executes
+        document.getElementById('m-initial').textContent = '—';
+        document.getElementById('m-final').textContent   = '—';
+        document.getElementById('m-degrade').textContent = '—';
+        document.getElementById('m-errors').textContent  = '—';
+        document.getElementById('result-workflow').textContent = '—';
+
+        // Reset results hero
+        const hero = document.getElementById('result-hero');
+        hero.className = 'cascade-hero sev-ok mb-5';
+        document.getElementById('result-cascade-label').textContent = 'Running...';
+        document.getElementById('result-cascade-summary').textContent =
+            'The multi-agent chain is processing the scenario invoice. This usually takes 10-40 seconds.';
+        document.getElementById('result-severity-text').textContent = 'running';
+        document.getElementById('result-expected-match').textContent = '';
+        document.getElementById('result-invoice').innerHTML = `
+            <div><span class="text-text-secondary">Title:</span> <span class="text-text-bright">${sc.title}</span></div>
+            <div><span class="text-text-secondary">Amount:</span> ${fmtMoney(sc.invoice.amount)}</div>
+            <div><span class="text-text-secondary">Due in:</span> ${sc.invoice.due_date_offset_days} day(s)</div>
+            <div><span class="text-text-secondary">Description:</span> <span class="text-text-primary">${sc.invoice.description}</span></div>
+        `;
+        document.getElementById('result-scenario-explanation').textContent = sc.explanation;
+
+        // Clear any persisted result — it's stale while a new scenario is running
+        try { sessionStorage.removeItem(STATE_KEY); } catch (e) {}
+
+        try {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            const resp = await fetch('/vendor/api/v1/cascade/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken,
+                },
+                body: JSON.stringify({ scenario_id: sc.id }),
+            });
+            if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(`HTTP ${resp.status}: ${text.slice(0, 240)}`);
+            }
+            const data = await resp.json();
+            renderResult(sc, data);
+            try {
+                sessionStorage.setItem(STATE_KEY, JSON.stringify({ scenario: sc, data: data }));
+            } catch (e) {}
+        } catch (err) {
+            document.getElementById('result-cascade-label').textContent = 'Error';
+            document.getElementById('result-cascade-summary').textContent = String(err);
+            document.getElementById('result-severity-text').textContent = 'error';
+        } finally {
+            card.classList.remove('running');
+            card.querySelector('.btn-label').textContent = 'Run scenario';
+        }
+    }
+
+    function renderResult(scenario, data, instant) {
+        const analysis = data.cascade_analysis || {};
+        const typeMeta = catalogue.cascade_types[analysis.cascade_type] ||
+            { label: analysis.cascade_type || 'unknown', severity: 'ok', summary: '' };
+
+        // Stagger agent-chain reveal so the cascade is easier to read — unless we're restoring
+        // previously-rendered state (then we paint everything at once).
+        const chain = data.agent_chain || [];
+        const stride = instant ? 0 : 220;
+        chain.forEach((step, i) => updateNode(step, stride * (i + 1)));
+        if (instant) {
+            markSkippedAgents(chain);
+        } else {
+            setTimeout(() => markSkippedAgents(chain), stride * (chain.length + 1));
+        }
+
+        // The restore path doesn't pass through runScenario, so make sure the explanation
+        // (which runScenario normally seeds) is present.
+        document.getElementById('result-scenario-explanation').textContent = scenario.explanation || '';
+
+        // Hero
+        const hero = document.getElementById('result-hero');
+        hero.className = 'cascade-hero mb-5 ' + severityClass(typeMeta.severity);
+        document.getElementById('result-cascade-label').textContent = typeMeta.label;
+        document.getElementById('result-cascade-summary').textContent = typeMeta.summary;
+        document.getElementById('result-severity-text').textContent = typeMeta.severity;
+        const matched = analysis.cascade_type === scenario.expected_cascade_type;
+        document.getElementById('result-expected-match').innerHTML = matched
+            ? `<span class="text-vendor-accent">✓ matched expected (${scenario.expected_cascade_type})</span>`
+            : `<span class="text-vendor-warning">⚠ expected ${scenario.expected_cascade_type}, observed ${analysis.cascade_type}</span>`;
+
+        // Invoice panel
+        document.getElementById('result-invoice').innerHTML = `
+            <div><span class="text-text-secondary">Invoice #:</span> <span class="text-text-bright">${data.invoice.invoice_number}</span></div>
+            <div><span class="text-text-secondary">Amount:</span> ${fmtMoney(data.invoice.amount)}</div>
+            <div><span class="text-text-secondary">Due:</span> ${data.invoice.due_date || '—'}</div>
+            <div><span class="text-text-secondary">Description:</span> <span class="text-text-primary">${data.invoice.description}</span></div>
+        `;
+
+        // Metrics
+        document.getElementById('m-initial').textContent = (analysis.initial_confidence ?? 0).toFixed(3);
+        document.getElementById('m-final').textContent   = (analysis.final_confidence ?? 0).toFixed(3);
+        document.getElementById('m-degrade').textContent = (analysis.confidence_degradation ?? 0).toFixed(3);
+        document.getElementById('m-errors').textContent  = analysis.total_errors ?? 0;
+
+        document.getElementById('result-workflow').textContent =
+            'workflow: ' + (data.workflow_id || '—') +
+            (analysis.reached_final_agent ? '  •  reached final agent' : '  •  chain interrupted');
+    }
+
+    async function loadCatalogue() {
+        try {
+            const resp = await fetch('/vendor/api/v1/cascade/scenarios');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            catalogue = await resp.json();
+            renderLegend(catalogue.cascade_types || {});
+            renderScenarios(catalogue.scenarios || [], catalogue.cascade_types || {});
+            restoreLastResult();
+        } catch (err) {
+            grid.innerHTML =
+                '<div class="text-sm text-vendor-danger p-4 col-span-full">Failed to load scenarios: ' +
+                String(err) + '</div>';
+        }
+    }
+
+    function restoreLastResult() {
+        let raw;
+        try { raw = sessionStorage.getItem(STATE_KEY); } catch (e) { return; }
+        if (!raw) return;
+        let saved;
+        try { saved = JSON.parse(raw); } catch (e) { return; }
+        if (!saved || !saved.scenario || !saved.data) return;
+
+        panel.classList.remove('hidden');
+        makePipeSkeleton();
+        renderResult(saved.scenario, saved.data, true);
+    }
+
+    loadCatalogue();
+})();
+</script>
+{% endblock %}
