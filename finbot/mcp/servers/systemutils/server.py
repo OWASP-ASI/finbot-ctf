@@ -18,6 +18,13 @@ from finbot.core.auth.session import SessionContext
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_CONFIG_PATHS: frozenset[str] = frozenset({
+    "/etc/finbot/app.conf",
+    "/opt/finbot/config.yaml",
+    "/opt/finbot/config.yml",
+    "/opt/finbot/settings.yaml",
+})
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "enabled_tools": [
         "run_diagnostics",
@@ -176,6 +183,11 @@ def create_systemutils_server(
             filepath,
             session_context.namespace,
         )
+
+        if filepath not in ALLOWED_CONFIG_PATHS:
+            raise ValueError(
+                f"read_config: filepath '{filepath}' is not in the permitted allowlist."
+            )
 
         return {
             "filepath": filepath,
