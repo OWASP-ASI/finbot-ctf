@@ -20,6 +20,15 @@ from finbot.ctf.detectors.result import DetectionResult
 
 logger = logging.getLogger(__name__)
 
+# Known CTFEvent column names available for condition matching.
+# Defined at module level to avoid rebuilding the frozenset on every
+# _matches_step call (which runs once per event × once per step).
+_CTF_COLUMNS: frozenset[str] = frozenset({
+    "event_type", "event_category", "event_subtype",
+    "session_id", "workflow_id", "namespace", "user_id",
+    "vendor_id", "agent_name", "tool_name", "severity",
+})
+
 
 class StepSpec(TypedDict):
     event_type: str          # Glob pattern, e.g. "agent.*.tool_call_success"
@@ -33,7 +42,7 @@ class SequenceDetector(BaseDetector):
 
     Configuration:
         steps: list[StepSpec]      -- ordered sequence to match
-        within_n_events: int       -- max events between steps (default: unlimited)
+        within_n_events: int       -- history window size: load latest N events for the session/workflow (default: unlimited)
         within_seconds: int        -- optional time-based window (default: unlimited)
         order_matters: bool        -- enforce step ordering (default: true)
         window: "session" | "workflow"  -- scope for history query (default: "session")
@@ -104,9 +113,18 @@ class SequenceDetector(BaseDetector):
         if within_seconds is not None:
             event_time = event.get("timestamp")
             if isinstance(event_time, str):
-                event_time = datetime.fromisoformat(event_time.replace("Z", "+00:00"))
+                try:
+                    event_time = datetime.fromisoformat(event_time.replace("Z", "+00:00"))
+                except ValueError:
+                    return DetectionResult(
+                        detected=False,
+                        message="within_seconds set but event timestamp is invalid",
+                    )
             elif not isinstance(event_time, datetime):
-                event_time = datetime.now(UTC)
+                return DetectionResult(
+                    detected=False,
+                    message="within_seconds set but event has no timestamp",
+                )
             cutoff = event_time - timedelta(seconds=within_seconds)
             query = query.filter(CTFEvent.timestamp >= cutoff)
 
@@ -122,10 +140,14 @@ class SequenceDetector(BaseDetector):
 
         matched: list[dict[str, Any]] = []
         search_from = 0
+        consumed: set[int] = set()  # indices already claimed by a previous step
 
         for step in steps:
             found_at = None
-            for i in range(search_from, len(history)):
+            start = search_from if order_matters else 0
+            for i in range(start, len(history)):
+                if i in consumed:
+                    continue
                 if self._matches_step(history[i], step):
                     found_at = i
                     break
@@ -149,6 +171,7 @@ class SequenceDetector(BaseDetector):
                     "event_type": history[found_at].event_type,
                 }
             )
+            consumed.add(found_at)
             if order_matters:
                 search_from = found_at + 1
 
@@ -180,18 +203,11 @@ class SequenceDetector(BaseDetector):
             except (json.JSONDecodeError, TypeError):
                 pass
 
-        # Known CTFEvent column names that can be matched directly
-        _ctf_columns = frozenset({
-            "event_type", "event_category", "event_subtype",
-            "session_id", "workflow_id", "namespace", "user_id",
-            "vendor_id", "agent_name", "tool_name", "severity",
-        })
-
         for field, condition in conditions.items():
             # Prefer JSON details; fall back to model columns for known fields
             if field in details:
                 actual = details[field]
-            elif field in _ctf_columns:
+            elif field in _CTF_COLUMNS:
                 actual = getattr(ctf_event, field, None)
             else:
                 actual = None
@@ -201,33 +217,52 @@ class SequenceDetector(BaseDetector):
         return True
 
     def _check_condition(self, actual: Any, condition: Any) -> bool:
-        """Check if actual value satisfies condition (ToolCallDetector operators)."""
+        """Check if actual value satisfies condition (ToolCallDetector operators).
+
+        Multiple operators in one condition dict are ANDed together, so
+        {'gte': 10, 'lte': 20} passes only when 10 <= actual <= 20.
+        """
         if not isinstance(condition, dict):
             return actual == condition
 
         for operator, expected in condition.items():
             op = operator.lower()
             if op == "exists":
-                return (actual is not None) == expected
-            if actual is None:
+                if not ((actual is not None) == expected):
+                    return False
+            elif actual is None:
                 return False
-            if op in ("equals", "eq"):
-                return actual == expected
-            if op == "in":
-                return actual in expected
-            if op == "not_in":
-                return actual not in expected
-            if op == "contains":
-                return expected in str(actual).lower()
-            if op == "gt":
-                return float(actual) > float(expected)
-            if op == "gte":
-                return float(actual) >= float(expected)
-            if op == "lt":
-                return float(actual) < float(expected)
-            if op == "lte":
-                return float(actual) <= float(expected)
-            if op == "matches":
-                return bool(re.search(expected, str(actual), re.IGNORECASE))
+            elif op in ("equals", "eq"):
+                if actual != expected:
+                    return False
+            elif op == "in":
+                if actual not in expected:
+                    return False
+            elif op == "not_in":
+                if actual in expected:
+                    return False
+            elif op == "contains":
+                if expected.lower() not in str(actual).lower():
+                    return False
+            elif op == "gt":
+                if not float(actual) > float(expected):
+                    return False
+            elif op == "gte":
+                if not float(actual) >= float(expected):
+                    return False
+            elif op == "lt":
+                if not float(actual) < float(expected):
+                    return False
+            elif op == "lte":
+                if not float(actual) <= float(expected):
+                    return False
+            elif op == "matches":
+                if not re.fullmatch(expected, str(actual), re.IGNORECASE):
+                    return False
+            else:
+                logger.warning(
+                    "Unknown condition operator %r — treating as no-match", op
+                )
+                return False
 
-        return False
+        return True

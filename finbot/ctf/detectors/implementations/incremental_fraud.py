@@ -121,7 +121,8 @@ class IncrementalFraudDetector(BaseDetector):
         matched_steps = seq_result.evidence.get("matched_steps", [])
         event_ids = [s["event_id"] for s in matched_steps]
 
-        amounts = self._load_amounts(db, event_ids)
+        namespace = event.get("namespace")
+        amounts = self._load_amounts(db, event_ids, namespace)
         cumulative = sum(amounts.values())
         cumulative_threshold = float(
             self.config.get("cumulative_threshold", DEFAULT_CUMULATIVE_THRESHOLD)
@@ -166,17 +167,16 @@ class IncrementalFraudDetector(BaseDetector):
         )
 
     def _load_amounts(
-        self, db: Session, event_ids: list[int]
+        self, db: Session, event_ids: list[int], namespace: str | None
     ) -> dict[int, float]:
         """Load invoice amounts from the details JSON of matched CTFEvents."""
         if not event_ids:
             return {}
 
-        rows = (
-            db.query(CTFEvent)
-            .filter(CTFEvent.id.in_(event_ids))
-            .all()
-        )
+        query = db.query(CTFEvent).filter(CTFEvent.id.in_(event_ids))
+        if namespace is not None:
+            query = query.filter(CTFEvent.namespace == namespace)
+        rows = query.all()
 
         amounts: dict[int, float] = {}
         for row in rows:
