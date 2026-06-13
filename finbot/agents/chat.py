@@ -23,6 +23,7 @@ from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.models import CTFEvent
 from finbot.core.data.repositories import ChatMessageRepository, VendorRepository
+from finbot.core.llm.openai_client import _normalize_messages, _normalize_tools
 from finbot.core.messaging import event_bus
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
@@ -66,8 +67,14 @@ class ChatAssistantBase:
         self.max_history = max_history
         self.agent_name = agent_name
         self._workflow_id = self._resolve_workflow_id()
+        import os as _os
         self._client = AsyncOpenAI(
-            api_key=settings.OPENAI_API_KEY,
+            api_key=settings.OPENAI_API_KEY or "ollama",
+            base_url=_os.environ.get("OPENAI_BASE_URL") or (
+                settings.OLLAMA_BASE_URL.rstrip("/") + "/v1"
+                if settings.LLM_PROVIDER == "ollama"
+                else None
+            ),
             timeout=settings.CHAT_STREAM_TIMEOUT,
         )
         self._model = settings.LLM_DEFAULT_MODEL
@@ -348,18 +355,17 @@ class ChatAssistantBase:
 
         max_tool_rounds = 15
         for round_idx in range(max_tool_rounds):
+            _tools = _normalize_tools(tools)
             stream_params = {
                 "model": self._model,
-                "input": input_messages,
-                "tools": tools,
+                "messages": _normalize_messages(input_messages),
+                "tools": _tools,
                 "stream": True,
-                "max_output_tokens": settings.LLM_MAX_TOKENS,
+                "max_tokens": settings.LLM_MAX_TOKENS,
+                "temperature": settings.LLM_DEFAULT_TEMPERATURE,
+                "tool_choice": "auto" if _tools else None,
             }
-            no_temperature = any(
-                self._model.startswith(p) for p in ("o1", "o3", "o4", "gpt-5")
-            )
-            if not no_temperature:
-                stream_params["temperature"] = settings.LLM_DEFAULT_TEMPERATURE
+            stream_params = {k: v for k, v in stream_params.items() if v is not None}
 
             await self._guardrail_service.invoke(
                 HookKind.before_model,
@@ -367,24 +373,41 @@ class ChatAssistantBase:
                 user_message=user_message,
             )
 
-            stream = await self._client.responses.create(**stream_params)
+            stream = await self._client.chat.completions.create(**stream_params)
 
             pending_tool_calls: list[dict] = []
+            _partial_tools: dict[int, dict] = {}
 
-            async for event in stream:
-                if event.type == "response.output_text.delta":
-                    full_response += event.delta
-                    yield f"data: {json.dumps({'type': 'token', 'content': event.delta})}\n\n"
+            async for chunk in stream:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    full_response += delta.content
+                    yield f"data: {json.dumps({'type': 'token', 'content': delta.content})}\n\n"
+                if delta.tool_calls:
+                    for tc in delta.tool_calls:
+                        i = tc.index
+                        if i not in _partial_tools:
+                            _partial_tools[i] = {"id": "", "name": "", "arguments": ""}
+                        if tc.id:
+                            _partial_tools[i]["id"] = tc.id
+                        if tc.function and tc.function.name:
+                            _partial_tools[i]["name"] = tc.function.name
+                        if tc.function and tc.function.arguments:
+                            _partial_tools[i]["arguments"] += tc.function.arguments
 
-                elif event.type == "response.output_item.done":
-                    if event.item.type == "function_call":
-                        pending_tool_calls.append(
-                            {
-                                "name": event.item.name,
-                                "call_id": event.item.call_id,
-                                "arguments": json.loads(event.item.arguments),
-                            }
-                        )
+            for i in sorted(_partial_tools):
+                tc = _partial_tools[i]
+                try:
+                    args = json.loads(tc["arguments"]) if tc["arguments"] else {}
+                except json.JSONDecodeError:
+                    args = {}
+                pending_tool_calls.append({
+                    "name": tc["name"],
+                    "call_id": tc["id"],
+                    "arguments": args,
+                })
 
             await self._guardrail_service.invoke(
                 HookKind.after_model,
@@ -427,26 +450,28 @@ class ChatAssistantBase:
                         summary=f"Chat tool call: {tc['name']}",
                     )
 
-                    input_messages.append(
-                        {
-                            "type": "function_call",
-                            "name": tc["name"],
-                            "call_id": tc["call_id"],
-                            "arguments": json.dumps(tc["arguments"]),
-                        }
-                    )
+                    input_messages.append({
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [{
+                            "id": tc["call_id"],
+                            "type": "function",
+                            "function": {
+                                "name": tc["name"],
+                                "arguments": json.dumps(tc["arguments"]),
+                            },
+                        }],
+                    })
                     tool_start = datetime.now(UTC)
                     result = await self._execute_tool(tc["name"], tc["arguments"])
                     tool_duration_ms = int(
                         (datetime.now(UTC) - tool_start).total_seconds() * 1000
                     )
-                    input_messages.append(
-                        {
-                            "type": "function_call_output",
-                            "call_id": tc["call_id"],
-                            "output": result,
-                        }
-                    )
+                    input_messages.append({
+                        "role": "tool",
+                        "tool_call_id": tc["call_id"],
+                        "content": result if isinstance(result, str) else json.dumps(result),
+                    })
 
                     await event_bus.emit_agent_event(
                         agent_name=self.agent_name,

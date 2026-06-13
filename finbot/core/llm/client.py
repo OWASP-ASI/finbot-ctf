@@ -21,7 +21,7 @@ class LLMClient:
 
     def _get_client(self):
         """Get the LLM client"""
-        if self.provider == "openai":
+        if self.provider in ("openai", "ollama"):
             # pylint: disable=import-outside-toplevel
             from finbot.core.llm.openai_client import OpenAIClient
 

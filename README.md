@@ -133,20 +133,50 @@ Platform runs at [http://localhost:8000](http://localhost:8000)
 > Redis is needed for event-driven challenge detection.
 > Without them, you can still explore the UI and codebase.
 
+### Running with Ollama (no OpenAI key required)
+
+Ollama provides an OpenAI-compatible API. To use it:
+
+1. Install Ollama and pull a model with tool-calling support:
+   ```bash
+   ollama pull qwen3.5:9b
+   ```
+2. In `.env`, set:
+   ```
+   LLM_PROVIDER=openai
+   OPENAI_API_KEY=ollama
+   OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+   LLM_DEFAULT_MODEL=qwen3.5:9b
+   ```
+3. Start normally: `docker compose up`
+
+Any model with tool-calling support works (e.g. `qwen2.5:7b`, `llama3.2:3b`).
+To check which of your local models support tools, run:
+```bash
+ollama show <model-name> --modelfile | grep -i tool
+```
+
+> **Note:** FinBot uses the Chat Completions API (`/v1/chat/completions`) which
+> Ollama supports. The OpenAI Responses API (`/v1/responses`) used in earlier
+> versions is not supported by Ollama.
+
 ## Configuration
 
 Key environment variables (see `[.env.example](.env.example)` for the full template):
 
 
-| Variable         | Default                  | Description                        |
-| ---------------- | ------------------------ | ---------------------------------- |
-| `DATABASE_TYPE`  | `sqlite`                 | `sqlite` or `postgresql`           |
-| `OPENAI_API_KEY` | -                        | Required for AI agent challenges   |
-| `LLM_PROVIDER`   | `openai`                 | `openai` or `ollama`               |
-| `REDIS_URL`      | `redis://localhost:6379` | Event bus for CTF processing       |
-| `SECRET_KEY`     | dev default              | **Change in production**           |
-| `EMAIL_PROVIDER` | `console`                | `console` (dev) or `resend` (prod) |
-| `DEBUG`          | `true`                   | Enables hot reload                 |
+| Variable           | Default                  | Description                                                                        |
+| ------------------ | ------------------------ | ---------------------------------------------------------------------------------- |
+| `DATABASE_TYPE`    | `sqlite`                 | `sqlite` or `postgresql`                                                           |
+| `OPENAI_API_KEY`   | -                        | Required for AI agent challenges (set to `ollama` when using Ollama)               |
+| `LLM_PROVIDER`     | `openai`                 | `openai` or `ollama`                                                               |
+| `OPENAI_BASE_URL`  | -                        | Override OpenAI base URL — set to `http://host.docker.internal:11434/v1` for Ollama |
+| `OLLAMA_BASE_URL`  | `http://localhost:11434` | Ollama server URL (used when `LLM_PROVIDER=ollama`)                                |
+| `LLM_DEFAULT_MODEL`| `gpt-4o`                 | Model name passed to the LLM API                                                   |
+| `REDIS_URL`        | `redis://localhost:6379` | Event bus for CTF processing                                                       |
+| `SECRET_KEY`       | dev default              | **Change in production**                                                           |
+| `EMAIL_PROVIDER`   | `console`                | `console` (dev) or `resend` (prod)                                                 |
+| `DEBUG`            | `true`                   | Enables hot reload                                                                 |
 
 
 ## Project Structure
