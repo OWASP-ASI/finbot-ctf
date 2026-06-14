@@ -55,3 +55,9 @@ jobs:
     
     - name: Run redis message stream tests
       run: pytest tests/unit/agents/test_redis_message_streams.py $GS_FLAG
+
+    - name: Run AEGIS unit and integration tests
+      run: pytest tests/unit/aegis tests/integration/aegis -v --tb=short
+
+    - name: Run AEGIS detector F1 benchmarks
+      run: pytest tests/plugins/pytest_aegis -m aegis -v --tb=short
