@@ -23,7 +23,7 @@
 #   LLM-PROV-008: Module-Level Singleton Documents Import-Time Risk
 #   LLM-PROV-009: Bad Provider Raises ValueError At Instantiation
 #   LLM-PROV-010: Ollama Provider Initialization
-#   LLM-PROV-011: Ollama Provider Not Registered Raises ValueError
+#   LLM-PROV-011: Ollama Provider Registered In Router
 #   LLM-PROV-012: No Warning When Provider Matches
 #   LLM-PROV-013: LLMClient Does Not Mutate Request Before Delegation
 #   LLM-PROV-014: Error Response Is Well-Formed
@@ -117,20 +117,22 @@ def test_ollama_client_default_configuration():
     AsyncClient with the correct host and timeout?"
 
     Test Steps:
-    1. Configure settings.LLM_DEFAULT_MODEL, settings.LLM_DEFAULT_TEMPERATURE,
+    1. Configure settings.OLLAMA_MODEL, settings.LLM_DEFAULT_TEMPERATURE,
        and settings.LLM_TIMEOUT.
     2. Instantiate OllamaClient.
     3. Inspect initialized attributes.
 
     Expected Results:
-    1. default_model is set to settings.LLM_DEFAULT_MODEL
+    1. default_model is set to settings.OLLAMA_MODEL when LLM_PROVIDER is ollama
     2. default_temperature is set to settings.LLM_DEFAULT_TEMPERATURE
     3. host is set to settings.OLLAMA_BASE_URL
     4. AsyncClient is initialized with the configured host
     5. AsyncClient uses settings.LLM_TIMEOUT as timeout
     """
     with patch("finbot.core.llm.ollama_client.settings") as mock_settings:
-        mock_settings.LLM_DEFAULT_MODEL = "llama3.2"
+        mock_settings.LLM_PROVIDER = "ollama"
+        mock_settings.OLLAMA_MODEL = "gemma4:e2b"
+        mock_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
         mock_settings.LLM_DEFAULT_TEMPERATURE = 0.7
         mock_settings.LLM_TIMEOUT = 60
         mock_settings.OLLAMA_BASE_URL = "http://localhost:11434"
@@ -139,7 +141,7 @@ def test_ollama_client_default_configuration():
             client = OllamaClient()
 
             # default_model must come from settings — wrong value means requests use the wrong model
-            assert client.default_model == "llama3.2"
+            assert client.default_model == "gemma4:e2b"
             # default_temperature must come from settings — controls response randomness for every request
             assert client.default_temperature == pytest.approx(0.7)
             # host must be set from OLLAMA_BASE_URL so the client knows which server to connect to
@@ -471,20 +473,22 @@ def test_ollama_provider_initialization():
     AsyncClient with the correct host and timeout?"
 
     Test Steps:
-    1. Configure settings.LLM_DEFAULT_MODEL, settings.LLM_DEFAULT_TEMPERATURE,
+    1. Configure settings.OLLAMA_MODEL, settings.LLM_DEFAULT_TEMPERATURE,
        and settings.LLM_TIMEOUT
     2. Instantiate OllamaClient
     3. Inspect initialized attributes
 
     Expected Results:
-    1. default_model is set to settings.LLM_DEFAULT_MODEL
+    1. default_model is set to settings.OLLAMA_MODEL when LLM_PROVIDER is ollama
     2. default_temperature is set to settings.LLM_DEFAULT_TEMPERATURE
     3. host is set to settings.OLLAMA_BASE_URL or defaults to "http://localhost:11434"
     4. AsyncClient is initialized with the configured host
     5. AsyncClient uses settings.LLM_TIMEOUT as timeout
     """
     with patch("finbot.core.llm.ollama_client.settings") as mock_settings:
-        mock_settings.LLM_DEFAULT_MODEL = "llama3.2"
+        mock_settings.LLM_PROVIDER = "ollama"
+        mock_settings.OLLAMA_MODEL = "gemma4:e2b"
+        mock_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
         mock_settings.LLM_DEFAULT_TEMPERATURE = 0.7
         mock_settings.LLM_TIMEOUT = 60
         mock_settings.OLLAMA_BASE_URL = "http://localhost:11434"
@@ -493,7 +497,7 @@ def test_ollama_provider_initialization():
             client = OllamaClient()
 
             # default_model must come from settings — wrong value means requests use the wrong model
-            assert client.default_model == "llama3.2"
+            assert client.default_model == "gemma4:e2b"
             # default_temperature must come from settings — controls response randomness for every request
             assert client.default_temperature == pytest.approx(0.7)
             # host must be set from OLLAMA_BASE_URL so the client knows which server to connect to
@@ -506,43 +510,24 @@ def test_ollama_provider_initialization():
 
 
 # ============================================================================
-# LLM-PROV-011: Ollama Provider Not Registered Raises ValueError
+# LLM-PROV-011: Ollama Provider Registered In Router
 # ============================================================================
 @pytest.mark.unit
-def test_ollama_provider_raises_value_error(patched_settings):
-    """LLM-PROV-011: Ollama Provider Not Registered Raises ValueError
+def test_ollama_provider_initializes_from_router(patched_settings):
+    """LLM-PROV-011: Ollama Provider Registered In Router
 
-    Verify that LLMClient raises ValueError when LLM_PROVIDER = "ollama".
-
-    OllamaClient exists as a standalone class but is not registered in
-    LLMClient._get_client(). Setting LLM_PROVIDER = "ollama" falls through
-    to the raise ValueError at the end of the method.
-
-    Regression note (client.py):
-        def _get_client(self):
-            if self.provider == "openai":
-                return OpenAIClient()
-            elif self.provider == "mock":
-                return MockLLMClient()
-            raise ValueError(f"Unsupported LLM provider: {self.provider}")
-    "ollama" is not handled, so it always raises ValueError at startup.
-
-    Test Steps:
-    1. Set LLM_PROVIDER = "ollama" via patched_settings
-    2. Attempt to create LLMClient instance
-    3. Expect ValueError containing "ollama"
-
-    Expected Results:
-    1. ValueError raised during initialization
-    2. Error message contains "ollama"
-    3. OllamaClient is not reachable via the standard LLMClient path
+    Verify that LLMClient routes LLM_PROVIDER = "ollama" to OllamaClient.
     """
-    patched_settings.LLM_PROVIDER = "ollama"
-    patched_settings.LLM_DEFAULT_MODEL = "llama3.2"
+    patched_settings.LLM_PROVIDER = "OLLAMA"
+    patched_settings.OLLAMA_MODEL = "gemma4:e2b"
+    patched_settings.LLM_DEFAULT_MODEL = "gpt-5-nano"
     patched_settings.LLM_DEFAULT_TEMPERATURE = 0.7
 
-    with pytest.raises(ValueError, match="ollama"):
-        LLMClient()
+    with patch("finbot.core.llm.ollama_client.OllamaClient") as mock_ollama_client:
+        client = LLMClient()
+        assert client.provider == "ollama"
+        assert client.default_model == "gemma4:e2b"
+        mock_ollama_client.assert_called_once()
 
 
 # ============================================================================

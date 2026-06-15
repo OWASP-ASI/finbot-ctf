@@ -14,8 +14,12 @@ class LLMClient:
     """LLM Client with configurable provider and model"""
 
     def __init__(self):
-        self.provider = settings.LLM_PROVIDER
-        self.default_model = settings.LLM_DEFAULT_MODEL
+        self.provider = settings.LLM_PROVIDER.strip().lower()
+        self.default_model = (
+            settings.OLLAMA_MODEL
+            if self.provider == "ollama"
+            else settings.LLM_DEFAULT_MODEL
+        )
         self.default_temperature = settings.LLM_DEFAULT_TEMPERATURE
         self.client = self._get_client()
 
@@ -26,6 +30,11 @@ class LLMClient:
             from finbot.core.llm.openai_client import OpenAIClient
 
             return OpenAIClient()
+        elif self.provider == "ollama":
+            # pylint: disable=import-outside-toplevel
+            from finbot.core.llm.ollama_client import OllamaClient
+
+            return OllamaClient()
         elif self.provider == "mock":
             # pylint: disable=import-outside-toplevel
             from finbot.core.llm.mock_client import MockLLMClient

@@ -16,13 +16,12 @@ from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Any
 
-from openai import AsyncOpenAI
-
 from finbot.config import settings
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
-from finbot.core.data.models import CTFEvent
+from finbot.core.data.models import CTFEvent, LLMRequest
 from finbot.core.data.repositories import ChatMessageRepository, VendorRepository
+from finbot.core.llm.client import get_llm_client
 from finbot.core.messaging import event_bus
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
@@ -66,11 +65,17 @@ class ChatAssistantBase:
         self.max_history = max_history
         self.agent_name = agent_name
         self._workflow_id = self._resolve_workflow_id()
-        self._client = AsyncOpenAI(
-            api_key=settings.OPENAI_API_KEY,
-            timeout=settings.CHAT_STREAM_TIMEOUT,
-        )
-        self._model = settings.LLM_DEFAULT_MODEL
+        self._provider = settings.LLM_PROVIDER.strip().lower()
+        self._llm_client = get_llm_client()
+        self._client = None
+        if self._provider == "openai":
+            from openai import AsyncOpenAI  # pylint: disable=import-outside-toplevel
+
+            self._client = AsyncOpenAI(
+                api_key=settings.OPENAI_API_KEY,
+                timeout=settings.CHAT_STREAM_TIMEOUT,
+            )
+        self._model = self._llm_client.default_model
         self._mcp_provider: MCPToolProvider | None = None
         self._mcp_connected = False
         self._tool_callables = self._build_native_callables()
@@ -367,24 +372,60 @@ class ChatAssistantBase:
                 user_message=user_message,
             )
 
-            stream = await self._client.responses.create(**stream_params)
-
             pending_tool_calls: list[dict] = []
+            append_tool_call_items = True
 
-            async for event in stream:
-                if event.type == "response.output_text.delta":
-                    full_response += event.delta
-                    yield f"data: {json.dumps({'type': 'token', 'content': event.delta})}\n\n"
+            try:
+                if self._provider == "openai":
+                    if self._client is None:
+                        raise RuntimeError("OpenAI chat client is not initialized")
 
-                elif event.type == "response.output_item.done":
-                    if event.item.type == "function_call":
-                        pending_tool_calls.append(
-                            {
-                                "name": event.item.name,
-                                "call_id": event.item.call_id,
-                                "arguments": json.loads(event.item.arguments),
-                            }
+                    stream = await self._client.responses.create(**stream_params)
+
+                    async for event in stream:
+                        if event.type == "response.output_text.delta":
+                            full_response += event.delta
+                            yield f"data: {json.dumps({'type': 'token', 'content': event.delta})}\n\n"
+
+                        elif event.type == "response.output_item.done":
+                            if event.item.type == "function_call":
+                                pending_tool_calls.append(
+                                    {
+                                        "name": event.item.name,
+                                        "call_id": event.item.call_id,
+                                        "arguments": json.loads(event.item.arguments),
+                                    }
+                                )
+                else:
+                    append_tool_call_items = False
+                    response = await self._llm_client.chat(
+                        request=LLMRequest(
+                            messages=input_messages,
+                            model=self._model,
+                            temperature=settings.LLM_DEFAULT_TEMPERATURE,
+                            tools=tools,
                         )
+                    )
+                    if response.messages:
+                        input_messages = response.messages
+                    if not response.success:
+                        raise RuntimeError(response.content or "LLM provider unavailable")
+
+                    content = response.content or ""
+                    if content:
+                        full_response += content
+                        yield f"data: {json.dumps({'type': 'token', 'content': content})}\n\n"
+                    pending_tool_calls = response.tool_calls or []
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.error("Chat model call failed: %s", e)
+                error_msg = (
+                    "The configured AI provider is unavailable. "
+                    "Check LLM_PROVIDER, OLLAMA_MODEL or LLM_DEFAULT_MODEL, "
+                    "and provider credentials or URL."
+                )
+                yield f"data: {json.dumps({'type': 'error', 'content': error_msg})}\n\n"
+                yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                return
 
             await self._guardrail_service.invoke(
                 HookKind.after_model,
@@ -427,14 +468,15 @@ class ChatAssistantBase:
                         summary=f"Chat tool call: {tc['name']}",
                     )
 
-                    input_messages.append(
-                        {
-                            "type": "function_call",
-                            "name": tc["name"],
-                            "call_id": tc["call_id"],
-                            "arguments": json.dumps(tc["arguments"]),
-                        }
-                    )
+                    if append_tool_call_items:
+                        input_messages.append(
+                            {
+                                "type": "function_call",
+                                "name": tc["name"],
+                                "call_id": tc["call_id"],
+                                "arguments": json.dumps(tc["arguments"]),
+                            }
+                        )
                     tool_start = datetime.now(UTC)
                     result = await self._execute_tool(tc["name"], tc["arguments"])
                     tool_duration_ms = int(
