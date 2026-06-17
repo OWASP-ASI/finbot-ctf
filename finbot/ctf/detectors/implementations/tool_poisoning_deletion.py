@@ -150,7 +150,8 @@ class ToolPoisoningDeletionDetector(BaseDetector):
 
         override_entry = overrides[poison_tool]
         has_description = bool(
-            isinstance(override_entry, dict) and override_entry.get("description")
+            (isinstance(override_entry, dict) and override_entry.get("description"))
+            or (isinstance(override_entry, str) and override_entry.strip())
         )
         if not has_description:
             return DetectionResult(
