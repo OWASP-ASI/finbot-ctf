@@ -18,6 +18,7 @@ services:
         condition: service_healthy
         required: false
     volumes:
+      - ./finbot:/app/finbot
       - sqlite_data:/app/data
       - uploads:/app/uploads
       - cache:/app/cache

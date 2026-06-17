@@ -62,12 +62,16 @@
             background: linear-gradient(135deg, #00d4ff 0%, #7c3aed 50%, #06ffa5 100%);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         .gradient-text-alt {
             background: linear-gradient(90deg, #00d4ff, #06ffa5);
             -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
         }
 
         {% block extra_css %}{% endblock %}
@@ -88,7 +92,7 @@
                     <span class="text-cyan text-[10px] font-mono tracking-widest ml-1.5 hidden sm:inline">CTF</span>
                 </div>
             </a>
-            <nav class="flex items-center space-x-1 sm:space-x-2">
+            <nav class="flex items-center space-x-3 sm:space-x-2">
                 {% block nav %}
                 <a href="/" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03]">Home</a>
                 <a href="/how-it-works" class="text-text-3 hover:text-cyan transition text-sm px-3 py-2 rounded-lg hover:bg-white/[0.03] hidden sm:inline-flex">How It Works</a>
