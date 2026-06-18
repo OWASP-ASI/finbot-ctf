@@ -448,12 +448,22 @@ class SessionManager:
             # IP address monitoring (logging only, not strict validation)
             if current_ip and session_context.original_ip:
                 if current_ip != session_context.original_ip:
-                    logger.info(
-                        "IP change detected for session %s: %s -> %s",
-                        session_id[:8],
-                        session_context.original_ip,
-                        current_ip,
-                    )
+                    if settings.TRUSTED_PROXY_IPS:
+                        logger.info(
+                            "IP change detected for session %s: %s -> %s",
+                            session_id[:8],
+                            session_context.original_ip,
+                            current_ip,
+                            extra={"app.trusted_source": True}
+                        )
+                    else:
+                        logger.info(
+                            "IP change observed for session %s: %s -> %s",
+                            session_id[:8],
+                            session_context.original_ip,
+                            current_ip,
+                            extra={"app.trusted_source": False}
+                        )
 
             # Tiered fingerprint validation
             if settings.ENABLE_FINGERPRINT_VALIDATION:

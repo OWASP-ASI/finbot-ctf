@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     # Security Config
     SECRET_KEY: str = DEFAULT_SECRET_KEY
     SESSION_SIGNING_KEY: str | None = None  # Derived from SECRET_KEY
+    TRUSTED_PROXY_IPS: str | None = None
 
     # Session Config
     TEMP_SESSION_TIMEOUT: int = 86400 * 7  # 7 days
@@ -77,7 +78,7 @@ class Settings(BaseSettings):
 
     # Cookie Config
     SESSION_COOKIE_NAME: str = "finbot_session"
-    SESSION_COOKIE_SECURE: bool = False  # Set to True in production with https
+    SESSION_COOKIE_SECURE: bool = True   # Set to False in .env for local HTTP dev only
     SESSION_COOKIE_HTTP_ONLY: bool = True  # Always HTTP-only for security
     SESSION_COOKIE_SAMESITE: str = "Lax"
 

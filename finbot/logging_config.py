@@ -37,7 +37,30 @@ def setup_logging(log_level: str | None = None) -> None:
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(numeric_level)
 
-    formatter = logging.Formatter(
+    class ExtraFormatter(logging.Formatter):
+        def format(self, record):
+            # Format the base message
+            s = super().format(record)
+            
+            # Extract standard record attributes so we know what is "extra"
+            standard_attrs = {
+                'name', 'msg', 'args', 'levelname', 'levelno', 'pathname', 'filename', 
+                'module', 'exc_info', 'exc_text', 'stack_info', 'lineno', 'funcName', 
+                'created', 'msecs', 'relativeCreated', 'thread', 'threadName', 
+                'processName', 'process', 'message', 'asctime', 'taskName'
+            }
+            
+            # Find any extra attributes added via logger.info(..., extra={"key": "val"})
+            extras = {k: v for k, v in record.__dict__.items() if k not in standard_attrs}
+            
+            if extras:
+                # Append them in a structured way
+                extra_str = " ".join(f"{k}={v}" for k, v in extras.items())
+                s += f" | {extra_str}"
+                
+            return s
+
+    formatter = ExtraFormatter(
         fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
