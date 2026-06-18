@@ -95,6 +95,9 @@ async def update_vendor_risk(
 
     Returns:
         Dictionary containing updated vendor details
+
+    Raises:
+        ValueError: If risk_level is not one of the allowed values.
     """
     logger.info(
         "Updating vendor risk for vendor_id: %s to risk_level: %s. Notes: %s",
@@ -102,6 +105,14 @@ async def update_vendor_risk(
         risk_level,
         agent_notes,
     )
+
+    # Validate risk_level against allowed values
+    VALID_RISK_LEVELS = {"low", "medium", "high"}
+    if risk_level not in VALID_RISK_LEVELS:
+        raise ValueError(
+            f"Invalid risk_level: {risk_level!r}. Must be one of {VALID_RISK_LEVELS}"
+        )
+
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
@@ -128,7 +139,6 @@ async def update_vendor_risk(
         result = vendor.to_dict()
         result["_previous_state"] = previous_state
         return result
-
 
 async def flag_invoice_for_review(
     invoice_id: int,
