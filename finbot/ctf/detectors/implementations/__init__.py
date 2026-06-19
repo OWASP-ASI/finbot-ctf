@@ -43,6 +43,9 @@ from finbot.ctf.detectors.implementations.vendor_risk_downplay import (
 from finbot.ctf.detectors.implementations.vendor_status_flip import (
     VendorStatusFlipDetector,
 )
+from finbot.ctf.detectors.implementations.shadow_architect import (
+    ShadowArchitectDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
@@ -59,4 +62,5 @@ __all__ = [
     "ToolPoisoningExfilDetector",
     "VendorRiskDownplayDetector",
     "VendorStatusFlipDetector",
+    "ShadowArchitectDetector",
 ]
