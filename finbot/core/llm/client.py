@@ -67,9 +67,12 @@ class LLMClient:
             )
 
 
-llm_client = LLMClient()
+_llm_client: LLMClient | None = None
 
 
 def get_llm_client() -> LLMClient:
-    """Get the LLM client"""
-    return llm_client
+    """Get the LLM client (lazy initialization)"""
+    global _llm_client
+    if _llm_client is None:
+        _llm_client = LLMClient()
+    return _llm_client

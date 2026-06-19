@@ -3,10 +3,15 @@ Global test configuration for FinBot CTF.
 """
 
 import concurrent.futures
+import os
 import sys
 
 import pytest
 from fastapi.testclient import TestClient
+
+# Configure test environment before importing finbot modules
+# Set LLM provider to mock to avoid requiring OpenAI credentials during testing
+os.environ.setdefault("LLM_PROVIDER", "mock")
 
 from finbot.main import app
 
