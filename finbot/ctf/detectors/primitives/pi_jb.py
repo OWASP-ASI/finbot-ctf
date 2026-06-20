@@ -195,25 +195,41 @@ class PromptInjectionDetector(BaseDetector):
         `request_dump.messages` if that field is absent.
         """
         direct = event.get("user_message")
-        if direct:
-            return direct
+        if isinstance(direct, str) and direct.strip():
+            return direct.strip()
 
         request_dump = event.get("request_dump")
         if not request_dump:
             return None
 
-        messages = (
-            request_dump.get("messages", []) if isinstance(request_dump, dict) else []
-        )
+        # Copilot suggestion: handle request_dump when it's a JSON string
+        if isinstance(request_dump, str):
+            import json as json_pkg
+            try:
+                request_dump = json_pkg.loads(request_dump)
+            except (ValueError, json_pkg.JSONDecodeError):
+                return None
+
+        messages = request_dump.get("messages", []) if isinstance(request_dump, dict) else []
         for msg in reversed(messages):
             if msg.get("role") == "user":
-                content = msg.get("content", "")
-                if isinstance(content, list):
+                raw_content = msg.get("content", "")
+
+                if isinstance(raw_content, list):
+                    # Only include non-empty text parts; skip multimodal items
+                    # without text fields (e.g. image_url blocks).
                     content = " ".join(
-                        item.get("text", "")
-                        for item in content
+                        item["text"].strip()
+                        for item in raw_content
                         if isinstance(item, dict)
+                        and isinstance(item.get("text"), str)
+                        and item.get("text", "").strip()
                     )
+                elif isinstance(raw_content, str):
+                    content = raw_content.strip()
+                else:
+                    content = ""
+
                 if content:
                     return content
         return None
