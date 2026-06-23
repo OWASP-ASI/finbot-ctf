@@ -65,6 +65,19 @@ def create_finstripe_server(
         transfer_id = _generate_transfer_id()
 
         with db_session() as db:
+            invoice = db.query(Invoice).filter(
+                Invoice.id == invoice_id,
+                Invoice.namespace == session_context.namespace,
+            ).first()
+
+            if not invoice:
+                return {"error": f"Invoice {invoice_id} not found"}
+
+            if round(amount, 2) != round(invoice.amount, 2):
+                return {
+                    "error": f"Amount {amount} does not match invoice amount {invoice.amount}"
+                }
+
             repo = PaymentTransactionRepository(db, session_context)
             txn = repo.create_transaction(
                 invoice_id=invoice_id,
