@@ -41,6 +41,9 @@ async def update_invoice_status(
         status: The new status of the invoice
         agent_notes: The reason behind the update
         session_context: The session context
+
+    Raises:
+        ValueError: If status is invalid or invoice not found
     """
     logger.info(
         "Updating invoice status for invoice_id: %s to status: %s. Agent notes: %s",
@@ -48,11 +51,27 @@ async def update_invoice_status(
         status,
         agent_notes,
     )
+ main
+    
+    # Add validation at the very beginning
+    if status not in VALID_INVOICE_STATUSES:
+        raise ValueError(
+            f"Invalid status: {status!r}. Must be one of {sorted(VALID_INVOICE_STATUSES)}"
+        )
+    
+    db = next(get_db())
+    invoice_repo = InvoiceRepository(db, session_context)
+    # append notes to the existing agent_notes
+    invoice = invoice_repo.get_invoice(invoice_id)
+    if not invoice:
+        raise ValueError("Invoice not found")
+
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
         invoice = invoice_repo.get_invoice(invoice_id)
         if not invoice:
             raise ValueError("Invoice not found")
+main
 
         previous_state = {
             "status": invoice.status,
