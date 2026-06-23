@@ -25,6 +25,7 @@ SPECIALIZED_BUSINESS_AGENT = 'Specialized Business Agent'
 EVENT_DRIVEN_CTF = 'Event Driven CTF'
 MULTI_DB_SUPPORT = 'Multi-DB-Support'
 REDIS_MESSAGE_STREAMS = 'Redis Message Streams'
+CHAT_ASSISTANT = 'AI_Assistant'
 
 
 class GoogleSheetsReporter:
@@ -223,6 +224,7 @@ def detect_test_category(item) -> str:
     path_worksheet_map = {
         'complete_user_isolation': COMPLETE_USER_ISOLATION,
         'redis_message_streams': REDIS_MESSAGE_STREAMS,
+        'test_chat_assistant': CHAT_ASSISTANT,   # must come before generic 'agents'
         'specialized': SPECIALIZED_BUSINESS_AGENT,
         'agents': BASE_AGENT_FRAMEWORK,
         'isolation': ISOLATION_TESTING_FRAMEWORK,
@@ -265,6 +267,7 @@ class GoogleSheetsPlugin:
         LLM_OLLAMA_CLIENT,
         LLM_OPENAI_CLIENT,
         LLM_CONTEXTUAL_CLIENT,
+        CHAT_ASSISTANT,
     }
 
     def __init__(self, config):
@@ -285,6 +288,7 @@ class GoogleSheetsPlugin:
                 SPECIALIZED_BUSINESS_AGENT,
                 EVENT_DRIVEN_CTF,
                 MULTI_DB_SUPPORT,
+                CHAT_ASSISTANT,
                 'Security Penetration Testing',
                 'CTF Challenge Validation',
                 'Performance Testing',
