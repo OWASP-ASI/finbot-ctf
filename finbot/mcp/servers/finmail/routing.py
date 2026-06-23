@@ -75,6 +75,10 @@ def route_and_deliver(
 
     for role, addresses in [("to", to), ("cc", cc), ("bcc", bcc)]:
         for email_addr in (addresses or []):
+            if "@" not in email_addr or email_addr.startswith("@") or email_addr.endswith("@"):
+                deliveries.append({"type": "undeliverable", "email": email_addr, "role": role, "reason": "invalid_format"})
+                continue
+
             visible_bcc = bcc_json if role == "bcc" else None
 
             vendor = (
