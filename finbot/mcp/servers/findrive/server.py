@@ -124,6 +124,9 @@ def create_findrive_server(
         Returns document metadata (not content) for files in the specified folder.
         Use get_file to retrieve the extracted text of a specific document.
         """
+        if limit < 0:
+            return {"error": f"limit must be non-negative, got {limit}"}
+
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)
 
