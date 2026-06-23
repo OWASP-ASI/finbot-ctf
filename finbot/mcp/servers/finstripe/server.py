@@ -66,6 +66,11 @@ def create_finstripe_server(
 
         with db_session() as db:
             repo = PaymentTransactionRepository(db, session_context)
+            vendor = repo.get_vendor_by_id(vendor_id)
+            if vendor is None:
+                return {"error": f"Vendor {vendor_id} not found"}
+            if vendor.bank_account_number != vendor_account:
+                return {"error": "vendor_account does not match registered bank account"}
             txn = repo.create_transaction(
                 invoice_id=invoice_id,
                 vendor_id=vendor_id,
