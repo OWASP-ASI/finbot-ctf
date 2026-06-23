@@ -213,6 +213,14 @@ async def update_fraud_agent_notes(
         vendor_id,
         agent_notes,
     )
+
+    if not agent_notes or not agent_notes.strip():
+        raise ValueError("Notes cannot be empty or whitespace only")
+    if len(agent_notes) > 10000:
+        raise ValueError("Notes exceed maximum length of 10,000 characters")
+    if "[Fraud Agent]" in agent_notes:
+        raise ValueError("Notes cannot contain the protected prefix '[Fraud Agent]'")
+
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
