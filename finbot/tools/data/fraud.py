@@ -157,14 +157,17 @@ async def flag_invoice_for_review(
     )
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
-        invoice = invoice_repo.get_invoice(invoice_id)
+               invoice = invoice_repo.get_invoice(invoice_id)
         if not invoice:
             raise ValueError("Invoice not found")
+
+        # Validate invoice amount is non-negative
+        if invoice.amount is not None and float(invoice.amount) < 0:
+            raise ValueError(f"Invoice amount {invoice.amount} is negative and cannot be flagged for fraud review")
 
         previous_state = {
             "status": invoice.status,
         }
-
         existing_notes = invoice.agent_notes or ""
         fraud_note = (
             f"[Fraud Agent] FLAG: {flag_reason}. "
