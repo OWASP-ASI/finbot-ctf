@@ -149,6 +149,11 @@ async def flag_invoice_for_review(
     Returns:
         Dictionary containing flagged invoice details
     """
+    if flag_reason is None:
+        raise ValueError("flag_reason must not be None")
+    if not flag_reason.strip():
+        raise ValueError("flag_reason must not be empty or whitespace")
+
     logger.info(
         "Flagging invoice_id: %s for review. Reason: %s, Action: %s",
         invoice_id,
