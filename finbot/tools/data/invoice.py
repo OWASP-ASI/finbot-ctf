@@ -57,6 +57,7 @@ async def update_invoice_status(
         previous_state = {
             "status": invoice.status,
         }
+
         existing_notes = invoice.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
         invoice = invoice_repo.update_invoice(
@@ -87,6 +88,8 @@ async def update_invoice_agent_notes(
         invoice = invoice_repo.get_invoice(invoice_id)
         if not invoice:
             raise ValueError("Invoice not found")
+        if agent_notes and len(agent_notes) > 10_000:
+            raise ValueError("agent_notes exceeds maximum length of 10,000 characters")
         existing_notes = invoice.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
         invoice = invoice_repo.update_invoice(
@@ -96,3 +99,4 @@ async def update_invoice_agent_notes(
         if not invoice:
             raise ValueError("Invoice not found")
         return invoice.to_dict()
+    

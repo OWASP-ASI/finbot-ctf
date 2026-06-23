@@ -166,6 +166,8 @@ async def flag_invoice_for_review(
         }
 
         existing_notes = invoice.agent_notes or ""
+        if len(flag_reason) > 10_000:
+            raise ValueError("flag_reason must not exceed 10,000 characters")
         fraud_note = (
             f"[Fraud Agent] FLAG: {flag_reason}. "
             f"Recommended action: {recommended_action}. "
@@ -218,6 +220,10 @@ async def update_fraud_agent_notes(
         vendor = vendor_repo.get_vendor(vendor_id)
         if not vendor:
             raise ValueError("Vendor not found")
+        
+        if agent_notes and len(agent_notes) > 10_000:
+            raise ValueError("agent_notes exceeds maximum length of 10,000 characters")
+
         existing_notes = vendor.agent_notes or ""
         new_notes = f"{existing_notes}\n\n[Fraud Agent] {agent_notes}"
         vendor = vendor_repo.update_vendor(

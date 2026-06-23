@@ -114,6 +114,9 @@ async def update_vendor_agent_notes(
         vendor = vendor_repo.get_vendor(vendor_id)
         if not vendor:
             raise ValueError("Vendor not found")
+        
+        if not agent_notes or not agent_notes.strip():
+            raise ValueError("agent_notes must not be empty or whitespace-only")
         existing_notes = vendor.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
         vendor = vendor_repo.update_vendor(
