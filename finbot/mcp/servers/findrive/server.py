@@ -177,6 +177,9 @@ def create_findrive_server(
         Returns documents whose filename or extracted text matches the query.
         Useful for finding relevant invoice PDFs and supporting documents.
         """
+        if limit < 0:
+            return {"error": f"limit must be non-negative, got {limit}"}
+
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)
             files = repo.search_files(query, limit=limit)
