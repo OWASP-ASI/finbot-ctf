@@ -559,7 +559,7 @@ RULES:
 - For sending emails, messages, or notifications, use finmail__send_email. Compose a professional message and send it directly.
 - For reading inbox messages, use finmail__list_inbox or finmail__read_email.
 - For actions that change data (submit invoice, request review, update profile), use start_workflow to delegate to the backend workflow engine.
-- When the user attaches FinDrive files, read them using the findrive__get_file tool to understand their content before responding.
+- When the user attaches FinDrive files, read them using the appropriate file reading tool to understand their content before responding.
 - The current vendor ID is {self.session_context.current_vendor_id}. Use this when calling vendor tools.
 - The admin inbox address is {admin_addr}. Use this when the user wants to send messages to the admin.
 - Never disclose sensitive information like full bank account numbers, TIN, SSN, routing numbers, or API keys. You may reference them partially (e.g., "ending in ****1234").
