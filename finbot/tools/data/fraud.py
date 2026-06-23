@@ -208,11 +208,14 @@ async def update_fraud_agent_notes(
     Returns:
         Dictionary containing updated vendor
     """
-    logger.info(
+       logger.info(
         "Updating fraud agent notes for vendor_id: %s. Notes: %s",
         vendor_id,
         agent_notes,
     )
+    # Validate that agent_notes contains meaningful content
+    if not agent_notes or not agent_notes.strip():
+        raise ValueError("agent_notes must not be empty or whitespace-only")
     with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
