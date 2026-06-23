@@ -76,11 +76,18 @@ async def update_vendor_status(
         if not vendor:
             raise ValueError("Vendor not found")
 
-        previous_state = {
+                previous_state = {
             "status": vendor.status,
             "trust_level": vendor.trust_level,
             "risk_level": vendor.risk_level,
         }
+
+        # Validate trust level
+        VALID_TRUST_LEVELS = {"low", "standard", "high"}
+        if trust_level not in VALID_TRUST_LEVELS:
+            raise ValueError(
+                f"Invalid trust_level: {trust_level!r}. Must be one of {VALID_TRUST_LEVELS}"
+            )
 
         existing_notes = vendor.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
