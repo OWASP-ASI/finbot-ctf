@@ -73,8 +73,13 @@ class FinBotAPI {
             }
 
             if (!response.ok) {
+                const errorMessage =
+                    data?.detail ||
+                    data?.message ||
+                    data?.error?.message ||
+                    `HTTP ${response.status}: ${response.statusText}`;
                 throw new APIError(
-                    data.message || `HTTP ${response.status}: ${response.statusText}`,
+                    errorMessage,
                     response.status,
                     data
                 );
@@ -284,7 +289,12 @@ function handleAPIError(error, options = {}) {
     }
 
     // Show user-friendly error message
-    const message = error.data?.message || error.message || 'An error occurred';
+    const message =
+        error.data?.detail ||
+        error.data?.message ||
+        error.data?.error?.message ||
+        error.message ||
+        'An error occurred';
 
     if (options.showAlert !== false) {
         showNotification(message, 'danger');

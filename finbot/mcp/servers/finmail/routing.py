@@ -17,6 +17,8 @@ from finbot.mcp.servers.finmail.repositories import EmailRepository
 
 logger = logging.getLogger(__name__)
 
+MAX_EMAIL_ADDRESS_LENGTH = 254
+
 
 def get_admin_address(namespace: str) -> str:
     """Derive the canonical admin address from a namespace."""
@@ -48,6 +50,22 @@ def _is_internal_address(email_addr: str, namespace: str) -> bool:
     return email_addr.lower().endswith(f"@{namespace.lower()}.finbot")
 
 
+def _normalize_and_validate_email_address(email_addr: str) -> tuple[str | None, str | None]:
+    """Normalize a recipient address and reject obviously invalid values."""
+    normalized = email_addr.strip() if isinstance(email_addr, str) else ""
+
+    if not normalized:
+        return None, "Email address is required"
+
+    if len(normalized) > MAX_EMAIL_ADDRESS_LENGTH:
+        return (
+            None,
+            f"Email address exceeds maximum length of {MAX_EMAIL_ADDRESS_LENGTH} characters",
+        )
+
+    return normalized, None
+
+
 def route_and_deliver(
     db: Session,
     repo: EmailRepository,
@@ -75,6 +93,10 @@ def route_and_deliver(
 
     for role, addresses in [("to", to), ("cc", cc), ("bcc", bcc)]:
         for email_addr in (addresses or []):
+            email_addr, validation_error = _normalize_and_validate_email_address(email_addr)
+            if validation_error:
+                return {"error": validation_error}
+
             visible_bcc = bcc_json if role == "bcc" else None
 
             vendor = (

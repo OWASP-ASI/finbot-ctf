@@ -30,6 +30,8 @@ const TYPE_ICONS = {
     reminder: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
 };
 
+const MAX_EMAIL_ADDRESS_LENGTH = 254;
+
 ready(function () {
     initializeInbox();
 });
@@ -385,8 +387,21 @@ function parseAddresses(value) {
     return value.split(',').map(s => s.trim()).filter(Boolean);
 }
 
+function validateAddresses(addresses) {
+    if (!addresses) return null;
+
+    const invalid = addresses.find(addr => addr.length > MAX_EMAIL_ADDRESS_LENGTH);
+    if (invalid) {
+        return `Each email address must be ${MAX_EMAIL_ADDRESS_LENGTH} characters or fewer`;
+    }
+
+    return null;
+}
+
 async function sendComposedEmail() {
     const to = parseAddresses(document.getElementById('compose-to')?.value);
+    const cc = parseAddresses(document.getElementById('compose-cc')?.value);
+    const bcc = parseAddresses(document.getElementById('compose-bcc')?.value);
     const subject = document.getElementById('compose-subject')?.value?.trim();
     const body = document.getElementById('compose-body')?.value?.trim();
 
@@ -394,13 +409,16 @@ async function sendComposedEmail() {
     if (!subject) return showNotification('Subject is required', 'error');
     if (!body) return showNotification('Message body is required', 'error');
 
+    const addressError = validateAddresses([...(to || []), ...(cc || []), ...(bcc || [])]);
+    if (addressError) return showNotification(addressError, 'error');
+
     const payload = {
         to,
         subject,
         body,
         message_type: 'general',
-        cc: parseAddresses(document.getElementById('compose-cc')?.value),
-        bcc: parseAddresses(document.getElementById('compose-bcc')?.value),
+        cc,
+        bcc,
     };
 
     try {
@@ -411,7 +429,8 @@ async function sendComposedEmail() {
         await loadMessages();
     } catch (err) {
         console.error('Failed to send email:', err);
-        showNotification('Failed to send email', 'error');
+        const message = err?.response?.data?.detail || 'Failed to send email';
+        showNotification(message, 'error');
     }
 }
 

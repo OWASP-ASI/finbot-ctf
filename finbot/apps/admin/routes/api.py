@@ -335,6 +335,9 @@ async def send_message(
             bcc=req.bcc,
         )
 
+        if result.get("error"):
+            raise HTTPException(status_code=400, detail=result["error"])
+
         external = [d for d in result.get("deliveries", []) if d["type"] == "external"]
         if external:
             from finbot.core.messaging import event_bus  # pylint: disable=import-outside-toplevel
