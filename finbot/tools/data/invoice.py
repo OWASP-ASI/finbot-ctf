@@ -87,6 +87,9 @@ async def update_invoice_agent_notes(
         invoice = invoice_repo.get_invoice(invoice_id)
         if not invoice:
             raise ValueError("Invoice not found")
+                if agent_notes is None:
+            return invoice.to_dict()
+
         existing_notes = invoice.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
         invoice = invoice_repo.update_invoice(
