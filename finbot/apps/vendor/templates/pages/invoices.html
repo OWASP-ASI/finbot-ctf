@@ -192,7 +192,7 @@
                 </button>
             </div>
         </div>
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div class="app-scrollbar p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
             <form id="invoice-form" class="space-y-6">
                 <!-- CSRF Token -->
                 {{ csrf_token_field | safe }}
@@ -362,7 +362,7 @@
                 Processing Notes
             </h4>
             <div class="bg-portal-surface rounded-xl p-4 border border-vendor-secondary/20">
-                <div id="sidecar-agent-notes" class="text-sm text-text-bright leading-relaxed max-h-48 overflow-y-auto">
+                <div id="sidecar-agent-notes" class="app-scrollbar text-sm text-text-bright leading-relaxed max-h-48 overflow-y-auto">
                     <span class="text-text-secondary italic">No processing notes available.</span>
                 </div>
             </div>
@@ -426,7 +426,7 @@
                 </svg>
             </button>
         </div>
-        <div id="picker-files-grid" class="p-4 overflow-y-auto max-h-[calc(70vh-120px)] grid grid-cols-3 sm:grid-cols-4 gap-3">
+        <div id="picker-files-grid" class="app-scrollbar p-4 overflow-y-auto max-h-[calc(70vh-120px)] grid grid-cols-3 sm:grid-cols-4 gap-3">
             <p class="col-span-full text-center text-text-secondary py-8">Loading files...</p>
         </div>
         <div class="p-3 border-t border-vendor-primary/20 flex justify-end">

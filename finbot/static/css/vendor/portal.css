@@ -2,6 +2,31 @@
  * FinBot Vendor Portal - Modern Financial Interface
  */
 
+/* App-wide internal scrollbar skin (vendor/admin/ctf) */
+.app-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 212, 255, 0.35) transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.app-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(0, 212, 255, 0.35), rgba(124, 58, 237, 0.35));
+    border-radius: 999px;
+    border: 1px solid rgba(10, 10, 15, 0.5);
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(0, 212, 255, 0.55), rgba(124, 58, 237, 0.55));
+}
+
 /* ==========================================================================
    CORE SYSTEM & VARIABLES
    ========================================================================== */

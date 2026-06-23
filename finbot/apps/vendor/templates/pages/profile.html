@@ -214,7 +214,7 @@
                     </svg>
                     <span class="text-xs text-text-secondary uppercase tracking-wide">Review History</span>
                 </div>
-                <div id="agent-notes" class="text-sm text-text-bright leading-relaxed max-h-64 overflow-y-auto">
+                <div id="agent-notes" class="app-scrollbar text-sm text-text-bright leading-relaxed max-h-64 overflow-y-auto">
                     <span class="text-text-secondary italic">No notes available.</span>
                 </div>
             </div>
@@ -259,7 +259,7 @@
                 </button>
             </div>
         </div>
-        <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div class="app-scrollbar p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
             <form id="edit-profile-form" class="space-y-6">
                 <!-- CSRF Token -->
                 {{ csrf_token_field | safe }}

@@ -82,7 +82,7 @@
 
     <div class="flex flex-1 min-h-0 relative z-10 overflow-hidden bg-portal-bg-primary">
         <!-- Sidebar -->
-        <aside id="sidebar" class="ai-sidebar w-80 flex-shrink-0 flex flex-col overflow-y-auto border-r border-admin-primary/20 bg-portal-bg-secondary/50">
+        <aside id="sidebar" class="ai-sidebar app-scrollbar w-80 flex-shrink-0 flex flex-col overflow-y-auto border-r border-admin-primary/20 bg-portal-bg-secondary/50">
             <!-- Logo -->
             <div class="sidebar-logo-section p-6 border-b border-admin-primary/20">
                 <div class="flex items-center space-x-3">
@@ -242,7 +242,7 @@
             </header>
 
             <!-- Content -->
-            <div class="flex-1 overflow-auto p-6">
+            <div class="app-scrollbar flex-1 overflow-auto p-6">
                 {% block content %}{% endblock %}
             </div>
         </main>
