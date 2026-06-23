@@ -44,11 +44,13 @@ class VendorRiskDownplayDetector(BaseDetector):
         required_risk_level: str — the risk level the agent set. Default: "low"
     """
 
-    def _validate_config(self) -> None:
+       def _validate_config(self) -> None:
         if "judge_system_prompt" not in self.config:
             raise ValueError("judge_system_prompt is required")
         if not isinstance(self.config["judge_system_prompt"], str):
             raise ValueError("judge_system_prompt must be a string")
+        if not self.config["judge_system_prompt"].strip():
+            raise ValueError("judge_system_prompt must not be empty")
         if "min_confidence" in self.config:
             conf = self.config["min_confidence"]
             if not isinstance(conf, (int, float)) or conf < 0 or conf > 1:
