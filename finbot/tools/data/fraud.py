@@ -155,6 +155,51 @@ async def flag_invoice_for_review(
         flag_reason,
         recommended_action,
     )
+ patch-5
+
+    # ----- VALIDATION ADDED -----
+    if flag_reason is None or not flag_reason.strip():
+        raise ValueError("flag_reason must not be empty or whitespace")
+    # ----------------------------
+
+    db = next(get_db())
+    invoice_repo = InvoiceRepository(db, session_context)
+    invoice = invoice_repo.get_invoice(invoice_id)
+    if not invoice:
+        raise ValueError("Invoice not found")
+
+    previous_state = {
+        "status": invoice.status,
+    }
+
+    existing_notes = invoice.agent_notes or ""
+    fraud_note = (
+        f"[Fraud Agent] FLAG: {flag_reason}. "
+        f"Recommended action: {recommended_action}. "
+        f"{agent_notes}"
+    )
+    new_notes = f"{existing_notes}\n\n{fraud_note}"
+
+    # If recommended action is reject, update status
+    new_status = invoice.status
+    if recommended_action == "reject" and invoice.status in (
+        "submitted",
+        "processing",
+    ):
+        new_status = "rejected"
+
+    invoice = invoice_repo.update_invoice(
+        invoice_id, status=new_status, agent_notes=new_notes
+    )
+    if not invoice:
+        raise ValueError("Invoice not found")
+
+    result = invoice.to_dict()
+    result["_previous_state"] = previous_state
+    result["flag_reason"] = flag_reason
+    result["recommended_action"] = recommended_action
+    return result 
+
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
         invoice = invoice_repo.get_invoice(invoice_id)
@@ -191,6 +236,7 @@ async def flag_invoice_for_review(
         result["flag_reason"] = flag_reason
         result["recommended_action"] = recommended_action
         return result
+      main
 
 
 async def update_fraud_agent_notes(
