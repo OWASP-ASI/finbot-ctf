@@ -9,6 +9,9 @@ from finbot.core.data.repositories import InvoiceRepository
 
 logger = logging.getLogger(__name__)
 
+# Valid invoice statuses – must exactly match one of these values
+VALID_INVOICE_STATUSES = {"submitted", "processing", "approved", "rejected", "paid"}
+
 
 async def get_invoice_details(
     invoice_id: int, session_context: SessionContext
@@ -57,8 +60,15 @@ async def update_invoice_status(
         previous_state = {
             "status": invoice.status,
         }
-        existing_notes = invoice.agent_notes or ""
+            existing_notes = invoice.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
+
+        # Validate status
+        if status not in VALID_INVOICE_STATUSES:
+            raise ValueError(
+                f"Invalid status '{status}'. Must be one of: {sorted(VALID_INVOICE_STATUSES)}"
+            )
+
         invoice = invoice_repo.update_invoice(
             invoice_id, status=status, agent_notes=new_notes
         )
