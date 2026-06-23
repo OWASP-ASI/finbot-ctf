@@ -441,18 +441,19 @@ async def get_public_profile(
     challenge_repo = ChallengeRepository(db)
     badge_repo = BadgeRepository(db)
 
-    # Query completed challenges for this user
+    # Load all progress rows for consistent profile stats with /api/v1/stats.
     from finbot.core.data.models import UserChallengeProgress, UserBadge
 
-    completed_progress = (
+    all_progress = (
         db.query(UserChallengeProgress)
         .filter(
             UserChallengeProgress.namespace == owner_namespace,
             UserChallengeProgress.user_id == profile.user_id,
-            UserChallengeProgress.status == "completed",
         )
         .all()
     )
+    completed_progress = [p for p in all_progress if p.status == "completed"]
+    hints_cost = sum(p.hints_cost for p in all_progress)
 
     # Get badge data
     earned_badges = (
@@ -468,7 +469,6 @@ async def get_public_profile(
     # Calculate points
     challenge_points = challenge_repo.get_effective_points(completed_progress)
     badge_points = badge_repo.get_total_points(earned_badge_ids)
-    hints_cost = sum(p.hints_cost for p in completed_progress)
     total_points = challenge_points + badge_points - hints_cost
 
     # Get totals

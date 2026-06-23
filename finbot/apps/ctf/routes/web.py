@@ -140,15 +140,16 @@ async def ctf_public_profile(
         challenge_repo = ChallengeRepository(db)
         badge_repo = BadgeRepository(db)
 
-        completed_progress = (
+        all_progress = (
             db.query(UserChallengeProgress)
             .filter(
                 UserChallengeProgress.namespace == user.namespace,
                 UserChallengeProgress.user_id == profile.user_id,
-                UserChallengeProgress.status == "completed",
             )
             .all()
         )
+        completed_progress = [p for p in all_progress if p.status == "completed"]
+        hints_cost = sum(p.hints_cost for p in all_progress)
         earned_badge_ids = [
             b.badge_id
             for b in db.query(UserBadge)
@@ -164,7 +165,7 @@ async def ctf_public_profile(
         total_points = (
             challenge_repo.get_effective_points(completed_progress)
             + badge_repo.get_total_points(earned_badge_ids)
-            - sum(p.hints_cost for p in completed_progress)
+            - hints_cost
         )
         level, level_title = calculate_level(total_points)
         bio = profile.bio or "AI Security Enthusiast"

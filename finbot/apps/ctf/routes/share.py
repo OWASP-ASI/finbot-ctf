@@ -194,15 +194,16 @@ async def get_profile_card(
     if not profile or not user:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    completed_progress = (
+    all_progress = (
         db.query(UserChallengeProgress)
         .filter(
             UserChallengeProgress.namespace == user.namespace,
             UserChallengeProgress.user_id == profile.user_id,
-            UserChallengeProgress.status == "completed",
         )
         .all()
     )
+    completed_progress = [p for p in all_progress if p.status == "completed"]
+    hints_cost = sum(p.hints_cost for p in all_progress)
 
     earned_badges = (
         db.query(UserBadge)
@@ -219,7 +220,6 @@ async def get_profile_card(
     challenge_points = challenge_repo.get_effective_points(completed_progress)
     earned_badge_ids = [b.badge_id for b in earned_badges]
     badge_points = badge_repo.get_total_points(earned_badge_ids)
-    hints_cost = sum(p.hints_cost for p in completed_progress)
     total_points = challenge_points + badge_points - hints_cost
 
     level, level_title = calculate_level(total_points)
