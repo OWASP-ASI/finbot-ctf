@@ -347,7 +347,7 @@ class ChatAssistantBase:
         start_time = datetime.now(UTC)
 
         max_tool_rounds = 15
-        for round_idx in range(max_tool_rounds):
+        for _ in range(max_tool_rounds):
             stream_params = {
                 "model": self._model,
                 "input": input_messages,
