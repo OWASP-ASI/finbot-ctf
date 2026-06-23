@@ -370,10 +370,11 @@ class ChatAssistantBase:
             stream = await self._client.responses.create(**stream_params)
 
             pending_tool_calls: list[dict] = []
+            round_text = ""
 
             async for event in stream:
                 if event.type == "response.output_text.delta":
-                    full_response += event.delta
+                    round_text += event.delta
                     yield f"data: {json.dumps({'type': 'token', 'content': event.delta})}\n\n"
 
                 elif event.type == "response.output_item.done":
