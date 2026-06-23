@@ -689,10 +689,7 @@ function formatToolbarHtml() {
 function initFormatToolbar(container) {
     const editable = container.querySelector('.fmt-editable');
     if (!editable) return;
-    editable.addEventListener('paste', (e) => {
-        e.preventDefault();
-        document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
-    });
+    // Allow normal copy and paste behavior (including formatted text)
 }
 
 function fmtSaveSelection() {

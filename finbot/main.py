@@ -3,6 +3,8 @@ FinBot Platform Main Application
 - Serves all the applications for the FinBot platform.
 """
 
+from finbot.core.security_detectors import MarkdownExfiltrationDetector
+
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -142,6 +144,7 @@ if settings.CC_ANALYTICS_ENABLED:
 # Execute session first, then CSRF
 app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(SessionMiddleware)
+app.add_middleware(MarkdownExfiltrationDetector)
 
 # Trust X-Forwarded-Proto/For from reverse proxies (Railway, etc.)
 # so url_for() generates https:// URLs and client IPs are correct.
