@@ -222,6 +222,9 @@ class ChatAssistantBase:
         if not self.background_tasks:
             return json.dumps({"error": "Workflow engine not available"})
 
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
+
         from finbot.agents.runner import (
             run_orchestrator_agent,  # pylint: disable=import-outside-toplevel
         )
