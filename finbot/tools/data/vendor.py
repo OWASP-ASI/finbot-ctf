@@ -109,11 +109,14 @@ async def update_vendor_agent_notes(
         vendor_id,
         agent_notes,
     )
-    with db_session() as db:
+        with db_session() as db:
         vendor_repo = VendorRepository(db, session_context)
         vendor = vendor_repo.get_vendor(vendor_id)
         if not vendor:
             raise ValueError("Vendor not found")
+        # If agent_notes is None, no update is needed; return current data.
+        if agent_notes is None:
+            return vendor.to_dict()
         existing_notes = vendor.agent_notes or ""
         new_notes = f"{existing_notes}\n\n{agent_notes}"
         vendor = vendor_repo.update_vendor(
