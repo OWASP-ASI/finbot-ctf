@@ -135,7 +135,7 @@ Platform runs at [http://localhost:8000](http://localhost:8000)
 
 ## Configuration
 
-Key environment variables (see `[.env.example](.env.example)` for the full template):
+Key environment variables (see [.env.example](.env.example) for the full template):
 
 
 | Variable         | Default                  | Description                        |
