@@ -142,7 +142,7 @@ async def flag_invoice_for_review(
     Args:
         invoice_id: The ID of the invoice to flag
         flag_reason: Reason for flagging (e.g., 'suspicious_amount', 'duplicate', 'vendor_risk')
-        recommended_action: Recommended action ('hold', 'reject', 'escalate')
+        recommended_action: Recommended action ('hold', 'reject', 'escalate', 'monitor')
         agent_notes: Detailed fraud assessment notes
         session_context: The session context
 
@@ -155,6 +155,15 @@ async def flag_invoice_for_review(
         flag_reason,
         recommended_action,
     )
+
+    # Validate recommended_action
+    VALID_ACTIONS = {"hold", "reject", "escalate", "monitor"}
+    if recommended_action not in VALID_ACTIONS:
+        raise ValueError(
+            f"Invalid recommended_action: {recommended_action!r}. "
+            f"Must be one of {VALID_ACTIONS}"
+        )
+
     with db_session() as db:
         invoice_repo = InvoiceRepository(db, session_context)
         invoice = invoice_repo.get_invoice(invoice_id)
