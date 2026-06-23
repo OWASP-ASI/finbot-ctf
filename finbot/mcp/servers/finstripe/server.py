@@ -111,8 +111,16 @@ def create_finstripe_server(
                     "transfer_id": transfer_id,
                 }
 
-            return txn.to_dict()
+            # Vendor sessions must own the transfer
+            if hasattr(session_context, 'current_vendor_id') and session_context.current_vendor_id is not None:
+                if txn.vendor_id != session_context.current_vendor_id:
+                    return {
+                        "error": f"Transfer {transfer_id} not found",
+                        "transfer_id": transfer_id,
+                    }
 
+            return txn.to_dict()
+            
     @mcp.tool
     def get_account_balance(account_id: str) -> dict[str, Any]:
         """Check available balance for an account.
