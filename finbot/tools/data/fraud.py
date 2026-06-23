@@ -96,6 +96,10 @@ async def update_vendor_risk(
     Returns:
         Dictionary containing updated vendor details
     """
+       VALID_RISK_LEVELS = {"low", "medium", "high"}
+    if risk_level not in VALID_RISK_LEVELS:
+        raise ValueError(f"Invalid risk_level: {risk_level!r}. Must be one of {VALID_RISK_LEVELS}")
+
     logger.info(
         "Updating vendor risk for vendor_id: %s to risk_level: %s. Notes: %s",
         vendor_id,
