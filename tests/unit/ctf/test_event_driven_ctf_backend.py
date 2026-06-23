@@ -208,6 +208,12 @@ def test_event_decoding_from_redis_streams():
     5. JSON-encoded integers parsed to Python int
     6. JSON-encoded dicts parsed to Python dict
     7. No data loss or corruption during decoding
+
+    Impact: If byte decoding raises instead of returning clean Python dicts,
+            every event arriving from Redis is silently dropped. The entire
+            CTF processing pipeline stops detecting exploits; no challenges
+            are ever completed and operators see no error because the
+            exception is swallowed inside the stream consumer loop.
     """
     processor = CTFEventProcessor(redis_client=None)
 
@@ -259,6 +265,12 @@ async def test_event_category_classification(db):
     2. "business" stream → "business" category
     3. Unknown stream → "unknown" category
     4. Classification is based on stream name substring matching
+
+    Impact: If agent stream events are categorised as "unknown", agent-event
+            detectors never fire — prompt-injection and tool-misuse challenges
+            become impossible to complete. Operators inspecting logs see events
+            flowing through Redis but cannot explain why challenges are never
+            triggered.
     """
     processor = CTFEventProcessor(redis_client=None)
     event = _make_event()
@@ -307,6 +319,11 @@ def test_idempotent_event_storage(db):
     1. First insert creates one CTFEvent record
     2. Second insert is a no-op (idempotent)
     3. No IntegrityError raised
+
+    Impact: If duplicate events are stored, the same agent interaction can
+            award a flag multiple times. Users score infinitely by replaying
+            the same Redis message, and the leaderboard becomes invalid with
+            no indication that scores were inflated.
     """
     from finbot.core.data.models import CTFEvent
 
@@ -359,6 +376,11 @@ def test_event_summary_generation():
     2. Tool name appended when present
     3. Agent name prepended when no tool name
     4. Bare event_type formatted as readable fallback
+
+    Impact: If summaries are missing or garbled, the activity feed and audit
+            log in the operator dashboard become unreadable. Security teams
+            reviewing event histories cannot correlate raw Redis events with
+            the actions that triggered challenge completions.
     """
     processor = CTFEventProcessor(redis_client=None)
 
@@ -401,6 +423,11 @@ def test_timestamp_parsing_with_fallback():
     1. Z-suffix and offset timestamps parsed correctly
     2. Missing or invalid timestamps fall back to now
     3. No exceptions raised for any format
+
+    Impact: If an unrecognised timestamp format raises an exception instead
+            of falling back, one malformed event crashes the event processing
+            loop and halts all CTF detection for every subsequent event in
+            the stream until the service restarts.
     """
     processor = CTFEventProcessor(redis_client=None)
 
@@ -439,6 +466,11 @@ async def test_processor_starts_and_stops_gracefully():
     1. No Redis → processor exits start_async without error
     2. stop() sets _running to False
     3. Processing loop will exit on next iteration
+
+    Impact: If stop() fails to set _running to False, a graceful shutdown
+            signal is ignored and the processor keeps consuming Redis events
+            after the rest of the application has torn down — leaving orphaned
+            async tasks that hold DB connections and block clean process exit.
     """
     processor = CTFEventProcessor(redis_client=None)
 
@@ -475,6 +507,12 @@ def test_prompt_leak_detection_default_patterns():
     2. Confidence calculated as min(1.0, matches * 0.3 + 0.2) = 0.8
     3. Evidence includes match contexts
     4. Detection result is positive
+
+    Impact: If the default patterns fail to match, the prompt-leak challenge
+            can never be completed by any user regardless of the actual
+            system-prompt content they extract. The challenge appears broken
+            with no helpful error — players are stuck and operators cannot
+            tell from logs why detection never fires.
     """
     detector = PromptLeakDetector(challenge_id="ch-prompt-001")
 
@@ -515,6 +553,12 @@ def test_prompt_leak_detection_custom_patterns():
     Expected Results:
     1. Custom pattern "secret_key" matches
     2. Normal response without patterns returns no detection
+
+    Impact: If custom patterns are ignored and the detector always falls back
+            to defaults, operators who craft bespoke challenges cannot control
+            what triggers a flag. Users submitting the expected exploit receive
+            no flag; users who happen to match a default pattern are incorrectly
+            awarded one.
     """
     detector = PromptLeakDetector(
         challenge_id="ch-custom-001",
@@ -560,6 +604,12 @@ def test_prompt_leak_below_confidence_threshold():
     1. Single match gives confidence of 0.5 (1 * 0.3 + 0.2)
     2. 0.5 < 0.9 threshold → detected=False
     3. Evidence preserved for audit even though not detected
+
+    Impact: If the confidence threshold is not enforced, a single accidental
+            pattern match (e.g. the word "system" in a legitimate response)
+            awards the flag prematurely. Users complete challenges without
+            demonstrating the intended exploit, inflating scores and rendering
+            the challenge meaningless as a security training exercise.
     """
     detector = PromptLeakDetector(
         challenge_id="ch-threshold-001",
@@ -599,6 +649,11 @@ def test_prompt_leak_no_response_text():
     1. Missing response_dump → no text to analyze
     2. Returns detected=False gracefully
     3. No exception raised
+
+    Impact: If a missing response_dump raises an exception, any event that
+            arrives without that field (e.g. a tool-call event forwarded to
+            the wrong detector) crashes the processing loop and halts all
+            detection until the service restarts.
     """
     detector = PromptLeakDetector(challenge_id="ch-notext-001")
 
@@ -632,6 +687,12 @@ def test_detector_event_type_filtering():
     1. PromptLeakDetector only matches its specific event type
     2. Wildcard "agent.*" matches any "agent." prefix
     3. Non-matching types rejected
+
+    Impact: If event-type filtering is bypassed, every detector runs against
+            every event regardless of relevance. Business events trigger
+            prompt-injection detectors; unrelated agent events trigger badge
+            evaluators. False positives award flags and badges for actions
+            that have nothing to do with the intended challenge scenario.
     """
     prompt_detector = PromptLeakDetector(challenge_id="ch-filter-001")
     assert prompt_detector.matches_event_type("agent.onboarding_agent.llm_request_success") is True
@@ -671,6 +732,13 @@ def test_detector_config_validation():
     2. Empty patterns → ValueError
     3. Out-of-range confidence → ValueError
     4. Valid config accepted
+
+    Impact: If invalid configs are silently accepted, a misconfigured
+            detector (e.g. an empty patterns list or out-of-range confidence)
+            produces unpredictable detection results at runtime with no error
+            surfaced to the operator. Challenges either never fire or fire on
+            every event, and the root cause is invisible without inspecting
+            the raw YAML definition.
     """
     with pytest.raises(ValueError, match="patterns must be a list"):
         PromptLeakDetector(challenge_id="bad-1", config={"patterns": "not a list"})
@@ -710,6 +778,12 @@ def test_detector_registry_lookup():
     1. PromptLeakDetector auto-registered on import
     2. Factory creates correct instance with config
     3. Non-existent detector returns None gracefully
+
+    Impact: If create_detector raises instead of returning None for an
+            unknown class, a single misspelled detector_class in any challenge
+            YAML crashes the entire challenge service for all events. No
+            challenges are evaluated until the bad definition is corrected and
+            the service restarted — even unrelated challenges stop working.
     """
     registered = list_registered_detectors()
     assert "PromptLeakDetector" in registered
@@ -748,6 +822,12 @@ async def test_challenge_completion_and_progress_update(db):
     1. Challenge flagged as completed automatically
     2. Progress record updated with evidence and timestamp
     3. Completion is immediate (no manual intervention)
+
+    Impact: If the progress record is not written or the status is not set
+            to "completed", users who successfully exploit a challenge see no
+            flag, no points, and no WebSocket notification. The leaderboard
+            stays unchanged and players cannot tell whether their exploit
+            worked or the challenge definition is wrong.
     """
     from finbot.core.data.models import Challenge, UserChallengeProgress
 
@@ -821,6 +901,12 @@ async def test_challenge_progress_tracking_on_failed_attempt(db):
     1. No flag awarded for failed detection
     2. Progress record created with "in_progress" status
     3. Attempt counters properly incremented
+
+    Impact: If failed attempts are not persisted, the attempt counter is
+            lost on every event and users who exhaust hint budgets (calculated
+            from attempt count) can purchase hints indefinitely for free.
+            Operators reviewing progress dashboards also see misleadingly
+            pristine records with no history of failed attempts.
     """
 
     service = ChallengeService()
@@ -887,6 +973,12 @@ async def test_already_completed_challenge_skipped(db):
     1. Completed challenge not re-detected
     2. No duplicate awards
     3. Returns empty for our challenge
+
+    Impact: If already-completed challenges are re-evaluated, the same
+            exploit triggers a second flag award on every subsequent matching
+            event. Users accumulate duplicate points and badges with no
+            cap, corrupting the leaderboard permanently until the database
+            is manually corrected.
     """
     from finbot.core.data.models import Challenge, UserChallengeProgress
 
@@ -950,6 +1042,12 @@ async def test_badge_auto_award_on_event(db):
     1. Badge auto-awarded on matching event
     2. UserBadge record created with timestamp and context
     3. No manual intervention needed
+
+    Impact: If badge auto-award is broken, users who meet all badge criteria
+            never receive recognition. The badge section of the user profile
+            stays empty regardless of challenge completion, and since no error
+            is raised the platform silently withholds earned rewards with no
+            operator alert.
     """
 
     from finbot.core.data.models import Badge, UserBadge
@@ -1030,6 +1128,12 @@ async def test_duplicate_badge_prevention(db):
     Expected Results:
     1. Existing badge prevents re-evaluation
     2. No duplicate UserBadge created
+
+    Impact: If duplicate prevention fails, every matching event awards the
+            same badge again. A user with a high-frequency event stream (e.g.
+            many LLM calls) accumulates hundreds of duplicate badge records
+            and inflated badge points, with the leaderboard becoming invalid
+            within minutes of the bug being introduced.
     """
     from finbot.core.data.models import Badge, UserBadge
 
@@ -1093,6 +1197,12 @@ def test_service_cache_reload():
     Expected Results:
     1. Both services present on construction
     2. Separate processors use independent service objects
+
+    Impact: If two processors share a service instance, concurrent event
+            processing across namespaces contaminates each other's state.
+            A detection result from one namespace's event can update progress
+            for a completely different user, silently awarding flags to the
+            wrong player with no error logged.
     """
     processor_a = CTFEventProcessor(redis_client=None)
     processor_b = CTFEventProcessor(redis_client=None)
@@ -1125,6 +1235,12 @@ def test_points_calculated_from_completed_challenges(db):
     1. Points sum correctly from completed challenges
     2. Hint costs deducted from total
     3. Badge points included in total
+
+    Impact: If point summation is wrong, the leaderboard ranks users
+            incorrectly. Users who complete high-value challenges appear below
+            users with fewer completions if their points are under-counted,
+            or above everyone if over-counted. Competition integrity is lost
+            and manual correction requires directly editing the database.
     """
     from finbot.core.data.models import Challenge, UserChallengeProgress
 
@@ -1198,6 +1314,12 @@ def test_category_progress_tracking(db):
     1. Category progress calculated correctly
     2. Percentage rounds to integer
     3. Uncompleted categories show 0%
+
+    Impact: If category progress percentages are wrong, the progress
+            dashboard misleads users about how much of each category they
+            have completed. Users who have finished all challenges in a
+            category see less than 100%, and operators cannot use the
+            dashboard to identify which categories need more content.
     """
     from finbot.core.data.models import Challenge, UserChallengeProgress
 
@@ -1273,6 +1395,12 @@ def test_badge_points_included_in_total(db):
     1. Badge points contribute to total score
     2. Only earned badges counted
     3. Leaderboard total = challenge_points + badge_points - hint_costs
+
+    Impact: If badge points are excluded from the total, users who invest
+            effort into earning rare badges gain no leaderboard advantage
+            over users who skip badges entirely. The badge system loses its
+            incentive value and the leaderboard no longer reflects the full
+            scope of a player's achievement.
     """
     from finbot.core.data.models import Badge, UserBadge
 
@@ -1331,6 +1459,13 @@ async def test_challenge_completed_websocket_event(db):
     1. Activity event broadcast to namespace
     2. Challenge completion event sent to user
     3. Event data includes challenge_id, title, points
+
+    Impact: If the challenge-completed WebSocket event is not sent, users
+            sitting on the challenge page see no real-time feedback when they
+            successfully exploit a challenge. They must manually refresh the
+            page to see their updated score, and in competitive sessions this
+            delay can cause them to submit the same exploit multiple times
+            believing it did not work.
     """
     from finbot.core.data.models import Challenge
 
@@ -1390,6 +1525,12 @@ async def test_badge_earned_websocket_event(db):
     Expected Results:
     1. Badge earned event sent to user
     2. Event data includes badge_id, title, rarity
+
+    Impact: If the badge-earned WebSocket event is not sent, users never
+            see the real-time badge award toast notification. The badge
+            silently appears in their profile only after a full page reload,
+            removing the reward moment that reinforces engagement with the
+            badge system.
     """
     from finbot.core.data.models import Badge
 
@@ -1444,6 +1585,13 @@ async def test_no_notification_without_identity(db):
     1. Missing identity prevents all notifications
     2. No exceptions raised
     3. System fails silently for anonymous events
+
+    Impact: If notifications are sent for events without namespace or
+            user_id, the WebSocket broadcast targets an undefined channel and
+            either crashes the ws_manager or delivers the message to every
+            connected user. In the latter case, one user's challenge
+            completion is announced to the entire namespace, leaking
+            competitive information about which challenges have been solved.
     """
     processor = CTFEventProcessor(redis_client=None)
 
@@ -1480,6 +1628,12 @@ def test_websocket_event_serialization():
     1. to_json() produces valid JSON with type, data, timestamp
     2. from_json() reconstructs identical WSEvent
     3. Round-trip serialization preserves all fields
+
+    Impact: If WSEvent serialisation is broken, the JSON payload sent over
+            the WebSocket is malformed. All connected clients fail to parse
+            the event, the challenge-completed UI never updates, and the
+            JavaScript error console fills with parse failures — the real-time
+            experience degrades entirely for every user in the session.
     """
     original = create_challenge_completed_event("ch-1", "Test Challenge", 50)
     json_str = original.to_json()
@@ -1517,6 +1671,13 @@ def test_websocket_event_factory_functions():
     1. Each factory produces correct WSEventType
     2. Data payloads contain expected fields
     3. Timestamps auto-populated
+
+    Impact: If a factory returns a WSEvent with the wrong type, the client-
+            side handler dispatches the event to the wrong React component.
+            A challenge-completed payload rendered by the badge handler shows
+            garbled UI; a badge payload rendered by the challenge handler
+            displays incorrect points. Users see confusing on-screen messages
+            for every milestone they reach.
     """
     activity = create_activity_event({
         "event_type": "agent.task_start",
@@ -1559,6 +1720,13 @@ def test_google_sheets_integration_verification():
     2. Summary sheet contains recent test run data
     3. Test counts are accurate
     4. Worksheet tab has automation_status updates
+
+    Impact: If Google Sheets integration fails silently, stakeholders
+            reviewing the test-results spreadsheet see stale data from the
+            previous run. QA sign-off decisions are made against outdated
+            pass/fail counts, and regressions introduced since the last
+            successful upload go undetected until a manual test run is
+            triggered.
     """
     import os
     from dotenv import load_dotenv
