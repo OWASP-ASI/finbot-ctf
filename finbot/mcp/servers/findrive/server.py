@@ -55,15 +55,20 @@ def create_findrive_server(
         retrieval. Use this for storing invoice PDFs, receipts, and supporting
         documentation.
         """
-        max_size = config.get("max_file_size_kb", 500) * 1024
+        conf = config or DEFAULT_CONFIG
+        MAX_FILENAME_LENGTH = 255
+        if len(filename) > MAX_FILENAME_LENGTH:
+            return {"error": f"filename exceeds maximum length of {MAX_FILENAME_LENGTH} characters"}
+
+        max_size = conf.get("max_file_size_kb", 500) * 1024
         if len(content.encode("utf-8")) > max_size:
-            return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
+            return {"error": f"File exceeds maximum size of {conf.get('max_file_size_kb', 500)}KB"}
 
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)
 
             vid = vendor_id if vendor_id > 0 else None
-            if _is_vendor_session(session_context) and vid is None:
+            if session_context and _is_vendor_session(session_context) and vid is None:
                 vid = session_context.current_vendor_id
 
             f = repo.create_file(
