@@ -685,6 +685,24 @@ const sidebar = {
         if (this.state.toggleButton) {
             this.state.toggleButton.classList.add('hidden');
         }
+
+        // Mobile touch navigation: attach touchend handlers to all sidebar links
+        // This bypasses CSS stacking/pointer-events issues on mobile
+        if ('ontouchstart' in window) {
+            const links = sidebarElement.querySelectorAll('a[href]');
+            links.forEach(link => {
+                if (!link._touchNavBound) {
+                    link._touchNavBound = true;
+                    link.addEventListener('touchend', function(e) {
+                        e.stopPropagation();
+                        const href = this.getAttribute('href');
+                        if (href && href !== '#') {
+                            window.location.href = href;
+                        }
+                    }, { passive: false });
+                }
+            });
+        }
     },
 
     close(sidebarSelector) {

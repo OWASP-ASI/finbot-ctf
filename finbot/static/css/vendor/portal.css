@@ -1333,7 +1333,7 @@ body {
         position: fixed;
         top: 1rem;
         right: 1rem;
-        z-index: 1002;
+        z-index: 10002;
         background: rgba(21, 21, 32, 0.95);
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 6px;
@@ -1375,7 +1375,7 @@ body {
         right: 0;
         bottom: 0;
         background: rgba(0, 0, 0, 0.7);
-        z-index: 999;
+        z-index: 10000;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -1397,7 +1397,7 @@ body {
         width: 320px;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
-        z-index: 1001;
+        z-index: 10001;
         box-shadow: 2px 0 20px rgba(0, 0, 0, 0.5);
         background: #0a0a0f !important;
         backdrop-filter: none !important;
@@ -1410,11 +1410,19 @@ body {
     /* Show sidebar when open */
     .ai-sidebar.open {
         transform: translateX(0);
-        pointer-events: auto;
+        pointer-events: auto !important;
     }
 
-    .ai-sidebar * {
-        pointer-events: auto;
+    .ai-sidebar.open * {
+        pointer-events: auto !important;
+    }
+
+    .ai-sidebar.open a,
+    .ai-sidebar.open button {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        position: relative !important;
+        z-index: 10003 !important;
     }
 
     /* Adjust main content */
