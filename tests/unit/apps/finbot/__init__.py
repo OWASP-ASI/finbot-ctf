@@ -1,0 +1,1 @@
+"""Unit tests for main FinBot application."""
