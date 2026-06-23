@@ -181,10 +181,10 @@ class CTFSidecar {
         const rarityIcons = { common: '⭐', rare: '💎', epic: '🌟', legendary: '👑' };
 
         grid.innerHTML = badges.map(badge => `
-            <div class="ctf-badge-item rarity-${badge.rarity}" title="${badge.title}">
-                <img src="/static/images/ctf/badges/${badge.icon_url}" alt="${badge.title}" class="w-6 h-6 object-contain"
+            <a href="/ctf/badges" class="ctf-badge-item rarity-${badge.rarity}" title="${this.escapeHtml(badge.title)}">
+                <img src="/static/images/ctf/badges/${badge.icon_url}" alt="${this.escapeHtml(badge.title)}" class="w-6 h-6 object-contain"
                      onerror="this.replaceWith(Object.assign(document.createElement('span'), { textContent: '${rarityIcons[badge.rarity] || '🏅'}', className: 'text-lg' }))">
-            </div>
+            </a>
         `).join('');
     }
 
@@ -202,15 +202,15 @@ class CTFSidecar {
         }
 
         container.innerHTML = challenges.map(c => `
-            <div class="ctf-challenge-card">
+            <a href="/ctf/challenges/${encodeURIComponent(String(c.id))}" class="ctf-challenge-card">
                 <div class="ctf-challenge-title">${this.escapeHtml(c.title)}</div>
                 <div class="ctf-challenge-meta">
                     <span class="ctf-challenge-points">${c.points} pts</span>
                     <span class="ctf-difficulty-badge ctf-difficulty-${c.difficulty}">${c.difficulty}</span>
-                    <span>${c.category}</span>
+                    <span>${this.escapeHtml(c.category)}</span>
                     ${c.attempts > 0 ? `<span>• ${c.attempts} attempts</span>` : ''}
                 </div>
-            </div>
+            </a>
         `).join('');
     }
 
@@ -233,15 +233,19 @@ class CTFSidecar {
     createActivityItem(activity) {
         const icon = this.getActivityIcon(activity.category);
         const timeAgo = this.formatTimeAgo(activity.timestamp);
+        const summaryText = activity.summary || activity.type || activity.event_type || '';
+
+        // For vendor portal sidecar, go to the activity stream.
+        const href = '/ctf/activity';
 
         return `
-            <div class="ctf-activity-item">
+            <a href="${href}" class="ctf-activity-item ctf-activity-link" aria-label="Open activity">
                 <div class="ctf-activity-icon ${activity.category}">${icon}</div>
                 <div class="ctf-activity-content">
-                    <div class="ctf-activity-summary">${this.escapeHtml(activity.summary || activity.type)}</div>
+                    <div class="ctf-activity-summary">${this.escapeHtml(summaryText)}</div>
                     <div class="ctf-activity-time">${timeAgo}</div>
                 </div>
-            </div>
+            </a>
         `;
     }
 

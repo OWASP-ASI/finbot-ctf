@@ -100,6 +100,14 @@
     font-size: 1.5rem;
     cursor: pointer;
     transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    box-sizing: border-box;
+}
+
+a.ctf-badge-item:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
 }
 
 .ctf-badge-item:hover {
@@ -132,11 +140,19 @@
 
 /* Active Challenge Card */
 .ctf-challenge-card {
+    display: block;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.5rem;
     padding: 0.75rem;
     transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+a.ctf-challenge-card:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
 }
 
 .ctf-challenge-card:hover {
@@ -199,10 +215,19 @@
     border-radius: 0.5rem;
     margin-bottom: 0.25rem;
     animation: slideIn 0.3s ease-out;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    box-sizing: border-box;
 }
 
 .ctf-activity-item:hover {
     background: rgba(255, 255, 255, 0.03);
+}
+
+.ctf-activity-item:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
 }
 
 @keyframes slideIn {

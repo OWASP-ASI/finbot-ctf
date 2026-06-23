@@ -53,7 +53,8 @@
         isLoading = true;
 
         try {
-            const data = await CTF.getActivity({ page: nextPage, page_size: PAGE_SIZE });
+            const options = { page: nextPage, page_size: PAGE_SIZE };
+            const data = await CTF.getActivity(options);
             const items = data.items || [];
 
             if (append) {

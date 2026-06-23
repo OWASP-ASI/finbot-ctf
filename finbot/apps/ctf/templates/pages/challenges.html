@@ -363,6 +363,11 @@ let currentFilters = {
     status: ''
 };
 
+const initialStatusFromUrl = new URLSearchParams(window.location.search).get('status');
+if (initialStatusFromUrl) {
+    currentFilters.status = initialStatusFromUrl;
+}
+
 // Category icons
 const CATEGORY_ICONS = {
     'prompt_injection': { icon: '💉', class: 'injection' },
@@ -379,6 +384,11 @@ const CATEGORY_ICONS = {
 document.addEventListener('DOMContentLoaded', function() {
     loadChallenges();
     setupFilters();
+
+    if (initialStatusFromUrl) {
+        const statusOption = document.querySelector(`.filter-option[data-filter="status"][data-value="${initialStatusFromUrl}"]`);
+        if (statusOption) statusOption.click();
+    }
 });
 
 async function loadChallenges() {

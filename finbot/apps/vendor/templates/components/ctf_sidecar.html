@@ -57,7 +57,7 @@
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-semibold text-gray-300 flex items-center space-x-2">
                         <span>🎖️</span>
-                        <span>Badges</span>
+                        <a href="/ctf/badges" class="hover:text-white transition-colors no-underline">Badges</a>
                         <span id="ctf-badges-count" class="text-xs bg-gray-700 px-2 py-0.5 rounded-full">0</span>
                     </h3>
                 </div>
@@ -73,7 +73,7 @@
             <div class="ctf-section">
                 <h3 class="text-sm font-semibold text-gray-300 flex items-center space-x-2 mb-3">
                     <span>🎯</span>
-                    <span>Active Challenges</span>
+                    <a href="/ctf/challenges?status=in_progress" class="hover:text-white transition-colors no-underline">Active Challenges</a>
                 </h3>
                 <div id="ctf-active-challenges" class="space-y-2">
                     <!-- Active challenges will be populated here -->
@@ -91,7 +91,7 @@
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        <span>Live Activity</span>
+                        <a href="/ctf/activity" class="hover:text-white transition-colors no-underline">Live Activity</a>
                     </h3>
                     <span id="ctf-ws-status" class="text-xs text-gray-500">Connecting...</span>
                 </div>
