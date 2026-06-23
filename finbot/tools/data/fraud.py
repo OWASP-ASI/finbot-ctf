@@ -161,6 +161,12 @@ async def flag_invoice_for_review(
         if not invoice:
             raise ValueError("Invoice not found")
 
+          # --- NEW VALIDATION ---
+        VALID_ACTIONS = {"hold", "reject", "escalate", "monitor"}
+        if recommended_action not in VALID_ACTIONS:
+            raise ValueError(f"Invalid recommended_action: {recommended_action!r}. Must be one of {VALID_ACTIONS}")
+        # --- END NEW VALIDATION ---
+
         previous_state = {
             "status": invoice.status,
         }
