@@ -8,6 +8,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from finbot.agents.runner import run_orchestrator_agent
+from finbot.core.ratelimit.limiter import check_agent_rate_limit
 from finbot.core.auth.middleware import get_session_context
 from finbot.core.utils import to_utc_iso
 from finbot.core.auth.session import SessionContext
@@ -91,6 +92,7 @@ async def register_vendor(
     vendor_data: VendorRegistrationRequest,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
+    _: None = Depends(check_agent_rate_limit),
 ):
     """Register a new vendor"""
     try:
@@ -309,6 +311,7 @@ async def request_vendor_review(
     vendor_id: int,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
+    _: None = Depends(check_agent_rate_limit),
 ):
     """Request a re-review of vendor status by running the onboarding workflow again"""
     with db_session() as db:
@@ -533,6 +536,7 @@ async def create_invoice(
     invoice_data: InvoiceCreateRequest,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
+    _: None = Depends(check_agent_rate_limit),
 ):
     """Create invoice for current vendor"""
     with db_session() as db:
@@ -702,6 +706,7 @@ async def reprocess_invoice(
     invoice_id: int,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
+    _: None = Depends(check_agent_rate_limit),
 ):
     """Request re-processing of an invoice by the AI agent"""
     with db_session() as db:
@@ -1171,6 +1176,7 @@ async def chat(
     request: ChatRequest,
     background_tasks: BackgroundTasks,
     session_context: SessionContext = Depends(get_session_context),
+    _: None = Depends(check_agent_rate_limit),
 ):
     """Stream a chat response from the AI assistant"""
     from finbot.agents.chat import (
