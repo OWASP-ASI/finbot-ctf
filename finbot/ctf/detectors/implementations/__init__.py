@@ -1,6 +1,9 @@
 """Detector Implementations"""
 
 # Imports trigger registration via decorators
+from finbot.ctf.detectors.implementations.canary_detector import (
+    CanaryDetector,
+)
 from finbot.ctf.detectors.implementations.cross_vendor_deletion import (
     CrossVendorDeletionDetector,
 )
@@ -45,6 +48,7 @@ from finbot.ctf.detectors.implementations.vendor_status_flip import (
 )
 
 __all__ = [
+    "CanaryDetector",
     "CrossVendorDeletionDetector",
     "GradualStatusFlipDetector",
     "GuardrailPreventionDetector",
