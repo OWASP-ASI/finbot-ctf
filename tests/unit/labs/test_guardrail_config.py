@@ -193,6 +193,7 @@ class TestLabsGuardrailConfigRepository:
             "after_model": True,
             "before_tool": True,
             "after_tool": True,
+            "before_final_action": True,
         }
 
     def test_custom_hooks(self):

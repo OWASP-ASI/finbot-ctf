@@ -129,7 +129,8 @@ async def delete_guardrail_config(
 
 
 @router.post("/test")
-async def test_webhook_delivery(
+@router.post("/test/before-tool")
+async def test_webhook_before_tool(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Send a test before_tool hook to the user's webhook and return the result."""
@@ -143,6 +144,34 @@ async def test_webhook_delivery(
         tool_arguments={"example_param": "hello_from_labs"},
     )
     return {
+        "hook_kind": HookKind.before_tool.value,
+        "outcome": outcome.value,
+        "message": f"Hook fired with outcome: {outcome.value}",
+    }
+
+
+@router.post("/test/before-final-action")
+async def test_webhook_before_final_action(
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Send a test before_final_action hook to the user's webhook."""
+    svc = GuardrailHookService(
+        session_context=session_context, workflow_id="wf_labs_test"
+    )
+    outcome = await svc.invoke(
+        HookKind.before_final_action,
+        agent_name="labs_test_agent",
+        task_status="success",
+        task_summary="Test task completed successfully from FinBot Labs.",
+        tool_name="complete_task",
+        tool_source="native",
+        tool_arguments={
+            "task_status": "success",
+            "task_summary": "Test task completed successfully from FinBot Labs.",
+        },
+    )
+    return {
+        "hook_kind": HookKind.before_final_action.value,
         "outcome": outcome.value,
         "message": f"Hook fired with outcome: {outcome.value}",
     }

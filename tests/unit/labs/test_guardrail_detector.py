@@ -323,3 +323,46 @@ class TestGuardrailExfilValidation:
                     "exfil_tools": [],
                 },
             )
+
+    @pytest.mark.asyncio
+    async def test_before_final_action_block_detected(self, db):
+        detector = GuardrailPreventionDetector(
+            challenge_id="test-final-action",
+            config={
+                "required_hook_kind": "before_final_action",
+                "required_task_status": "success",
+            },
+        )
+        event = {
+            "event_type": "agent.guardrail.webhook_completed",
+            "hook_kind": "before_final_action",
+            "outcome": "completed",
+            "verdict": "block",
+            "agent_name": "invoice_agent",
+            "task_status": "success",
+            "task_summary": "Approved invoice 4",
+            "tool_name": "complete_task",
+        }
+        result = await detector.check_event(event, db)
+        assert result.detected is True
+        assert "before_final_action" in result.message
+
+    @pytest.mark.asyncio
+    async def test_before_final_action_wrong_task_status(self, db):
+        detector = GuardrailPreventionDetector(
+            challenge_id="test-final-action",
+            config={
+                "required_hook_kind": "before_final_action",
+                "required_task_status": "success",
+            },
+        )
+        event = {
+            "event_type": "agent.guardrail.webhook_completed",
+            "hook_kind": "before_final_action",
+            "outcome": "completed",
+            "verdict": "block",
+            "task_status": "failed",
+        }
+        result = await detector.check_event(event, db)
+        assert result.detected is False
+        assert "task_status" in result.message

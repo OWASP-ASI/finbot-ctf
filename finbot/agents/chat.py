@@ -201,6 +201,29 @@ class ChatAssistantBase:
 
         return result_str
 
+    async def _invoke_before_final_action_guardrail(
+        self,
+        *,
+        response_content: str,
+        user_message: str,
+        duration_ms: int,
+    ) -> None:
+        """Fire before_final_action when the chat assistant is about to commit a reply."""
+        await self._guardrail_service.invoke(
+            HookKind.before_final_action,
+            agent_name=self.agent_name,
+            user_message=user_message,
+            model_output=response_content,
+            model=self._model,
+            tool_name="chat_response",
+            tool_source="native",
+            tool_arguments={
+                "response_content": response_content,
+                "user_message": user_message,
+                "duration_ms": duration_ms,
+            },
+        )
+
     def _load_history(self) -> list[dict]:
         with db_session() as db:
             repo = ChatMessageRepository(db, self.session_context)
@@ -481,6 +504,11 @@ class ChatAssistantBase:
         duration_ms = int((datetime.now(UTC) - start_time).total_seconds() * 1000)
 
         if full_response:
+            await self._invoke_before_final_action_guardrail(
+                response_content=full_response,
+                user_message=user_message,
+                duration_ms=duration_ms,
+            )
             self._save_message("assistant", full_response)
 
         await event_bus.emit_agent_event(

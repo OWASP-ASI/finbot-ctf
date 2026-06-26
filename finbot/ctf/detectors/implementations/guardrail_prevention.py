@@ -18,13 +18,16 @@ Detection logic:
 
 Configuration:
   required_hook_kind: str — hook kind that must produce a block verdict.
-      One of: before_model, after_model, before_tool, after_tool.
+      One of: before_model, after_model, before_tool, after_tool,
+      before_final_action.
       Default: "before_tool"
   required_tool_name: str | None — if set, only match events for this
       specific tool (tool hooks only). Default: None (any)
   required_tool_arguments: dict[str, Any] | None — if set, each key-value
       pair must be present in the event's tool_arguments for the block to
       count. Example: {"status": "approved"}. Default: None (no check)
+  required_task_status: str | None — for before_final_action hooks, the
+      task_status that must match (e.g. "success"). Default: None (any)
   exfil_tools: list[str] | None — if set, the blocked tool must be one
       of these (namespaced, e.g. "systemutils__network_request").
       Default: None (any tool counts)
@@ -57,7 +60,13 @@ class GuardrailPreventionDetector(BaseDetector):
     """
 
     def _validate_config(self) -> None:
-        valid_kinds = {"before_model", "after_model", "before_tool", "after_tool"}
+        valid_kinds = {
+            "before_model",
+            "after_model",
+            "before_tool",
+            "after_tool",
+            "before_final_action",
+        }
         kind = self.config.get("required_hook_kind", "before_tool")
         if kind not in valid_kinds:
             raise ValueError(
@@ -140,6 +149,18 @@ class GuardrailPreventionDetector(BaseDetector):
                         ),
                     )
 
+        required_task_status = self.config.get("required_task_status")
+        if required_task_status:
+            task_status = event.get("task_status")
+            if task_status != required_task_status:
+                return DetectionResult(
+                    detected=False,
+                    message=(
+                        f"task_status is '{task_status}', "
+                        f"expected '{required_task_status}'"
+                    ),
+                )
+
         outcome = event.get("outcome")
         verdict = event.get("verdict")
 
@@ -207,13 +228,15 @@ class GuardrailPreventionDetector(BaseDetector):
 
         # --- All gates passed ---
         is_tool_hook = hook_kind in ("before_tool", "after_tool")
-        context = (
-            f" for tool '{tool_name}'"
-            if is_tool_hook and tool_name
-            else f" on model '{event.get('model')}'"
-            if event.get("model")
-            else ""
-        )
+        is_final_action = hook_kind == "before_final_action"
+        if is_final_action:
+            context = f" for agent '{event.get('agent_name')}' ({event.get('task_status')})"
+        elif is_tool_hook and tool_name:
+            context = f" for tool '{tool_name}'"
+        elif event.get("model"):
+            context = f" on model '{event.get('model')}'"
+        else:
+            context = ""
 
         evidence: dict[str, Any] = {
             "hook_kind": hook_kind,
@@ -225,6 +248,10 @@ class GuardrailPreventionDetector(BaseDetector):
         if is_tool_hook:
             evidence["tool_name"] = tool_name
             evidence["tool_source"] = event.get("tool_source")
+        elif is_final_action:
+            evidence["agent_name"] = event.get("agent_name")
+            evidence["task_status"] = event.get("task_status")
+            evidence["task_summary"] = event.get("task_summary")
         else:
             evidence["model"] = event.get("model")
         evidence.update(pii_evidence)

@@ -165,6 +165,33 @@ class TestWebhookInvocation:
 
     @pytest.mark.asyncio
     @patch("finbot.guardrails.service.event_bus")
+    async def test_before_final_action_payload(self, mock_bus):
+        mock_bus.emit_agent_event = AsyncMock()
+
+        resp = httpx.Response(200, json={"verdict": "allow"})
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=resp):
+            svc = self._make_service()
+            outcome = await svc.invoke(
+                HookKind.before_final_action,
+                agent_name="invoice_agent",
+                task_status="success",
+                task_summary="Approved invoice 4",
+                tool_name="complete_task",
+                tool_source="native",
+                tool_arguments={
+                    "task_status": "success",
+                    "task_summary": "Approved invoice 4",
+                },
+            )
+
+        assert outcome == HookOutcome.completed
+        call_kwargs = mock_bus.emit_agent_event.call_args.kwargs
+        assert call_kwargs["event_data"]["hook_kind"] == "before_final_action"
+        assert call_kwargs["event_data"]["task_status"] == "success"
+        assert call_kwargs["event_data"]["agent_name"] == "invoice_agent"
+
+    @pytest.mark.asyncio
+    @patch("finbot.guardrails.service.event_bus")
     async def test_timeout(self, mock_bus):
         mock_bus.emit_agent_event = AsyncMock()
 
