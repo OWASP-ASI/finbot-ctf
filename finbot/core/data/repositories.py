@@ -1359,6 +1359,7 @@ class LabsGuardrailConfigRepository(NamespacedRepository):
             "after_model",
             "before_tool",
             "after_tool",
+            "before_final_action",
         }
     )
 

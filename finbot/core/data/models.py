@@ -985,6 +985,7 @@ class LabsGuardrailConfig(Base):
             "after_model": True,
             "before_tool": True,
             "after_tool": True,
+            "before_final_action": True,
         }
 
     def to_dict(self) -> dict:

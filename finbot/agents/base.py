@@ -149,12 +149,25 @@ class BaseAgent(ABC):
                                     in self._mcp_provider.get_callables()
                                     else "native"
                                 )
-                                await self._guardrail_service.invoke(
-                                    HookKind.before_tool,
-                                    tool_name=tool_call_name,
-                                    tool_source=tool_source,
-                                    tool_arguments=tool_call.get("arguments"),
-                                )
+                                tool_arguments = tool_call.get("arguments") or {}
+                                if tool_call_name == "complete_task":
+                                    await self._invoke_before_final_action_guardrail(
+                                        task_status=tool_arguments.get(
+                                            "task_status", ""
+                                        ),
+                                        task_summary=tool_arguments.get(
+                                            "task_summary", ""
+                                        ),
+                                        tool_arguments=tool_arguments,
+                                        tool_source=tool_source,
+                                    )
+                                else:
+                                    await self._guardrail_service.invoke(
+                                        HookKind.before_tool,
+                                        tool_name=tool_call_name,
+                                        tool_source=tool_source,
+                                        tool_arguments=tool_arguments,
+                                    )
                                 try:
                                     logger.debug(
                                         "Calling callable %s with arguments %s",
@@ -166,6 +179,13 @@ class BaseAgent(ABC):
                                     )
                                     logger.debug("Function output: %s", function_output)
                                     if tool_call_name == "complete_task":
+                                        await self._guardrail_service.invoke(
+                                            HookKind.after_tool,
+                                            tool_name=tool_call_name,
+                                            tool_source=tool_source,
+                                            tool_arguments=tool_arguments,
+                                            tool_result=str(function_output),
+                                        )
                                         # this will end the agent loop and
                                         # return the task status and summary
                                         await self.log_task_completion(
@@ -184,7 +204,7 @@ class BaseAgent(ABC):
                                     HookKind.after_tool,
                                     tool_name=tool_call_name,
                                     tool_source=tool_source,
-                                    tool_arguments=tool_call.get("arguments"),
+                                    tool_arguments=tool_arguments,
                                     tool_result=str(function_output),
                                 )
                             else:
@@ -248,12 +268,17 @@ class BaseAgent(ABC):
                                     workflow_id=self.workflow_id,
                                     summary=f"Agent stalled after {stall_count} consecutive text-only iterations",
                                 )
+                                task_summary = (
+                                    f"Agent stalled: {stall_count} consecutive iterations "
+                                    f"without tool calls. Unable to make progress."
+                                )
+                                await self._invoke_before_final_action_guardrail(
+                                    task_status="failed",
+                                    task_summary=task_summary,
+                                )
                                 task_result = await callables["complete_task"](
                                     task_status="failed",
-                                    task_summary=(
-                                        f"Agent stalled: {stall_count} consecutive iterations "
-                                        f"without tool calls. Unable to make progress."
-                                    ),
+                                    task_summary=task_summary,
                                 )
                                 await self.log_task_completion(task_result=task_result)
                                 return task_result
@@ -290,17 +315,29 @@ class BaseAgent(ABC):
                 except Exception as e:  # pylint: disable=broad-exception-caught
                     logger.error("Agent loop iteration %d failed: %s", iteration, e)
 
+                    task_summary = f"Agent loop iteration {iteration} failed: {e}"
+                    await self._invoke_before_final_action_guardrail(
+                        task_status="failed",
+                        task_summary=task_summary,
+                    )
                     task_result = await callables["complete_task"](
                         task_status="failed",
-                        task_summary=f"Agent loop iteration {iteration} failed: {e}",
+                        task_summary=task_summary,
                     )
                     await self.log_task_completion(task_result=task_result)
                     return task_result
 
             # iterations exhausted, return the task status as failure
+            task_summary = (
+                f"Agent loop iterations exhausted after {max_iterations} iterations"
+            )
+            await self._invoke_before_final_action_guardrail(
+                task_status="failed",
+                task_summary=task_summary,
+            )
             task_result = await callables["complete_task"](
                 task_status="failed",
-                task_summary=f"Agent loop iterations exhausted after {max_iterations} iterations",
+                task_summary=task_summary,
             )
             await self.log_task_completion(task_result=task_result)
             return task_result
@@ -424,6 +461,29 @@ class BaseAgent(ABC):
         await self._on_task_completion(task_result)
 
         return task_result
+
+    async def _invoke_before_final_action_guardrail(
+        self,
+        *,
+        task_status: str,
+        task_summary: str,
+        tool_arguments: dict[str, Any] | None = None,
+        tool_source: str = "native",
+    ) -> None:
+        """Fire before_final_action when the agent is about to complete its task."""
+        args = tool_arguments or {
+            "task_status": task_status,
+            "task_summary": task_summary,
+        }
+        await self._guardrail_service.invoke(
+            HookKind.before_final_action,
+            agent_name=self.agent_name,
+            task_status=task_status,
+            task_summary=task_summary,
+            tool_name="complete_task",
+            tool_source=tool_source,
+            tool_arguments=args,
+        )
 
     def _get_final_callables(self) -> dict[str, Callable[..., Any]]:
         """Get the final dict of callables: native + MCP + control flow."""

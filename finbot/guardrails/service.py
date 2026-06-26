@@ -87,6 +87,9 @@ class GuardrailHookService:
         model: str | None = None,
         user_message: str | None = None,
         model_output: str | None = None,
+        agent_name: str | None = None,
+        task_status: str | None = None,
+        task_summary: str | None = None,
     ) -> HookOutcome:
         """Fire a passive guardrail hook.
 
@@ -113,6 +116,9 @@ class GuardrailHookService:
             model=model,
             user_message=user_message,
             model_output=model_output,
+            agent_name=agent_name,
+            task_status=task_status,
+            task_summary=task_summary,
             timestamp=timestamp,
         )
 
@@ -197,6 +203,9 @@ class GuardrailHookService:
             tool_source=tool_source,
             tool_arguments=tool_arguments,
             model=model,
+            agent_name=agent_name,
+            task_status=task_status,
+            task_summary=task_summary,
         )
 
         return outcome
@@ -215,6 +224,9 @@ class GuardrailHookService:
         tool_source: str | None,
         tool_arguments: dict[str, Any] | None,
         model: str | None,
+        agent_name: str | None = None,
+        task_status: str | None = None,
+        task_summary: str | None = None,
     ) -> None:
         """Emit guardrail event via the existing agent event stream."""
         event_type = f"webhook_{outcome.value}"
@@ -240,6 +252,12 @@ class GuardrailHookService:
             event_data["tool_arguments"] = tool_arguments
         if model is not None:
             event_data["model"] = model
+        if agent_name is not None:
+            event_data["agent_name"] = agent_name
+        if task_status is not None:
+            event_data["task_status"] = task_status
+        if task_summary is not None:
+            event_data["task_summary"] = task_summary
 
         summary_parts = [f"Guardrail {kind.value}"]
         if verdict:

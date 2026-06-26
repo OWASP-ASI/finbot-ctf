@@ -53,6 +53,10 @@
                         <input type="checkbox" id="hook-after_tool" checked class="accent-labs-primary w-4 h-4">
                         <div><div class="text-sm text-text-bright">After Tool</div><div class="text-xs text-text-secondary">After tool completes</div></div>
                     </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-white/10 hover:border-labs-primary/30 transition-colors cursor-pointer">
+                        <input type="checkbox" id="hook-before_final_action" checked class="accent-labs-primary w-4 h-4">
+                        <div><div class="text-sm text-text-bright">Before Final Action</div><div class="text-xs text-text-secondary">Before complete_task</div></div>
+                    </label>
                 </div>
             </div>
 
@@ -94,11 +98,16 @@
             <h2 class="text-lg font-semibold text-text-bright">Test Delivery</h2>
         </div>
         <p class="text-xs text-text-secondary mb-4">
-            Send a test <code class="text-labs-accent">before_tool</code> hook to your endpoint and see the response.
+            Send a test hook to your endpoint and see the response.
         </p>
-        <button id="test-btn" class="px-5 py-2.5 text-sm font-medium rounded-lg bg-portal-bg-tertiary border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors">
-            Send Test Hook
-        </button>
+        <div class="flex flex-wrap gap-3">
+            <button id="test-btn" class="px-5 py-2.5 text-sm font-medium rounded-lg bg-portal-bg-tertiary border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors">
+                Test before_tool
+            </button>
+            <button id="test-final-btn" class="px-5 py-2.5 text-sm font-medium rounded-lg bg-portal-bg-tertiary border border-labs-primary/30 text-labs-primary hover:bg-labs-primary/10 transition-colors">
+                Test before_final_action
+            </button>
+        </div>
         <pre id="test-result" class="hidden mt-4 bg-portal-bg-primary border border-white/10 rounded-lg p-4 text-xs text-text-primary font-mono overflow-x-auto max-h-64 overflow-y-auto"></pre>
     </div>
 </div>
@@ -108,6 +117,7 @@
 <script>
 const API = '/labs/api/v1/guardrails';
 const banner = document.getElementById('status-banner');
+const HOOK_KINDS = ['before_model','after_model','before_tool','after_tool','before_final_action'];
 
 function showBanner(msg, type) {
     banner.textContent = msg;
@@ -121,7 +131,7 @@ function renderConfig(cfg) {
     if (!cfg) return;
     document.getElementById('webhook-url').value = cfg.webhook_url;
     document.getElementById('timeout').value = cfg.timeout_seconds;
-    ['before_model','after_model','before_tool','after_tool'].forEach(k => {
+    HOOK_KINDS.forEach(k => {
         document.getElementById('hook-' + k).checked = cfg.hooks[k] ?? true;
     });
 
@@ -153,7 +163,7 @@ async function loadConfig() {
 document.getElementById('config-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const hooks = {};
-    ['before_model','after_model','before_tool','after_tool'].forEach(k => {
+    HOOK_KINDS.forEach(k => {
         hooks[k] = document.getElementById('hook-' + k).checked;
     });
     try {
@@ -204,7 +214,18 @@ document.getElementById('test-btn').addEventListener('click', async () => {
     result.classList.remove('hidden');
     result.textContent = 'Sending test hook...';
     try {
-        const resp = await fetch(API + '/test', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+        const resp = await fetch(API + '/test/before-tool', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
+        const data = await resp.json();
+        result.textContent = JSON.stringify(data, null, 2);
+    } catch(e) { result.textContent = 'Error: ' + e.message; }
+});
+
+document.getElementById('test-final-btn').addEventListener('click', async () => {
+    const result = document.getElementById('test-result');
+    result.classList.remove('hidden');
+    result.textContent = 'Sending test hook...';
+    try {
+        const resp = await fetch(API + '/test/before-final-action', {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''}});
         const data = await resp.json();
         result.textContent = JSON.stringify(data, null, 2);
     } catch(e) { result.textContent = 'Error: ' + e.message; }

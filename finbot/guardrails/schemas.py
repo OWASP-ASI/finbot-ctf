@@ -11,12 +11,16 @@ class HookKind(str, Enum):
 
     MCP tools share before_tool / after_tool with a tool_source field
     in the payload ("mcp" | "native") rather than separate hook kinds.
+
+    complete_task uses before_final_action instead of before_tool so
+    defenders can inspect task_status / task_summary as a final gate.
     """
 
     before_model = "before_model"
     after_model = "after_model"
     before_tool = "before_tool"
     after_tool = "after_tool"
+    before_final_action = "before_final_action"
 
 
 class HookEnvelope(BaseModel):
@@ -33,6 +37,9 @@ class HookEnvelope(BaseModel):
     model: str | None = None
     user_message: str | None = None
     model_output: str | None = None
+    agent_name: str | None = None
+    task_status: str | None = None  # "success" | "failed" on before_final_action
+    task_summary: str | None = None
     timestamp: str = ""
 
 
