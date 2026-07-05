@@ -23,6 +23,7 @@ from finbot.core.data.database import db_session
 from finbot.core.data.models import Vendor
 from finbot.mcp.servers.finmail.repositories import EmailRepository
 from finbot.mcp.servers.finmail.routing import get_admin_address, route_and_deliver
+from finbot.security.authorization import schedule_authorization_decision
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,25 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 def _is_vendor_session(session_context: SessionContext) -> bool:
     return session_context.is_vendor_portal()
+
+
+def _deny_vendor_admin_inbox_access(
+    session_context: SessionContext,
+    *,
+    action: str,
+    source: str,
+    resource_type: str = "admin_inbox",
+    resource_id: int | str | None = None,
+) -> None:
+    schedule_authorization_decision(
+        session_context=session_context,
+        action=action,
+        allowed=False,
+        reason="vendor_admin_inbox_denied",
+        source=source,
+        resource_type=resource_type,
+        resource_id=resource_id,
+    )
 
 
 def _get_vendor_email(session_context: SessionContext) -> str | None:
@@ -145,6 +165,11 @@ def create_finmail_server(
             limit: Maximum number of messages to return
         """
         if _is_vendor_session(session_context) and inbox == "admin":
+            _deny_vendor_admin_inbox_access(
+                session_context,
+                action="list_inbox",
+                source="finmail.list_inbox",
+            )
             return {
                 "error": "Access denied: vendor sessions cannot read the admin inbox"
             }
@@ -200,6 +225,13 @@ def create_finmail_server(
                 return {"error": f"Message {message_id} not found"}
 
             if _is_vendor_session(session_context) and msg.inbox_type == "admin":
+                _deny_vendor_admin_inbox_access(
+                    session_context,
+                    action="read_email",
+                    source="finmail.read_email",
+                    resource_type="message",
+                    resource_id=message_id,
+                )
                 return {
                     "error": "Access denied: vendor sessions cannot read admin messages"
                 }
@@ -223,6 +255,11 @@ def create_finmail_server(
             limit: Maximum results to return
         """
         if _is_vendor_session(session_context) and inbox == "admin":
+            _deny_vendor_admin_inbox_access(
+                session_context,
+                action="search_emails",
+                source="finmail.search_emails",
+            )
             return {
                 "error": "Access denied: vendor sessions cannot search the admin inbox"
             }
@@ -273,6 +310,13 @@ def create_finmail_server(
                 return {"error": f"Message {message_id} not found"}
 
             if _is_vendor_session(session_context) and msg.inbox_type == "admin":
+                _deny_vendor_admin_inbox_access(
+                    session_context,
+                    action="mark_as_read",
+                    source="finmail.mark_as_read",
+                    resource_type="message",
+                    resource_id=message_id,
+                )
                 return {
                     "error": "Access denied: vendor sessions cannot modify admin messages"
                 }

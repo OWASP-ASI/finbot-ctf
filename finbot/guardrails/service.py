@@ -27,6 +27,8 @@ from finbot.guardrails.schemas import (
     HookOutcome,
     WebhookVerdict,
 )
+from finbot.security.emitter import emit_security_event
+from finbot.security.schemas import SecurityEventCategory
 
 logger = logging.getLogger(__name__)
 
@@ -260,3 +262,19 @@ class GuardrailHookService:
             )
         except Exception:  # pylint: disable=broad-exception-caught
             logger.warning("Failed to emit guardrail event", exc_info=True)
+        
+        severity = "warning" if verdict == "block" or outcome != HookOutcome.completed else "info"
+        security_summary = f"Security {SecurityEventCategory.guardrail_trigger.value}: {kind.value}"
+        try:
+            await emit_security_event(
+                category=SecurityEventCategory.guardrail_trigger,
+                payload=event_data,
+                session_context=self._session_context,
+                workflow_id=self._workflow_id,
+                agent_name="security",
+                severity=severity,
+                summary=security_summary,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.warning("Failed to emit standardized security event", exc_info=True)
+    

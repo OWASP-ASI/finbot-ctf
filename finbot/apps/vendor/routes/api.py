@@ -19,9 +19,33 @@ from finbot.core.data.repositories import (
 )
 from finbot.core.messaging import event_bus
 from finbot.mcp.servers.finmail.repositories import EmailRepository
+from finbot.security.authorization import check_vendor_portal_scope
 
 # Create API router
 router = APIRouter(prefix="/api/v1", tags=["vendor-api"])
+
+
+async def _require_vendor_scope(
+    session_context: SessionContext,
+    *,
+    owner_vendor_id: int | None,
+    action: str,
+    resource_type: str,
+    resource_id: int | str | None,
+    source: str,
+    detail: str = "Access denied",
+) -> None:
+    """Emit authorization_decision and raise 403 if vendor portal scope check fails."""
+    allowed = await check_vendor_portal_scope(
+        session_context=session_context,
+        owner_vendor_id=owner_vendor_id,
+        action=action,
+        source=source,
+        resource_type=resource_type,
+        resource_id=resource_id,
+    )
+    if not allowed:
+        raise HTTPException(status_code=403, detail=detail)
 
 
 class VendorRegistrationRequest(BaseModel):
@@ -188,10 +212,15 @@ async def get_vendor(
             raise HTTPException(status_code=404, detail="Vendor not found")
 
         # Verify vendor is the current vendor (vendor portal only sees current vendor)
-        if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to view this vendor"
-            )
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=vendor.id,
+            action="view",
+            resource_type="vendor",
+            resource_id=vendor.id,
+            source="vendor_api.get_vendor",
+            detail="Not authorized to view this vendor",
+        )
 
         return vendor.to_dict()
 
@@ -212,10 +241,15 @@ async def update_vendor(
             raise HTTPException(status_code=404, detail="Vendor not found")
 
         # Verify vendor belongs to current user and is the current vendor
-        if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to update this vendor"
-            )
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=vendor.id,
+            action="update",
+            resource_type="vendor",
+            resource_id=vendor.id,
+            source="vendor_api.update_vendor",
+            detail="Not authorized to update this vendor",
+        )
 
         try:
             # Update only provided fields
@@ -282,10 +316,15 @@ async def delete_vendor(
             raise HTTPException(status_code=404, detail="Vendor not found")
 
         # Verify vendor belongs to current user and is the current vendor
-        if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to delete this vendor"
-            )
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=vendor.id,
+            action="delete",
+            resource_type="vendor",
+            resource_id=vendor.id,
+            source="vendor_api.delete_vendor",
+            detail="Not authorized to delete this vendor",
+        )
 
         company_name = vendor.company_name
         success = vendor_repo.delete_vendor(vendor_id)
@@ -320,10 +359,15 @@ async def request_vendor_review(
             raise HTTPException(status_code=404, detail="Vendor not found")
 
         # Verify vendor belongs to current user and is the current vendor
-        if vendor.id != session_context.current_vendor_id:
-            raise HTTPException(
-                status_code=403, detail="Not authorized to request review for this vendor"
-            )
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=vendor.id,
+            action="request_review",
+            resource_type="vendor",
+            resource_id=vendor.id,
+            source="vendor_api.request_vendor_review",
+            detail="Not authorized to request review for this vendor",
+        )
 
         try:
             # Generate workflow ID for tracking
@@ -619,8 +663,14 @@ async def get_invoice(
             raise HTTPException(status_code=404, detail="Invoice not found")
 
         # Verify invoice belongs to current vendor
-        if invoice.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=invoice.vendor_id,
+            action="view",
+            resource_type="invoice",
+            resource_id=invoice.id,
+            source="vendor_api.get_invoice",
+        )
 
         return {"invoice": invoice.to_dict()}
 
@@ -652,8 +702,14 @@ async def update_invoice(
             raise HTTPException(status_code=404, detail="Invoice not found")
 
         # Verify invoice belongs to current vendor
-        if invoice.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=invoice.vendor_id,
+            action="update",
+            resource_type="invoice",
+            resource_id=invoice.id,
+            source="vendor_api.update_invoice",
+        )
 
         # Build update dict from non-None values (status not editable by vendors)
         updates = {}
@@ -713,8 +769,14 @@ async def reprocess_invoice(
             raise HTTPException(status_code=404, detail="Invoice not found")
 
         # Verify invoice belongs to current vendor
-        if invoice.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=invoice.vendor_id,
+            action="reprocess",
+            resource_type="invoice",
+            resource_id=invoice.id,
+            source="vendor_api.reprocess_invoice",
+        )
 
         # Create workflow ID for tracking
         workflow_id = f"wf_{secrets.token_urlsafe(12)}"
@@ -909,8 +971,14 @@ async def get_vendor_file(
 
         if not f:
             raise HTTPException(status_code=404, detail="File not found")
-        if f.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=f.vendor_id,
+            action="view",
+            resource_type="file",
+            resource_id=f.id,
+            source="vendor_api.get_file",
+        )
 
         return {"file": f.to_dict_with_content()}
 
@@ -933,8 +1001,14 @@ async def update_vendor_file(
 
         if not f:
             raise HTTPException(status_code=404, detail="File not found")
-        if f.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=f.vendor_id,
+            action="update",
+            resource_type="file",
+            resource_id=f.id,
+            source="vendor_api.update_file",
+        )
 
         updated = repo.update_file(
             file_id,
@@ -962,8 +1036,14 @@ async def delete_vendor_file(
 
         if not f:
             raise HTTPException(status_code=404, detail="File not found")
-        if f.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=f.vendor_id,
+            action="delete",
+            resource_type="file",
+            resource_id=f.id,
+            source="vendor_api.delete_file",
+        )
 
         repo.delete_file(file_id)
 
@@ -1052,8 +1132,14 @@ async def get_message(
         if not msg:
             raise HTTPException(status_code=404, detail="Message not found")
 
-        if msg.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=msg.vendor_id,
+            action="view",
+            resource_type="message",
+            resource_id=msg.id,
+            source="vendor_api.get_message",
+        )
 
         return {"message": msg.to_dict()}
 
@@ -1071,8 +1157,14 @@ async def mark_message_read(
         if not msg:
             raise HTTPException(status_code=404, detail="Message not found")
 
-        if msg.vendor_id != session_context.current_vendor_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        await _require_vendor_scope(
+            session_context,
+            owner_vendor_id=msg.vendor_id,
+            action="mark_read",
+            resource_type="message",
+            resource_id=msg.id,
+            source="vendor_api.mark_message_read",
+        )
 
         msg = repo.mark_as_read(message_id)
         return {"success": True, "message": msg.to_dict()}

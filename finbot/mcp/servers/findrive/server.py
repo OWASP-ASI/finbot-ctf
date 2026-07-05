@@ -19,6 +19,7 @@ from fastmcp import FastMCP
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.mcp.servers.findrive.repositories import FinDriveFileRepository
+from finbot.security.authorization import schedule_authorization_decision
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,24 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 def _is_vendor_session(session_context: SessionContext) -> bool:
     return session_context.is_vendor_portal()
+
+
+def _deny_vendor_admin_file_access(
+    session_context: SessionContext,
+    *,
+    action: str,
+    source: str,
+    file_id: int,
+) -> None:
+    schedule_authorization_decision(
+        session_context=session_context,
+        action=action,
+        allowed=False,
+        reason="vendor_admin_file_denied",
+        source=source,
+        resource_type="file",
+        resource_id=file_id,
+    )
 
 
 def create_findrive_server(
@@ -100,6 +119,12 @@ def create_findrive_server(
                 return {"error": f"File {file_id} not found", "file_id": file_id}
 
             if _is_vendor_session(session_context) and f.vendor_id is None:
+                _deny_vendor_admin_file_access(
+                    session_context,
+                    action="get_file",
+                    source="findrive.get_file",
+                    file_id=file_id,
+                )
                 return {"error": "Access denied: cannot access admin files", "file_id": file_id}
 
             return {
@@ -154,6 +179,12 @@ def create_findrive_server(
                 return {"error": f"File {file_id} not found", "file_id": file_id}
 
             if _is_vendor_session(session_context) and f.vendor_id is None:
+                _deny_vendor_admin_file_access(
+                    session_context,
+                    action="delete_file",
+                    source="findrive.delete_file",
+                    file_id=file_id,
+                )
                 return {"error": "Access denied: cannot delete admin files", "file_id": file_id}
 
             filename = f.filename

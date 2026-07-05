@@ -6,6 +6,7 @@ from typing import Any
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import InvoiceRepository, VendorRepository
+from finbot.security.memory import emit_memory_write
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,14 @@ async def update_vendor_risk(
         if not vendor:
             raise ValueError("Vendor not found")
 
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="vendor",
+            entity_id=vendor_id,
+            content=f"[Fraud Agent] {agent_notes}",
+            source="update_vendor_risk",
+        )
+
         result = vendor.to_dict()
         result["_previous_state"] = previous_state
         return result
@@ -186,6 +195,14 @@ async def flag_invoice_for_review(
         if not invoice:
             raise ValueError("Invoice not found")
 
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="invoice",
+            entity_id=invoice_id,
+            content=fraud_note,
+            source="flag_invoice_for_review",
+        )
+
         result = invoice.to_dict()
         result["_previous_state"] = previous_state
         result["flag_reason"] = flag_reason
@@ -226,4 +243,11 @@ async def update_fraud_agent_notes(
         )
         if not vendor:
             raise ValueError("Vendor not found")
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="vendor",
+            entity_id=vendor_id,
+            content=f"[Fraud Agent] {agent_notes}",
+            source="update_fraud_agent_notes",
+        )
         return vendor.to_dict()

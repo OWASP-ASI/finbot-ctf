@@ -23,6 +23,7 @@ from finbot.tools import (
     process_payment,
     update_payment_agent_notes,
 )
+from finbot.security.memory import emit_agent_notes_read
 
 logger = logging.getLogger(__name__)
 
@@ -315,7 +316,19 @@ class PaymentsAgent(BaseAgent):
         """
         logger.info("Getting invoice for payment, invoice_id: %s", invoice_id)
         try:
-            return await get_invoice_for_payment(invoice_id, self.session_context)
+            invoice_details = await get_invoice_for_payment(
+                invoice_id, self.session_context
+            )
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="invoice",
+                entity_id=invoice_id,
+                agent_notes=invoice_details.get("agent_notes"),
+                source="payments_agent.get_invoice_for_payment",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
+            return invoice_details
         except ValueError as e:
             logger.error("Error getting invoice for payment: %s", e)
             return {
