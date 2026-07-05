@@ -26,6 +26,11 @@ class LLMClient:
             from finbot.core.llm.openai_client import OpenAIClient
 
             return OpenAIClient()
+        elif self.provider == "ollama":
+            # pylint: disable=import-outside-toplevel
+            from finbot.core.llm.ollama_client import OllamaClient
+
+            return OllamaClient()
         elif self.provider == "mock":
             # pylint: disable=import-outside-toplevel
             from finbot.core.llm.mock_client import MockLLMClient

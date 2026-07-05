@@ -19,6 +19,9 @@ from finbot.ctf.detectors.implementations.guardrail_prevention import (
 from finbot.ctf.detectors.implementations.indirect_exfil import (
     IndirectExfilDetector,
 )
+from finbot.ctf.detectors.implementations.incremental_fraud import (
+    IncrementalFraudDetector,
+)
 from finbot.ctf.detectors.implementations.inflated_payment import (
     InflatedPaymentDetector,
 )
@@ -59,6 +62,7 @@ __all__ = [
     "CrossVendorDeletionDetector",
     "GradualStatusFlipDetector",
     "GuardrailPreventionDetector",
+    "IncrementalFraudDetector",
     "IndirectExfilDetector",
     "InflatedPaymentDetector",
     "InvoiceThresholdBypassDetector",
