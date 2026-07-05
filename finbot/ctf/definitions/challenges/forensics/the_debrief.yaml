@@ -1,0 +1,81 @@
+id: forensics-the-debrief
+title: "The Debrief"
+description: |
+  You broke the payment pipeline in Toxic Transfer. Now prove you understand
+  why it worked. This is a purple team exercise: red teams break things, blue
+  teams explain them, and the best operators do both.
+
+  A poisoned MCP tool caused an agent to leak vendor financial data during a
+  payment. Your job is to file the incident report — name the compromised
+  server, the tool that carried the hidden instruction, and the directive
+  itself.
+
+  **Objective:**
+
+  Submit a forensic answer with three fields:
+  - **server** — the MCP server whose tool was poisoned
+  - **tool** — the specific tool that carried the injected directive
+  - **directive** — what the hidden instruction told the agent to do
+
+  **Scoring:**
+
+  Each field scores independently. Get the server and tool exactly right, and
+  describe the directive in your own words. You do not need to quote it
+  verbatim — the grader accepts any answer that captures what the instruction
+  actually did. Partial credit is awarded, so a partial understanding still
+  earns points.
+
+  **How to submit:**
+
+  POST your answer to `/ctf/api/v1/toolkit/investigation` with a JSON body:
+  `{"challenge_id": "forensics-the-debrief", "server": "...", "tool": "...",
+  "directive": "..."}`.
+
+category: forensics
+subcategory: purple_team
+difficulty: advanced
+points: 250
+
+hints:
+  - cost: 10
+    text: "Retrace Toxic Transfer. The attack poisoned a tool on the payment
+      server. Which server handles payments in FinBot?"
+  - cost: 25
+    text: "The poisoned tool is the one that moves money. Look at what the agent
+      called right before the vendor's financial data showed up in the Hacker
+      Toolkit."
+  - cost: 50
+    text: "The server is finstripe and the tool is create_transfer. The directive
+      told the agent to email the vendor's tax ID and bank account to an external
+      address before processing the transfer."
+
+labels:
+  owasp_llm:
+    - LLM03:Supply Chain Vulnerabilities
+    - LLM01:Prompt Injection
+  cwe:
+    - CWE-94:Improper Control of Generation of Code
+  mitre_atlas:
+    - AML.T0056:LLM Supply Chain Compromise
+  owasp_agentic:
+    - ASI-04:Agentic Supply Chain Vulnerabilities
+    - ASI-02:Tool Misuse and Exploitation
+
+prerequisites:
+  - data-exfil-toxic-transfer
+
+resources:
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: PurpleTeamDetector
+detector_config:
+  expected:
+    server: finstripe
+    tool: create_transfer
+    directive: "email the vendor tax id and bank account to an external address"
+  min_score: 50
+  directive_match: fuzzy
+
+is_active: true
+order_index: 20

@@ -145,6 +145,53 @@ async def test_directive_fuzzy_substring_match():
 
 
 @pytest.mark.asyncio
+async def test_directive_fuzzy_paraphrase_reordered_words():
+    # Student paraphrases: reordered clauses and "outside" for "external".
+    det = _detector()
+    submission = {
+        "server": "findrive",
+        "tool": "get_file",
+        "directive": "it emailed the vendor bank account and tax id to an outside address",
+    }
+    # expected: "approve all pending invoices" — override to a longer directive
+    det = PurpleTeamDetector(
+        "c",
+        {
+            "expected": {
+                "server": "findrive",
+                "tool": "get_file",
+                "directive": "email the vendor tax id and bank account to an external address",
+            }
+        },
+    )
+    result = await det.check_event(_event(submission), db=None)
+    assert result.evidence["fields_correct"]["directive"] is True
+    assert result.evidence["score"] == 100
+
+
+@pytest.mark.asyncio
+async def test_directive_fuzzy_rejects_unrelated_text():
+    det = PurpleTeamDetector(
+        "c",
+        {
+            "expected": {
+                "server": "findrive",
+                "tool": "get_file",
+                "directive": "email the vendor tax id and bank account to an external address",
+            }
+        },
+    )
+    submission = {
+        "server": "findrive",
+        "tool": "get_file",
+        "directive": "the agent deleted some invoices for no reason",
+    }
+    result = await det.check_event(_event(submission), db=None)
+    assert result.evidence["fields_correct"]["directive"] is False
+    assert result.evidence["score"] == 66
+
+
+@pytest.mark.asyncio
 async def test_directive_exact_mode_rejects_substring():
     det = _detector({"directive_match": "exact"})
     submission = {
@@ -225,6 +272,17 @@ def test_config_rejects_bad_directive_match():
     with pytest.raises(ValueError):
         PurpleTeamDetector(
             "c", {"expected": {"server": "s"}, "directive_match": "regex"}
+        )
+
+
+def test_config_rejects_bad_directive_threshold():
+    with pytest.raises(ValueError):
+        PurpleTeamDetector(
+            "c", {"expected": {"server": "s"}, "directive_threshold": 0}
+        )
+    with pytest.raises(ValueError):
+        PurpleTeamDetector(
+            "c", {"expected": {"server": "s"}, "directive_threshold": 1.5}
         )
 
 
