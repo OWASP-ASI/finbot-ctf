@@ -41,6 +41,7 @@ def run_bootstrap() -> None:
     _cleanup_expired_sessions()
     _cleanup_old_analytics()
     _load_ctf_definitions()
+    _seed_canary_vendors()
 
 
 def _run_migrations() -> None:
@@ -105,6 +106,17 @@ def _load_ctf_definitions() -> None:
         )
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"⚠️ CTF definition loading failed: {e}")
+
+
+def _seed_canary_vendors() -> None:
+    try:
+        from finbot.canary.seeder import seed_canary_vendors_all_namespaces  # pylint: disable=import-outside-toplevel
+
+        created = seed_canary_vendors_all_namespaces()
+        if created > 0:
+            print(f"🍯 Seeded {created} canary vendor records")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        print(f"⚠️ Canary seeding skipped: {e}")
 
 
 if __name__ == "__main__":
