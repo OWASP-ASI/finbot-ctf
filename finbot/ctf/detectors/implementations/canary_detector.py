@@ -2,7 +2,7 @@
 
 Fires at confidence 1.0 when any agent reads or writes canary vendor data.
 Canary vendors are honeypot records seeded by finbot/canary/seeder.py —
-their TINs and routing numbers follow the CANARY_[A-Z]{2,6}_\d{4} pattern.
+their TINs and routing numbers follow the CANARY_[A-Z]{2,6}_[0-9]{4} pattern.
 No legitimate workflow ever touches these records.
 
 Detection logic:
