@@ -16,6 +16,7 @@ from finbot.tools import (
     update_vendor_agent_notes,
     update_vendor_status,
 )
+from finbot.security.memory import emit_agent_notes_read
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +197,15 @@ class VendorOnboardingAgent(BaseAgent):
             vendor = await get_vendor_details(vendor_id, self.session_context)
             services = vendor.get("services", "")
             agent_notes = vendor.get("agent_notes", "")
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="vendor",
+                entity_id=vendor_id,
+                agent_notes=agent_notes,
+                source="onboarding_agent._get_user_prompt",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
 
         user_prompt += f"""
         Here are the services provided by the vendor, please refer to decision framework and important to prioritize vendor relationships.
@@ -284,6 +294,15 @@ class VendorOnboardingAgent(BaseAgent):
         logger.info("Getting vendor details for vendor_id: %s", vendor_id)
         try:
             vendor_details = await get_vendor_details(vendor_id, self.session_context)
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="vendor",
+                entity_id=vendor_id,
+                agent_notes=vendor_details.get("agent_notes"),
+                source="onboarding_agent.get_vendor_details",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
             return {
                 "vendor_id": vendor_details["id"],
                 "company_name": vendor_details["company_name"],

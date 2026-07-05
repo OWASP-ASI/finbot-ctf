@@ -10,6 +10,7 @@ from typing import Any, Callable, TypeVar, cast
 from uuid import UUID
 
 from finbot.core.messaging import event_bus
+from finbot.security.tools import emit_native_tool_output, emit_native_tool_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,14 @@ def agent_tool(func: F) -> F:
             workflow_id=workflow_id,
             summary=f"Calling tool: {tool_name}",
         )
+        await emit_native_tool_parameters(
+            session_context=session_context,
+            agent_name=agent_name,
+            tool_name=tool_name,
+            tool_args=tool_args,
+            tool_kwargs=tool_kwargs,
+            workflow_id=workflow_id,
+        )
 
         try:
             # Execute the tool
@@ -130,6 +139,15 @@ def agent_tool(func: F) -> F:
                 workflow_id=workflow_id,
                 summary=f"Tool completed: {tool_name} ({duration_ms:.0f}ms)",
             )
+            await emit_native_tool_output(
+                session_context=session_context,
+                agent_name=agent_name,
+                tool_name=tool_name,
+                workflow_id=workflow_id,
+                output=_json_safe_value(result) if result else None,
+                success=True,
+                duration_ms=duration_ms,
+            )
 
             return result
 
@@ -153,6 +171,16 @@ def agent_tool(func: F) -> F:
                 session_context=session_context,
                 workflow_id=workflow_id,
                 summary=f"Tool failed: {tool_name} ({type(e).__name__})",
+            )
+            await emit_native_tool_output(
+                session_context=session_context,
+                agent_name=agent_name,
+                tool_name=tool_name,
+                workflow_id=workflow_id,
+                success=False,
+                duration_ms=duration_ms,
+                error_type=type(e).__name__,
+                error_message=str(e),
             )
 
             # Re-raise the exception
@@ -194,6 +222,14 @@ def agent_tool(func: F) -> F:
                 workflow_id=workflow_id,
                 summary=f"Calling tool: {tool_name}",
             )
+            await emit_native_tool_parameters(
+                session_context=session_context,
+                agent_name=agent_name,
+                tool_name=tool_name,
+                tool_args=tool_args,
+                tool_kwargs=tool_kwargs,
+                workflow_id=workflow_id,
+            )
 
             try:
                 # Execute the tool
@@ -218,6 +254,15 @@ def agent_tool(func: F) -> F:
                     workflow_id=workflow_id,
                     summary=f"Tool completed: {tool_name} ({duration_ms:.0f}ms)",
                 )
+                await emit_native_tool_output(
+                    session_context=session_context,
+                    agent_name=agent_name,
+                    tool_name=tool_name,
+                    workflow_id=workflow_id,
+                    output=_json_safe_value(result) if result else None,
+                    success=True,
+                    duration_ms=duration_ms,
+                )
 
                 return result
 
@@ -241,6 +286,16 @@ def agent_tool(func: F) -> F:
                     session_context=session_context,
                     workflow_id=workflow_id,
                     summary=f"Tool failed: {tool_name} ({type(e).__name__})",
+                )
+                await emit_native_tool_output(
+                    session_context=session_context,
+                    agent_name=agent_name,
+                    tool_name=tool_name,
+                    workflow_id=workflow_id,
+                    success=False,
+                    duration_ms=duration_ms,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
                 )
 
                 # Re-raise the exception

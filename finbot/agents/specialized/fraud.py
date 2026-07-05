@@ -26,6 +26,7 @@ from finbot.tools import (
     update_fraud_agent_notes,
     update_vendor_risk,
 )
+from finbot.security.memory import emit_agent_notes_read
 
 logger = logging.getLogger(__name__)
 
@@ -430,7 +431,17 @@ class FraudComplianceAgent(BaseAgent):
         """
         logger.info("Getting vendor risk profile for vendor_id: %s", vendor_id)
         try:
-            return await get_vendor_risk_profile(vendor_id, self.session_context)
+            profile = await get_vendor_risk_profile(vendor_id, self.session_context)
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="vendor",
+                entity_id=vendor_id,
+                agent_notes=profile.get("agent_notes"),
+                source="fraud_agent.get_vendor_risk_profile",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
+            return profile
         except ValueError as e:
             logger.error("Error getting vendor risk profile: %s", e)
             return {
@@ -450,7 +461,19 @@ class FraudComplianceAgent(BaseAgent):
         """
         logger.info("Getting invoice details for invoice_id: %s", invoice_id)
         try:
-            return await get_invoice_details(invoice_id, self.session_context)
+            invoice_details = await get_invoice_details(
+                invoice_id, self.session_context
+            )
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="invoice",
+                entity_id=invoice_id,
+                agent_notes=invoice_details.get("agent_notes"),
+                source="fraud_agent.get_invoice_details",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
+            return invoice_details
         except ValueError as e:
             logger.error("Error getting invoice details: %s", e)
             return {
@@ -471,6 +494,19 @@ class FraudComplianceAgent(BaseAgent):
         logger.info("Getting invoices for vendor_id: %s", vendor_id)
         try:
             invoices = await get_vendor_invoices(vendor_id, self.session_context)
+            for invoice in invoices:
+                invoice_id = invoice.get("id")
+                if invoice_id is None:
+                    continue
+                await emit_agent_notes_read(
+                    session_context=self.session_context,
+                    entity_type="invoice",
+                    entity_id=invoice_id,
+                    agent_notes=invoice.get("agent_notes"),
+                    source="fraud_agent.get_vendor_invoices",
+                    consumer_agent=self.agent_name,
+                    workflow_id=self.workflow_id,
+                )
             return {
                 "vendor_id": vendor_id,
                 "total_invoices": len(invoices),

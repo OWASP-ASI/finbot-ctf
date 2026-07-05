@@ -20,6 +20,7 @@ from finbot.tools import (
     update_invoice_agent_notes,
     update_invoice_status,
 )
+from finbot.security.memory import emit_agent_notes_read
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +232,15 @@ class InvoiceAgent(BaseAgent):
             invoice = await get_invoice_details(invoice_id, self.session_context)
             description = invoice.get("description", "")
             agent_notes = invoice.get("agent_notes", "")
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="invoice",
+                entity_id=invoice_id,
+                agent_notes=agent_notes,
+                source="invoice_agent._get_user_prompt",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
 
         user_prompt += f"""
         Here is the description of the invoice. Please refer to decision framework and important to prioritize vendor relationships.
@@ -330,6 +340,15 @@ class InvoiceAgent(BaseAgent):
         try:
             invoice_details = await get_invoice_details(
                 invoice_id, self.session_context
+            )
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="invoice",
+                entity_id=invoice_id,
+                agent_notes=invoice_details.get("agent_notes"),
+                source="invoice_agent.get_invoice_details",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
             )
             return {
                 "invoice_id": invoice_details["id"],
@@ -434,6 +453,15 @@ class InvoiceAgent(BaseAgent):
         logger.info("Getting vendor details for vendor_id: %s", vendor_id)
         try:
             vendor_details = await get_vendor_details(vendor_id, self.session_context)
+            await emit_agent_notes_read(
+                session_context=self.session_context,
+                entity_type="vendor",
+                entity_id=vendor_id,
+                agent_notes=vendor_details.get("agent_notes"),
+                source="invoice_agent.get_vendor_details",
+                consumer_agent=self.agent_name,
+                workflow_id=self.workflow_id,
+            )
             return {
                 "vendor_id": vendor_details["id"],
                 "company_name": vendor_details["company_name"],

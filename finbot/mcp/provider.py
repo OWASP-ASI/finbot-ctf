@@ -16,6 +16,7 @@ from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import MCPActivityLogRepository
 from finbot.core.messaging import event_bus
+from finbot.security.tools import emit_tool_output, emit_tool_parameters
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +204,18 @@ class MCPToolProvider:
                 workflow_id=self._workflow_id,
                 summary=f"MCP tool call: {namespaced_name}",
             )
+            await emit_tool_parameters(
+                session_context=self._session_context,
+                agent_name=self._agent_name,
+                tool_name=original_name,
+                tool_source="mcp",
+                arguments=_safe_serialize(kwargs),
+                source="mcp.provider",
+                mapped_from_event_type="mcp_tool_call_start",
+                workflow_id=self._workflow_id,
+                mcp_server=server_name,
+                namespaced_tool_name=namespaced_name,
+            )
 
             try:
                 result = await client.call_tool(original_name, kwargs)
@@ -235,6 +248,20 @@ class MCPToolProvider:
                     session_context=self._session_context,
                     workflow_id=self._workflow_id,
                     summary=f"MCP tool completed: {namespaced_name} ({duration_ms:.0f}ms)",
+                )
+                await emit_tool_output(
+                    session_context=self._session_context,
+                    agent_name=self._agent_name,
+                    tool_name=original_name,
+                    tool_source="mcp",
+                    source="mcp.provider",
+                    mapped_from_event_type="mcp_tool_call_success",
+                    workflow_id=self._workflow_id,
+                    output=str(output)[:2000],
+                    success=True,
+                    duration_ms=duration_ms,
+                    mcp_server=server_name,
+                    namespaced_tool_name=namespaced_name,
                 )
 
                 logger.debug(
@@ -271,6 +298,21 @@ class MCPToolProvider:
                     session_context=self._session_context,
                     workflow_id=self._workflow_id,
                     summary=f"MCP tool failed: {namespaced_name} ({type(e).__name__})",
+                )
+                await emit_tool_output(
+                    session_context=self._session_context,
+                    agent_name=self._agent_name,
+                    tool_name=original_name,
+                    tool_source="mcp",
+                    source="mcp.provider",
+                    mapped_from_event_type="mcp_tool_call_failure",
+                    workflow_id=self._workflow_id,
+                    success=False,
+                    duration_ms=duration_ms,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
+                    mcp_server=server_name,
+                    namespaced_tool_name=namespaced_name,
                 )
 
                 logger.exception("MCP tool '%s' failed", namespaced_name)

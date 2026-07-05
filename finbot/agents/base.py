@@ -17,6 +17,8 @@ from finbot.core.messaging import event_bus
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
 from finbot.mcp.provider import MCPToolProvider
+from finbot.security.prompt import emit_prompt_goal_change
+from finbot.security.tools import emit_tool_selection
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +88,15 @@ class BaseAgent(ABC):
         system_prompt = self._get_final_system_prompt()
         user_prompt = await self._get_user_prompt(task_data=task_data)
 
+        await emit_prompt_goal_change(
+            session_context=self.session_context,
+            change_type="task_prompt",
+            source=f"{self.agent_name}.process",
+            content=user_prompt,
+            agent_name=self.agent_name,
+            workflow_id=self.workflow_id,
+        )
+
         # Store the user prompt on the workflow so every event
         # (agent + business) in this workflow carries it.
         event_bus.set_workflow_context(self.workflow_id, user_prompt=user_prompt)
@@ -141,14 +152,26 @@ class BaseAgent(ABC):
                         for tool_call in response.tool_calls:
                             tool_call_name = tool_call["name"]
                             callable_fn = callables.get(tool_call_name, None)
+                            tool_source = (
+                                "mcp"
+                                if self._mcp_provider
+                                and tool_call_name
+                                in self._mcp_provider.get_callables()
+                                else "native"
+                            )
+                            await emit_tool_selection(
+                                session_context=self.session_context,
+                                tool_name=tool_call_name,
+                                tool_source=tool_source if callable_fn else "unknown",
+                                source=f"{self.agent_name}.process",
+                                agent_name=self.agent_name,
+                                workflow_id=self.workflow_id,
+                                iteration=iteration + 1,
+                                call_id=tool_call.get("call_id"),
+                                valid=bool(callable_fn),
+                                available_tool_count=len(callables),
+                            )
                             if callable_fn:
-                                tool_source = (
-                                    "mcp"
-                                    if self._mcp_provider
-                                    and tool_call_name
-                                    in self._mcp_provider.get_callables()
-                                    else "native"
-                                )
                                 await self._guardrail_service.invoke(
                                     HookKind.before_tool,
                                     tool_name=tool_call_name,

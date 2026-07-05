@@ -56,6 +56,14 @@ class EventBus:
         """Remove workflow context after the workflow finishes."""
         self._workflow_ctx.pop(workflow_id, None)
 
+    def resolve_workflow_id(self, workflow_id: str | None) -> str:
+        """Return explicit workflow_id or infer from active agent workflow context."""
+        if workflow_id:
+            return workflow_id
+        if len(self._workflow_ctx) == 1:
+            return next(iter(self._workflow_ctx))
+        return ""
+
     def _apply_workflow_context(self, event: dict[str, Any]) -> None:
         """Inject stored workflow context into the event dict."""
         wf_id = event.get("workflow_id")

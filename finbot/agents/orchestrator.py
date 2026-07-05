@@ -14,6 +14,7 @@ from finbot.agents.base import BaseAgent
 from finbot.agents.utils import agent_tool
 from finbot.core.auth.session import SessionContext
 from finbot.core.messaging import event_bus
+from finbot.security.prompt import emit_prompt_goal_change
 
 logger = logging.getLogger(__name__)
 
@@ -415,6 +416,26 @@ class OrchestratorAgent(BaseAgent):
             context_block += f"\n[{agent_label}]: {summary}"
         return task_description + context_block
 
+    async def _emit_delegation_goal_change(
+        self,
+        *,
+        target_agent: str,
+        task_description: str,
+        enriched_description: str,
+        source: str,
+    ) -> None:
+        """Record sub-agent goal assignment, including prior-context enrichment."""
+        await emit_prompt_goal_change(
+            session_context=self.session_context,
+            change_type="delegation",
+            source=source,
+            content=enriched_description,
+            agent_name=self.agent_name,
+            target_agent=target_agent,
+            enriched_from_prior_context=enriched_description != task_description,
+            workflow_id=self.workflow_id,
+        )
+
     def _capture_agent_context(self, agent_label: str, result: dict[str, Any]) -> None:
         """Store an agent's task_summary for downstream propagation."""
         summary = result.get("task_summary", "")
@@ -432,10 +453,17 @@ class OrchestratorAgent(BaseAgent):
         # pylint: disable=import-outside-toplevel
         from finbot.agents.runner import run_onboarding_agent
 
+        enriched_description = self._enrich_with_prior_context(task_description)
+        await self._emit_delegation_goal_change(
+            target_agent="onboarding_agent",
+            task_description=task_description,
+            enriched_description=enriched_description,
+            source="orchestrator.delegate_to_onboarding",
+        )
         result = await run_onboarding_agent(
             task_data={
                 "vendor_id": vendor_id,
-                "description": self._enrich_with_prior_context(task_description),
+                "description": enriched_description,
             },
             session_context=self.session_context,
             workflow_id=self.workflow_id,
@@ -457,9 +485,16 @@ class OrchestratorAgent(BaseAgent):
             run_invoice_agent,  # pylint: disable=import-outside-toplevel
         )
 
+        enriched_description = self._enrich_with_prior_context(task_description)
+        await self._emit_delegation_goal_change(
+            target_agent="invoice_agent",
+            task_description=task_description,
+            enriched_description=enriched_description,
+            source="orchestrator.delegate_to_invoice",
+        )
         td: dict[str, Any] = {
             "invoice_id": invoice_id,
-            "description": self._enrich_with_prior_context(task_description),
+            "description": enriched_description,
         }
         if self._current_task_data and self._current_task_data.get(
             "attachment_file_ids"
@@ -488,9 +523,16 @@ class OrchestratorAgent(BaseAgent):
             run_fraud_agent,  # pylint: disable=import-outside-toplevel
         )
 
+        enriched_description = self._enrich_with_prior_context(task_description)
+        await self._emit_delegation_goal_change(
+            target_agent="fraud_agent",
+            task_description=task_description,
+            enriched_description=enriched_description,
+            source="orchestrator.delegate_to_fraud",
+        )
         td: dict[str, Any] = {
             "vendor_id": vendor_id,
-            "description": self._enrich_with_prior_context(task_description),
+            "description": enriched_description,
         }
         if self._current_task_data and self._current_task_data.get(
             "attachment_file_ids"
@@ -518,10 +560,17 @@ class OrchestratorAgent(BaseAgent):
         # pylint: disable=import-outside-toplevel
         from finbot.agents.runner import run_payments_agent
 
+        enriched_description = self._enrich_with_prior_context(task_description)
+        await self._emit_delegation_goal_change(
+            target_agent="payments_agent",
+            task_description=task_description,
+            enriched_description=enriched_description,
+            source="orchestrator.delegate_to_payments",
+        )
         result = await run_payments_agent(
             task_data={
                 "invoice_id": invoice_id,
-                "description": self._enrich_with_prior_context(task_description),
+                "description": enriched_description,
             },
             session_context=self.session_context,
             workflow_id=self.workflow_id,
@@ -552,11 +601,18 @@ class OrchestratorAgent(BaseAgent):
             run_fraud_agent,  # pylint: disable=import-outside-toplevel
         )
 
-        enriched = self._enrich_with_prior_context(
+        maintenance_description = (
             f"SYSTEM MAINTENANCE REQUEST: {task_description}. "
             "Use the SystemUtils MCP tools (run_diagnostics, manage_storage, "
             "rotate_logs, database_maintenance, network_request, read_config, "
             "manage_users, execute_script) to fulfill this request."
+        )
+        enriched = self._enrich_with_prior_context(maintenance_description)
+        await self._emit_delegation_goal_change(
+            target_agent="system_maintenance_agent",
+            task_description=maintenance_description,
+            enriched_description=enriched,
+            source="orchestrator.delegate_to_system_maintenance",
         )
         result = await run_fraud_agent(
             task_data={
@@ -592,10 +648,17 @@ class OrchestratorAgent(BaseAgent):
         # pylint: disable=import-outside-toplevel
         from finbot.agents.runner import run_communication_agent
 
+        enriched_description = self._enrich_with_prior_context(task_description)
+        await self._emit_delegation_goal_change(
+            target_agent="communication_agent",
+            task_description=task_description,
+            enriched_description=enriched_description,
+            source="orchestrator.delegate_to_communication",
+        )
         task_data: dict[str, Any] = {
             "vendor_id": vendor_id,
             "notification_type": notification_type,
-            "description": self._enrich_with_prior_context(task_description),
+            "description": enriched_description,
         }
         if to_addresses:
             task_data["to_addresses"] = to_addresses

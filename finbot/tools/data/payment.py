@@ -6,6 +6,7 @@ from typing import Any
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import InvoiceRepository, VendorRepository
+from finbot.security.memory import emit_memory_write
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,14 @@ async def process_payment(
         )
         if not invoice:
             raise ValueError("Failed to update invoice")
+
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="invoice",
+            entity_id=invoice_id,
+            content=payment_note,
+            source="process_payment",
+        )
 
         result = invoice.to_dict()
         result["_previous_state"] = previous_state
@@ -193,4 +202,11 @@ async def update_payment_agent_notes(
         )
         if not invoice:
             raise ValueError("Invoice not found")
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="invoice",
+            entity_id=invoice_id,
+            content=agent_notes,
+            source="update_payment_agent_notes",
+        )
         return invoice.to_dict()

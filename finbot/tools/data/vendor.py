@@ -6,6 +6,7 @@ from typing import Any
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import VendorRepository
+from finbot.security.memory import emit_memory_write
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,13 @@ async def update_vendor_status(
         )
         if not vendor:
             raise ValueError("Vendor not found")
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="vendor",
+            entity_id=vendor_id,
+            content=agent_notes,
+            source="update_vendor_status",
+        )
         result = vendor.to_dict()
         result["_previous_state"] = previous_state
         return result
@@ -122,4 +130,11 @@ async def update_vendor_agent_notes(
         )
         if not vendor:
             raise ValueError("Vendor not found")
+        await emit_memory_write(
+            session_context=session_context,
+            entity_type="vendor",
+            entity_id=vendor_id,
+            content=agent_notes,
+            source="update_vendor_agent_notes",
+        )
         return vendor.to_dict()

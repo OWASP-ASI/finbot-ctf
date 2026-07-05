@@ -27,6 +27,8 @@ from finbot.core.messaging import event_bus
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
 from finbot.mcp.provider import MCPToolProvider
+from finbot.security.prompt import emit_prompt_goal_change
+from finbot.security.tools import emit_tool_output, emit_tool_parameters, emit_tool_selection
 from finbot.tools import (
     get_all_vendors_summary,
     get_invoice_details,
@@ -336,6 +338,15 @@ class ChatAssistantBase:
             summary=f"Chat message received ({len(user_message)} chars)",
         )
 
+        await emit_prompt_goal_change(
+            session_context=self.session_context,
+            change_type="user_message",
+            source=f"{self.agent_name}.stream_response",
+            content=effective_message,
+            agent_name=self.agent_name,
+            workflow_id=self._workflow_id,
+        )
+
         history = self._load_history()
         input_messages = [
             {"role": "system", "content": self._get_system_prompt()},
@@ -412,6 +423,19 @@ class ChatAssistantBase:
                 for tc in pending_tool_calls:
                     yield f"data: {json.dumps({'type': 'status', 'content': self._tool_display_label(tc['name'])})}\n\n"
 
+                    await emit_tool_selection(
+                        session_context=self.session_context,
+                        tool_name=tc["name"],
+                        tool_source=self._tool_source(tc["name"]),
+                        source=f"{self.agent_name}.stream_response",
+                        agent_name=self.agent_name,
+                        workflow_id=self._workflow_id,
+                        iteration=round_idx + 1,
+                        call_id=tc.get("call_id"),
+                        valid=tc["name"] in self._tool_callables,
+                        available_tool_count=len(self._tool_callables),
+                    )
+
                     await event_bus.emit_agent_event(
                         agent_name=self.agent_name,
                         event_type="tool_call_start",
@@ -425,6 +449,16 @@ class ChatAssistantBase:
                         session_context=self.session_context,
                         workflow_id=self._workflow_id,
                         summary=f"Chat tool call: {tc['name']}",
+                    )
+                    await emit_tool_parameters(
+                        session_context=self.session_context,
+                        agent_name=self.agent_name,
+                        tool_name=tc["name"],
+                        tool_source=self._tool_source(tc["name"]),
+                        arguments=tc["arguments"],
+                        source=f"{self.agent_name}.stream_response",
+                        mapped_from_event_type="tool_call_start",
+                        workflow_id=self._workflow_id,
                     )
 
                     input_messages.append(
@@ -455,12 +489,25 @@ class ChatAssistantBase:
                         event_data={
                             "tool_name": tc["name"],
                             "duration_ms": tool_duration_ms,
+                            "tool_output": result[:2000],
                             "vendor_id": self.session_context.current_vendor_id,
                             "llm_model": self._model,
                         },
                         session_context=self.session_context,
                         workflow_id=self._workflow_id,
                         summary=f"Chat tool completed: {tc['name']} ({tool_duration_ms}ms)",
+                    )
+                    await emit_tool_output(
+                        session_context=self.session_context,
+                        agent_name=self.agent_name,
+                        tool_name=tc["name"],
+                        tool_source=self._tool_source(tc["name"]),
+                        source=f"{self.agent_name}.stream_response",
+                        mapped_from_event_type="tool_call_success",
+                        workflow_id=self._workflow_id,
+                        output=result[:2000],
+                        success=True,
+                        duration_ms=tool_duration_ms,
                     )
 
                     while not keepalive_queue.empty():
