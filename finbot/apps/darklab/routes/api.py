@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from finbot.core.auth.middleware import get_session_context
+from finbot.core.auth.middleware import get_authenticated_session_context, get_session_context
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session, get_db
 from finbot.core.data.repositories import CTFEventRepository, MCPServerConfigRepository
@@ -108,7 +108,7 @@ async def get_server_tools(
 async def update_tool_overrides(
     server_type: str,
     update: ToolOverridesUpdate,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Update tool definition overrides (supply chain attack surface)."""
     with db_session() as db:
@@ -129,7 +129,7 @@ async def update_tool_overrides(
 @router.post("/supply-chain/servers/{server_type}/reset-tools")
 async def reset_tool_overrides(
     server_type: str,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Reset tool overrides to defaults."""
     with db_session() as db:
