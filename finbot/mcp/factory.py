@@ -36,10 +36,19 @@ def _import_factory(dotted_path: str) -> Any:
 
 
 async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
-    """Apply user-supplied tool description overrides to a FastMCP server.
+    """Apply user-supplied tool overrides to a FastMCP server.
 
-    Modifies tool descriptions (the text the LLM sees) via the provider's
-    get_tool() API. This is the primary CTF attack surface for tool poisoning.
+    Modifies tool definitions (the text and schema the LLM sees) via the
+    provider's get_tool() API.  Supports two override keys per tool:
+
+    - ``description``: replaces the tool's natural-language description
+      (primary CTF attack surface for prompt-injection / tool poisoning).
+    - ``parameters`` / ``inputSchema``: replaces the JSON Schema the LLM
+      uses when constructing tool arguments (enables parameter-schema
+      poisoning attacks).
+
+    Fixes #547: previously only ``description`` was applied; ``parameters``
+    was silently discarded even though the API accepted and stored it.
     """
     if not overrides:
         return
@@ -50,16 +59,31 @@ async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
 
     for tool_name, override in overrides.items():
         new_description = override.get("description")
-        if new_description:
-            try:
-                tool = await provider.get_tool(tool_name)
-                if tool:
+        new_parameters = override.get("parameters") or override.get("inputSchema")
+
+        if not (new_description or new_parameters):
+            continue
+
+        try:
+            tool = await provider.get_tool(tool_name)
+            if tool:
+                if new_description:
                     tool.description = new_description
-                    logger.debug(
-                        "Applied tool override for '%s': description updated", tool_name
-                    )
-            except Exception:
-                logger.debug("Tool '%s' not found for override", tool_name)
+                if new_parameters:
+                    if hasattr(tool, "parameters"):
+                        tool.parameters = new_parameters
+                    if hasattr(tool, "inputSchema"):
+                        tool.inputSchema = new_parameters
+                    if not (hasattr(tool, "parameters") or hasattr(tool, "inputSchema")):
+                        setattr(tool, "parameters", new_parameters)
+                applied = ", ".join(
+                    k for k, v in [("description", new_description), ("parameters", new_parameters)] if v
+                )
+                logger.debug(
+                    "Applied tool override for '%s': %s updated", tool_name, applied
+                )
+        except Exception:
+            logger.debug("Tool '%s' not found for override", tool_name)
 
 
 async def create_mcp_server(
