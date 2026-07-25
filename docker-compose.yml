@@ -1,4 +1,4 @@
-services:
+﻿services:
   app:
     build:
       context: .
@@ -23,6 +23,33 @@ services:
       - cache:/app/cache
     restart: unless-stopped
 
+  mcp_server:
+    build:
+      context: .
+      target: ${DOCKER_TARGET:-app}
+    container_name: finbot-mcp-server
+    command: ["python", "run_mcp_server.py"]
+    ports:
+      - "${MCP_PORT:-8100}:8100"
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL:-sqlite://data/finbot.db}
+      - POSTGRES_HOST=postgres
+      - SKIP_BOOTSTRAP=true
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+        required: false
+      app:
+        condition: service_started
+    volumes:
+      - sqlite_data:/app/data
+      - uploads:/app/uploads
+      - cache:/app/cache
+    restart: unless-stopped
   redis:
     image: redis:7-alpine
     container_name: finbot-redis
@@ -58,3 +85,4 @@ volumes:
   postgres_data:
   uploads:
   cache:
+
