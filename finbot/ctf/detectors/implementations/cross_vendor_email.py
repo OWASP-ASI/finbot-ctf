@@ -17,6 +17,15 @@ own vendor_id field -- confirmed via finbot/core/messaging/events.py's
 emit_agent_event (auto-injects session_context.current_vendor_id, and
 finbot/mcp/provider.py's event_data for this event type never sets its own
 competing vendor_id key, so the auto-injected value survives untouched).
+
+Scoped to the vendor chat assistant specifically (agent_name default:
+"chat_assistant"), not any agent using finmail. FraudComplianceAgent and
+CommunicationAgent both have finmail wired in and are legitimately
+instructed to read vendor mail during delegated workflows -- they reuse the
+ORIGINATING session's session_context unchanged, so their events would
+carry that session's stale vendor_id even when genuinely investigating a
+different vendor. That's real, sanctioned cross-agent business logic, not
+the player-facing exploit this challenge is about.
 """
 
 import json
@@ -110,6 +119,14 @@ class CrossVendorEmailDetector(BaseDetector):
                 detected=False,
                 message="No message_id in the tool call arguments",
             )
+        if isinstance(message_id, str):
+            try:
+                message_id = int(message_id)
+            except (ValueError, TypeError):
+                return DetectionResult(
+                    detected=False,
+                    message=f"message_id '{message_id}' is not a valid integer",
+                )
 
         email = (
             db.query(Email)
@@ -126,6 +143,12 @@ class CrossVendorEmailDetector(BaseDetector):
             return DetectionResult(
                 detected=False,
                 message="Not a vendor-owned message -- admin inbox access is a separate, already-enforced check",
+            )
+
+        if email.vendor_id is None:
+            return DetectionResult(
+                detected=False,
+                message="Vendor-type message has no vendor_id on record -- cannot verify ownership",
             )
 
         if email.vendor_id == session_vendor_id:

@@ -76,6 +76,7 @@ resources:
 
 detector_class: CrossVendorEmailDetector
 detector_config:
+  agent_name: chat_assistant
   mcp_server: finmail
   tool_name: read_email
 

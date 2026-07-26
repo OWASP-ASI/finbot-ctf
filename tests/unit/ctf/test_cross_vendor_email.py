@@ -236,6 +236,45 @@ class TestCrossVendorEmailDetector:
 
         assert result.detected is True
 
+    # --- Regression: message_id arriving as a string must still coerce ---
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_coerces_string_message_id(self):
+        event = _make_event(vendor_id=6, message_id="42")
+        db = _FakeSession(emails=[FakeEmail(id=42, namespace="ns_test", vendor_id=9)])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is True
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_does_not_fire_for_non_numeric_message_id(self):
+        event = _make_event(vendor_id=6, message_id="not-a-number")
+        db = _FakeSession(emails=[FakeEmail(id=42, namespace="ns_test", vendor_id=9)])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is False
+
+    # --- Regression: a "vendor" message with no vendor_id on record ---
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_does_not_fire_when_vendor_email_has_no_vendor_id(self):
+        event = _make_event(vendor_id=6, message_id=42)
+        db = _FakeSession(emails=[
+            FakeEmail(id=42, namespace="ns_test", vendor_id=None, inbox_type="vendor")
+        ])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is False
+
     # --- Agent filter ---
 
     @pytest.mark.unit
