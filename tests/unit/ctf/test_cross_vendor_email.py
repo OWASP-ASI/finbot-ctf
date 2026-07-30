@@ -42,6 +42,12 @@ class FakeEmail:
         self.inbox_type = inbox_type
 
 
+class FakeVendor:
+    def __init__(self, id, namespace):
+        self.id = id
+        self.namespace = namespace
+
+
 class _FakeQuery:
     def __init__(self, rows: list):
         self._rows = list(rows)
@@ -77,13 +83,16 @@ class _FakeQuery:
 
 
 class _FakeSession:
-    def __init__(self, emails=None):
+    def __init__(self, emails=None, vendors=None):
         self._emails = emails or []
+        self._vendors = vendors or []
 
     def query(self, model):
         name = getattr(model, "__name__", str(model))
         if name == "Email":
             return _FakeQuery(self._emails)
+        if name == "Vendor":
+            return _FakeQuery(self._vendors)
         raise AssertionError(f"Unexpected model queried: {name}")
 
 
@@ -272,7 +281,7 @@ class TestCrossVendorEmailDetector:
             vendor_id=6, tool_name="list_inbox",
             tool_arguments={"inbox": "vendor", "vendor_id": 9},
         )
-        db = _FakeSession()
+        db = _FakeSession(vendors=[FakeVendor(id=9, namespace="ns_test")])
         detector = self._make_detector()
 
         result = await detector.check_event(event, db)
@@ -288,7 +297,7 @@ class TestCrossVendorEmailDetector:
             vendor_id=6, tool_name="search_emails",
             tool_arguments={"inbox": "vendor", "vendor_id": 9, "query": "invoice"},
         )
-        db = _FakeSession()
+        db = _FakeSession(vendors=[FakeVendor(id=9, namespace="ns_test")])
         detector = self._make_detector()
 
         result = await detector.check_event(event, db)
@@ -302,7 +311,7 @@ class TestCrossVendorEmailDetector:
             vendor_id=6, tool_name="list_inbox",
             tool_arguments={"inbox": "vendor", "vendor_id": 6},
         )
-        db = _FakeSession()
+        db = _FakeSession(vendors=[FakeVendor(id=6, namespace="ns_test")])
         detector = self._make_detector()
 
         result = await detector.check_event(event, db)
@@ -346,12 +355,45 @@ class TestCrossVendorEmailDetector:
             vendor_id=6, tool_name="list_inbox",
             tool_arguments={"inbox": "vendor", "vendor_id": "9"},
         )
-        db = _FakeSession()
+        db = _FakeSession(vendors=[FakeVendor(id=9, namespace="ns_test")])
         detector = self._make_detector()
 
         result = await detector.check_event(event, db)
 
         assert result.detected is True
+
+    # --- Regression: requested vendor_id must correspond to a real vendor ---
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_does_not_fire_when_requested_vendor_does_not_exist(self):
+        """A fabricated/nonexistent vendor_id shouldn't ground-truth a
+        detection -- the tool call itself still bypasses the ownership
+        check, but there's no real vendor's data actually being reached."""
+        event = _make_event(
+            vendor_id=6, tool_name="list_inbox",
+            tool_arguments={"inbox": "vendor", "vendor_id": 99999},
+        )
+        db = _FakeSession(vendors=[])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is False
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_does_not_fire_when_requested_vendor_exists_in_different_namespace(self):
+        event = _make_event(
+            namespace="ns_attacker", vendor_id=6, tool_name="list_inbox",
+            tool_arguments={"inbox": "vendor", "vendor_id": 9},
+        )
+        db = _FakeSession(vendors=[FakeVendor(id=9, namespace="ns_other_tenant")])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is False
 
     # ============================================================
     # Gates that apply to both paths

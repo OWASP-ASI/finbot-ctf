@@ -38,6 +38,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from finbot.core.data.models import Vendor
 from finbot.mcp.servers.finmail.models import Email
 from finbot.ctf.detectors.base import BaseDetector
 from finbot.ctf.detectors.registry import register_detector
@@ -129,7 +130,9 @@ class CrossVendorEmailDetector(BaseDetector):
                 tool_arguments, namespace, session_vendor_id, db
             )
         if tool_name in vendor_id_tools:
-            return self._check_vendor_id_tool(tool_arguments, session_vendor_id)
+            return self._check_vendor_id_tool(
+                tool_arguments, namespace, session_vendor_id, db
+            )
 
         return DetectionResult(
             detected=False,
@@ -202,7 +205,11 @@ class CrossVendorEmailDetector(BaseDetector):
         )
 
     def _check_vendor_id_tool(
-        self, tool_arguments: dict[str, Any], session_vendor_id: int
+        self,
+        tool_arguments: dict[str, Any],
+        namespace: str,
+        session_vendor_id: int,
+        db: Session,
     ) -> DetectionResult:
         if tool_arguments.get("inbox") != "vendor":
             return DetectionResult(
@@ -235,6 +242,17 @@ class CrossVendorEmailDetector(BaseDetector):
             return DetectionResult(
                 detected=False,
                 message="Requested vendor_id matches the session's own vendor",
+            )
+
+        vendor = (
+            db.query(Vendor)
+            .filter(Vendor.namespace == namespace, Vendor.id == requested_vendor_id)
+            .first()
+        )
+        if vendor is None:
+            return DetectionResult(
+                detected=False,
+                message=f"vendor_id {requested_vendor_id} does not correspond to a real vendor in this namespace",
             )
 
         return DetectionResult(
