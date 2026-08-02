@@ -1,15 +1,20 @@
 """
 Agent Rate Limiter
+
 Provides per-namespace rate limiting for agent-triggering endpoints.
-Uses a fixed-window counter stored in Redis, reusing the existing
-EventBus Redis connection.
+Uses an atomic Redis pipeline to increment and set expiry in a single
+operation, preventing race conditions between INCR and EXPIRE.
+Fails closed on Redis errors to prevent abuse during outages.
 """
+
 import logging
+
 from fastapi import Depends, HTTPException
+
 from finbot.config import settings
-from finbot.core.messaging.events import event_bus
 from finbot.core.auth.middleware import get_session_context
 from finbot.core.auth.session import SessionContext
+from finbot.core.messaging.events import event_bus
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +24,12 @@ async def check_agent_rate_limit(
 ) -> None:
     """FastAPI dependency that enforces per-namespace agent rate limiting.
 
+    Uses an atomic Redis pipeline so INCR and EXPIRE are never split.
+    Fails closed with HTTP 503 if Redis is unavailable, to prevent
+    abuse during outages.
+
     Raises HTTP 429 if the namespace has exceeded AGENT_RATE_LIMIT_MAX
     requests within the current AGENT_RATE_LIMIT_WINDOW_SECONDS window.
-
-    Add to any route that triggers an agent or LLM call:
-        Depends(check_agent_rate_limit)
     """
     namespace = session_context.namespace
     key = f"finbot:ratelimit:{namespace}:agent"
@@ -31,24 +37,19 @@ async def check_agent_rate_limit(
     window_seconds = settings.AGENT_RATE_LIMIT_WINDOW_SECONDS
 
     try:
-        # Explicitly guard Redis initialization
         redis = getattr(event_bus, "redis", None)
         if redis is None:
-            logger.warning("Rate limiter: Redis not initialized, allowing request through")
-            return
+            raise RuntimeError("Redis client is not initialized")
 
-        # Increment the counter for this namespace
-        count = await redis.incr(key)
+        # Atomic pipeline: INCR and EXPIRE in a single round trip
+        # This prevents the race condition where INCR succeeds but
+        # EXPIRE never runs, leaving a permanent key with no TTL
+        async with redis.pipeline(transaction=True) as pipe:
+            await pipe.incr(key)
+            await pipe.expire(key, window_seconds)
+            results = await pipe.execute()
 
-        # On the first request in a window, set the expiry
-        if count == 1:
-            await redis.expire(key, window_seconds)
-        else:
-            # Protect against orphaned keys from a previous crash
-            # (incr succeeded but expire was never called)
-            ttl_check = await redis.ttl(key)
-            if ttl_check == -1:
-                await redis.expire(key, window_seconds)
+        count = results[0]
 
         logger.debug(
             "Rate limit check: namespace=%s count=%d max=%d",
@@ -58,14 +59,7 @@ async def check_agent_rate_limit(
         )
 
         if count > max_requests:
-            # Get remaining TTL to report in the error message
             ttl = await redis.ttl(key)
-
-            # Guard against negative TTL values (-1 = no expiry, -2 = key gone)
-            if ttl < 0:
-                ttl = window_seconds
-
-            # Include Retry-After header in the 429 response
             raise HTTPException(
                 status_code=429,
                 detail=(
@@ -73,12 +67,16 @@ async def check_agent_rate_limit(
                     f"within the {window_seconds}s window (max {max_requests}). "
                     f"Please wait {ttl} seconds before trying again."
                 ),
-                headers={"Retry-After": str(ttl)},
             )
 
     except HTTPException:
         raise
+
     except Exception as e:
-        # If Redis is unavailable, log and allow the request through
-        # rather than blocking all users due to an infrastructure issue
-        logger.error("Rate limit check failed (Redis error): %s", e)
+        # Fail closed: if Redis is unavailable or any error occurs,
+        # block the request rather than allowing potential abuse
+        logger.error("Rate limit check failed, blocking request: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail="Rate limiting service unavailable. Please try again shortly.",
+        )
