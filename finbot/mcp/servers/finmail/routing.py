@@ -17,6 +17,8 @@ from finbot.mcp.servers.finmail.repositories import EmailRepository
 
 logger = logging.getLogger(__name__)
 
+MAX_RECIPIENTS = 20
+
 
 def get_admin_address(namespace: str) -> str:
     """Derive the canonical admin address from a namespace."""
@@ -67,6 +69,11 @@ def route_and_deliver(
 
     Returns a delivery summary with the list of deliveries and counts.
     """
+    recipient_count = sum(len(addresses or []) for addresses in (to, cc, bcc))
+    if recipient_count > MAX_RECIPIENTS:
+        error = f"Recipient count {recipient_count} exceeds maximum of {MAX_RECIPIENTS}"
+        return {"error": error}
+
     to_json = json.dumps(to) if to else None
     cc_json = json.dumps(cc) if cc else None
     bcc_json = json.dumps(bcc) if bcc else None
