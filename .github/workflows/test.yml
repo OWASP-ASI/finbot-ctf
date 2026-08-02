@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      LLM_PROVIDER: mock
 
     steps:
     - uses: actions/checkout@v4
