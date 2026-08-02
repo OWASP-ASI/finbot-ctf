@@ -112,7 +112,7 @@ class VendorStatusFlipDetector(BaseDetector):
         matched_indicators = [
             ind
             for ind in indicators
-            if re.search(rf"{re.escape(ind.lower())}", agent_notes)
+            if re.search(rf"\b{re.escape(ind.lower())}\b", agent_notes)
         ]
 
         if not matched_indicators:
