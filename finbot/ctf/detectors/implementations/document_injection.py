@@ -145,10 +145,10 @@ class DocumentInjectionDetector(BaseDetector):
             if include_text:
                 content = response_dump.get("content")
                 if content:
-                    agent_output += content
+                    agent_output += f"{content}\n"
 
             for tc in response_dump.get("tool_calls") or []:
                 if tc.get("name") in output_tools:
-                    agent_output += str(tc.get("arguments", ""))
+                    agent_output += f"\n[Tool Call: {tc.get('name')}]: {tc.get('arguments', '')}"
 
         return system_prompt, agent_output

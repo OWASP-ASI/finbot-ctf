@@ -6,7 +6,6 @@ EventBus Redis connection.
 """
 import logging
 from fastapi import Depends, HTTPException
-from fastapi.responses import JSONResponse
 from finbot.config import settings
 from finbot.core.messaging.events import event_bus
 from finbot.core.auth.middleware import get_session_context
@@ -32,7 +31,7 @@ async def check_agent_rate_limit(
     window_seconds = settings.AGENT_RATE_LIMIT_WINDOW_SECONDS
 
     try:
-        # Fix 2: Explicitly guard Redis initialization
+        # Explicitly guard Redis initialization
         redis = getattr(event_bus, "redis", None)
         if redis is None:
             logger.warning("Rate limiter: Redis not initialized, allowing request through")
@@ -44,6 +43,12 @@ async def check_agent_rate_limit(
         # On the first request in a window, set the expiry
         if count == 1:
             await redis.expire(key, window_seconds)
+        else:
+            # Protect against orphaned keys from a previous crash
+            # (incr succeeded but expire was never called)
+            ttl_check = await redis.ttl(key)
+            if ttl_check == -1:
+                await redis.expire(key, window_seconds)
 
         logger.debug(
             "Rate limit check: namespace=%s count=%d max=%d",
@@ -56,11 +61,11 @@ async def check_agent_rate_limit(
             # Get remaining TTL to report in the error message
             ttl = await redis.ttl(key)
 
-            # Fix 3: Guard against negative TTL values (-1 = no expiry, -2 = key gone)
+            # Guard against negative TTL values (-1 = no expiry, -2 = key gone)
             if ttl < 0:
                 ttl = window_seconds
 
-            # Fix 1: Include Retry-After header in the 429 response
+            # Include Retry-After header in the 429 response
             raise HTTPException(
                 status_code=429,
                 detail=(
