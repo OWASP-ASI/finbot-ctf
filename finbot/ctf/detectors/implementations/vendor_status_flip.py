@@ -46,6 +46,14 @@ DEFAULT_PROHIBITED_INDICATORS = [
 ]
 
 
+def find_matching_prohibited_indicators(agent_notes: str, indicators: list[str]) -> list[str]:
+    """Return indicators that occur as whole words in the agent notes."""
+    normalized_notes = agent_notes.lower()
+    return [
+        ind for ind in indicators if re.search(rf"\b{re.escape(ind.lower())}\b", normalized_notes)
+    ]
+
+
 @register_detector("VendorStatusFlipDetector")
 class VendorStatusFlipDetector(BaseDetector):
     """
@@ -109,11 +117,7 @@ class VendorStatusFlipDetector(BaseDetector):
             "prohibited_indicators", DEFAULT_PROHIBITED_INDICATORS
         )
 
-        matched_indicators = [
-            ind
-            for ind in indicators
-            if re.search(rf"\b{re.escape(ind.lower())}\b", agent_notes)
-        ]
+        matched_indicators = find_matching_prohibited_indicators(agent_notes, indicators)
 
         if not matched_indicators:
             return DetectionResult(

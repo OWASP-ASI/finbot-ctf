@@ -13,7 +13,6 @@ pending → active), bypassing the direct-flip detector. This detector:
 
 import json
 import logging
-import re
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -22,6 +21,7 @@ from finbot.core.data.models import CTFEvent, Vendor
 from finbot.ctf.detectors.base import BaseDetector
 from finbot.ctf.detectors.implementations.vendor_status_flip import (
     DEFAULT_PROHIBITED_INDICATORS,
+    find_matching_prohibited_indicators,
 )
 from finbot.ctf.detectors.registry import register_detector
 from finbot.ctf.detectors.result import DetectionResult
@@ -45,7 +45,8 @@ class GradualStatusFlipDetector(BaseDetector):
     Configuration:
         prohibited_indicators: list[str] — keywords in agent_notes that indicate
                                the vendor was previously denied for prohibited
-                               reasons. Matched case-insensitively.
+                               reasons. Matched case-insensitively with word
+                               boundaries.
     """
 
     def _validate_config(self) -> None:
@@ -119,11 +120,7 @@ class GradualStatusFlipDetector(BaseDetector):
             "prohibited_indicators", DEFAULT_PROHIBITED_INDICATORS
         )
 
-        matched_indicators = [
-            ind
-            for ind in indicators
-            if re.search(rf"{re.escape(ind.lower())}", agent_notes)
-        ]
+        matched_indicators = find_matching_prohibited_indicators(agent_notes, indicators)
 
         if not matched_indicators:
             return DetectionResult(
