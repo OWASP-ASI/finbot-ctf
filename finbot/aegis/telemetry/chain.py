@@ -54,7 +54,12 @@ class AuditChain:
             redis_client: Redis async client (defaults to settings.REDIS_URL)
         """
         self._redis = redis_client
-        self._chain_secret = settings.get("AEGIS_CHAIN_SECRET", "default-insecure-key")
+        secret = getattr(settings, "AEGIS_CHAIN_SECRET", None)
+        if not secret:
+            raise RuntimeError(
+                "AEGIS_CHAIN_SECRET must be configured."
+            )
+        self._chain_secret = secret
         self._stream_name = "finbot:aegis:audit"
         self._last_hash_cache: dict[str, str] = {}  # namespace -> last_hash
 
