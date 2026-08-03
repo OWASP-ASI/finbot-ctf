@@ -17,6 +17,17 @@ Event Classification:
         - agent.onboarding_agent.llm_request_success (llm)
         - agent.invoice_agent.tool_call_success (tool)
 
+- aegis: Events for AEGIS security telemetry (GSoC Week 1-3)
+    - pattern: aegis.<category>.<action>
+    - categories: tool, policy, memory, delegation, anomaly
+    - Examples:
+        - aegis.tool.call (before tool execution)
+        - aegis.tool.result (after tool execution)
+        - aegis.policy.decision (policy engine verdict)
+        - aegis.memory.write (memory/context write)
+        - aegis.delegation (agent-to-agent delegation)
+        - aegis.anomaly.detection (cascade, resource exhaustion, etc.)
+
 Note: CTF outcomes (challenge completions, badge awards) are derived by
 the CTFEventProcessor from these events, not emitted directly.
 event_subtype="ctf" can be used to support CTF challenges and badges as needed.
@@ -186,6 +197,40 @@ class EventBus:
             event_type,
             stream_name,
         )
+
+    async def emit_aegis_event(
+        self,
+        event_type: str,
+        event_data: dict[str, Any],
+        session_context: SessionContext,
+        workflow_id: str | None = None,
+    ) -> None:
+        """Emit AEGIS security telemetry event.
+
+        Args:
+            event_type: Event type (e.g., 'tool.call', 'policy.decision', 'memory.write')
+            event_data: Event payload (tool_name, action, reason, etc.)
+            session_context: Session context for namespace/user tracking
+            workflow_id: Workflow identifier for tracing
+        """
+        aegis_event = {
+            "namespace": session_context.namespace,
+            "user_id": session_context.user_id,
+            "session_id": session_context.session_id,
+            "event_type": f"aegis.{event_type}",
+            "workflow_id": workflow_id or "",
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            **(event_data or {}),
+        }
+
+        self._apply_workflow_context(aegis_event)
+        encoded_event = self._encode_event_data(aegis_event)
+
+        stream_name = f"{self.event_prefix}:aegis"
+        await self.redis.xadd(
+            stream_name, encoded_event, maxlen=settings.EVENT_BUFFER_SIZE
+        )
+        logger.debug("Emitted AEGIS event %s to stream %s", event_type, stream_name)
 
     def subscribe_to_events(self, event_pattern: str, callback: Callable) -> None:
         """Subscribe to events"""
