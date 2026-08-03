@@ -1,5 +1,3 @@
-# Test file
-
 # ============================================================
 # File: finbot/aegis/policy/agent_profiles.py
 # Package: finbot.aegis.policy
@@ -16,8 +14,25 @@ of least privilege to minimize the attack surface of autonomous agents.
 
 from __future__ import annotations
 
+import logging
+import secrets
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+
+from finbot.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Get agent secret key from configuration or generate a cryptographically secure one
+try:
+    _AGENT_SECRET = settings.AEGIS_AGENT_SECRET
+except AttributeError:
+    _AGENT_SECRET = secrets.token_hex(32)
+    logger.warning(
+        "AEGIS_AGENT_SECRET not set in configuration. Using a generated secret: %s. "
+        "This is not suitable for production - please configure AEGIS_AGENT_SECRET.",
+        _AGENT_SECRET,
+    )
 
 
 @dataclass
@@ -39,7 +54,7 @@ class AgentProfile:
     description: str
     allowed_tools: List[str] = field(default_factory=list)
     tool_limits: Dict[str, Dict[str, int]] = field(default_factory=dict)
-    secret_key: str = field(default_factory=lambda: "default-secret-key-change-in-production")
+    secret_key: str = field(default=_AGENT_SECRET)
     current_workflow: Optional[str] = None
     max_concurrent_operations: int = 1
     required_attestation: bool = False
@@ -76,6 +91,7 @@ class AgentProfile:
         """
         return self.tool_limits.get(tool_name, {}).get(limit_type, 0)
 
+
 # Predefined agent profiles for the six agent types in FinBot-AEGIS
 
 # 1. Data Analyst Agent - Limited to data querying and analysis tools
@@ -95,7 +111,6 @@ DATA_ANALYST_PROFILE = AgentProfile(
         "data:visualize": {"max_calls_per_minute": 10},
         "filesystem:read": {"max_calls_per_minute": 60},
     },
-    secret_key="data-analyst-secret-key-change-in-production",
     max_concurrent_operations=3,
 )
 
@@ -116,7 +131,6 @@ REPORT_GENERATOR_PROFILE = AgentProfile(
         "document:create": {"max_calls_per_minute": 20},
         "filesystem:write": {"max_calls_per_minute": 30},
     },
-    secret_key="report-generator-secret-key-change-in-production",
     max_concurrent_operations=2,
 )
 
@@ -137,7 +151,6 @@ API_INTEGRATOR_PROFILE = AgentProfile(
         "api:call": {"max_calls_per_minute": 60},
         "cache:set": {"max_calls_per_minute": 120},
     },
-    secret_key="api-integrator-secret-key-change-in-production",
     max_concurrent_operations=5,
 )
 
@@ -158,7 +171,6 @@ SECURITY_AUDITOR_PROFILE = AgentProfile(
         "vulnerability:check": {"max_calls_per_minute": 20},
         "network:scan": {"max_calls_per_minute": 5},
     },
-    secret_key="security-auditor-secret-key-change-in-production",
     max_concurrent_operations=2,
     required_attestation=True,
 )
@@ -179,7 +191,6 @@ WORKFLOW_ORCHESTRATOR_PROFILE = AgentProfile(
         "workflow:execute": {"max_calls_per_minute": 20},
         "task:schedule": {"max_calls_per_minute": 30},
     },
-    secret_key="workflow-orchestrator-secret-key-change-in-production",
     max_concurrent_operations=10,
 )
 
@@ -200,7 +211,6 @@ RESEARCH_ASSISTANT_PROFILE = AgentProfile(
         "knowledge:query": {"max_calls_per_minute": 60},
         "filesystem:write": {"max_calls_per_minute": 20},
     },
-    secret_key="research-assistant-secret-key-change-in-production",
     max_concurrent_operations=5,
 )
 
