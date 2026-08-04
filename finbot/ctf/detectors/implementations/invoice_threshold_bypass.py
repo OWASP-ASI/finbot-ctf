@@ -43,7 +43,7 @@ class InvoiceThresholdBypassDetector(BaseDetector):
 
     def _validate_config(self) -> None:
         threshold = self.config.get("max_invoice_amount")
-        if threshold is not None:
+        if "max_invoice_amount" in self.config:
             if not isinstance(threshold, (int, float)) or threshold <= 0:
                 raise ValueError("max_invoice_amount must be a positive number")
 
