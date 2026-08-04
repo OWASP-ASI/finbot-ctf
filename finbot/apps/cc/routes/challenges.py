@@ -37,7 +37,11 @@ def _challenge_list_with_stats(db) -> list[dict]:
         total_attempts = sum(p.attempts for p in progress_rows)
         hints_used = sum(p.hints_used for p in progress_rows)
 
-        completed_rows = [p for p in progress_rows if p.status == "completed" and p.completion_time_seconds]
+        completed_rows = [
+            p
+            for p in progress_rows
+            if p.status == "completed" and p.completion_time_seconds is not None
+        ]
         avg_solve = (
             int(sum(p.completion_time_seconds for p in completed_rows) / len(completed_rows))
             if completed_rows else None
