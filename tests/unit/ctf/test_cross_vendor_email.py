@@ -440,6 +440,21 @@ class TestCrossVendorEmailDetector:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    async def test_does_not_fire_when_tool_arguments_is_not_a_dict(self):
+        """A malformed payload (e.g. a JSON array/string instead of an
+        object) must not raise -- .get() on a non-dict would otherwise
+        throw AttributeError."""
+        event = _make_event(vendor_id=6, tool_name="read_email")
+        event["tool_arguments"] = json.dumps([1, 2, 3])
+        db = _FakeSession(emails=[])
+        detector = self._make_detector()
+
+        result = await detector.check_event(event, db)
+
+        assert result.detected is False
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_does_not_fire_for_wrong_agent_when_agent_name_configured(self):
         event = _make_event(
             agent_name="copilot_assistant", vendor_id=6, tool_name="read_email",

@@ -125,6 +125,11 @@ class CrossVendorEmailDetector(BaseDetector):
             except (ValueError, TypeError):
                 tool_arguments = {}
 
+        if not isinstance(tool_arguments, dict):
+            return DetectionResult(
+                detected=False, message="tool_arguments did not parse to a dict"
+            )
+
         if tool_name in message_id_tools:
             return self._check_message_id_tool(
                 tool_arguments, namespace, session_vendor_id, db
