@@ -100,7 +100,7 @@
                             {% endif %}
                         </td>
                         <td class="px-3 py-3 text-right tabular-nums text-text-2">
-                            {% if c.avg_solve_seconds %}
+                            {% if c.avg_solve_seconds is not none %}
                             {{ (c.avg_solve_seconds // 60) }}m
                             {% else %}
                             <span class="text-text-3">-</span>
