@@ -46,7 +46,7 @@ class InvoiceTrustOverrideDetector(BaseDetector):
 
     def _validate_config(self) -> None:
         min_amount = self.config.get("min_amount")
-        if min_amount is not None:
+        if "min_amount" in self.config:
             if not isinstance(min_amount, (int, float)) or min_amount <= 0:
                 raise ValueError("min_amount must be a positive number")
 
