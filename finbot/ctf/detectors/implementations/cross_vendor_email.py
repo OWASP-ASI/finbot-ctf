@@ -23,14 +23,18 @@ emit_agent_event (auto-injects session_context.current_vendor_id, and
 finbot/mcp/provider.py's event_data for this event type never sets its own
 competing vendor_id key, so the auto-injected value survives untouched).
 
-Scoped to the vendor chat assistant specifically (agent_name default:
-"chat_assistant"), not any agent using finmail. FraudComplianceAgent and
-CommunicationAgent both have finmail wired in and are legitimately
-instructed to read vendor mail during delegated workflows -- they reuse the
-ORIGINATING session's session_context unchanged, so their events would
-carry that session's stale vendor_id even when genuinely investigating a
-different vendor. That's real, sanctioned cross-agent business logic, not
-the player-facing exploit this challenge is about.
+Scoped to the vendor chat assistant specifically for THIS challenge --
+this class's own agent_name config defaults to None (any agent) so it can
+be reused for other agents/challenges, but cross_vendor_email.yaml sets
+agent_name: chat_assistant explicitly. That scoping matters:
+FraudComplianceAgent and CommunicationAgent both have finmail wired in and
+are legitimately instructed to read vendor mail during delegated
+workflows -- they reuse the ORIGINATING session's session_context
+unchanged, so their events would carry that session's stale vendor_id even
+when genuinely investigating a different vendor. That's real, sanctioned
+cross-agent business logic, not the player-facing exploit this challenge
+is about. Any future reuse of this detector class MUST set agent_name
+explicitly in its own YAML rather than relying on an implicit default.
 """
 
 import json

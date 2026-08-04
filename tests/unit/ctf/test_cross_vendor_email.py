@@ -27,7 +27,6 @@
 
 import json
 import pytest
-from datetime import UTC, datetime
 
 from finbot.ctf.detectors.implementations.cross_vendor_email import (
     CrossVendorEmailDetector,
