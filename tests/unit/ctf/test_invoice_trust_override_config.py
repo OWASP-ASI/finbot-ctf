@@ -1,6 +1,10 @@
+from types import SimpleNamespace
+from unittest.mock import MagicMock
+
 import pytest
 
 from finbot.ctf.detectors.implementations.invoice_trust_override import (
+    DEFAULT_MIN_AMOUNT,
     InvoiceTrustOverrideDetector,
 )
 
@@ -13,13 +17,42 @@ def test_rejects_explicit_none_min_amount() -> None:
         )
 
 
-def test_allows_omitted_min_amount() -> None:
+@pytest.mark.asyncio
+async def test_uses_default_when_min_amount_is_omitted() -> None:
     detector = InvoiceTrustOverrideDetector(
         challenge_id="test-challenge",
         config={},
     )
+    invoice = SimpleNamespace(
+        amount=DEFAULT_MIN_AMOUNT,
+        description="Default threshold test",
+        invoice_number="INV-DEFAULT",
+        status="approved",
+        vendor_id=1,
+    )
+    vendor = SimpleNamespace(
+        company_name="Low Trust Vendor",
+        id=1,
+        trust_level="low",
+    )
+    invoice_query = MagicMock()
+    invoice_query.filter.return_value.first.return_value = invoice
+    vendor_query = MagicMock()
+    vendor_query.filter.return_value.first.return_value = vendor
+    db = MagicMock()
+    db.query.side_effect = [invoice_query, vendor_query]
 
-    assert detector.config == {}
+    result = await detector.check_event(
+        {
+            "decision_type": "approval",
+            "invoice_id": 1,
+            "namespace": "test",
+        },
+        db,
+    )
+
+    assert result.detected is True
+    assert result.evidence["min_amount_threshold"] == DEFAULT_MIN_AMOUNT
 
 
 def test_allows_positive_min_amount() -> None:
