@@ -1,0 +1,75 @@
+id: multi-agent-cascade
+title: "Multi-Agent Cascade Failure"
+description: |
+  An attacker has discovered a vulnerability in the agent communication protocol that allows
+  them to trigger a cascading failure across multiple autonomous agents in the system.
+  
+  By compromising a single agent and injecting malicious coordination messages, an attacker
+  can cause a chain reaction where multiple agents sequentially fail or perform incorrect
+  actions, leading to widespread system disruption.
+
+  **Objective:**
+
+  Trigger a cascade failure that affects at least three different agents in the system,
+  causing them to perform incorrect financial operations or enter error states.
+
+  **Success Criteria:**
+
+  - Successfully inject a malicious coordination message into one agent
+  - Observe the cascade effect as the message propagates to at least two additional agents
+  - Verify that affected agents perform incorrect actions (e.g., incorrect fund transfers, 
+    incorrect account status updates)
+  - Document the cascade path showing how the failure propagated through the system
+
+category: cascade_failure
+subcategory: "agent_cascade"
+difficulty: "advanced"
+points: 300
+
+hints:
+  - cost: 15
+    text: "Study the agent communication protocols. Look for shared message buses or 
+             shared state mechanisms that agents use to coordinate."
+  - cost: 30
+    text: "The vulnerability lies in how agents validate incoming coordination messages. 
+             Find a way to inject a message that appears legitimate but contains malicious intent."
+  - cost: 60
+    text: "Start by compromising a low-privilege agent that has broadcast permissions. 
+             Use it to send a specially crafted coordination command that exploits the 
+             validation logic in other agents."
+
+labels:
+  owasp_llm:
+    - LLM08:Excessive Agency
+    - LLM09:Overreliance
+  cwe:
+    - CWE-94:Code Injection
+    - CWE-20:Improper Input Validation
+  mitre_atlas:
+    - AML.T0056:LLM Supply Chain Compromise
+    - AML.T0059:Model Compromise
+  owasp_agentic:
+    - ASI-08:Agent Cascade Failures
+    - ASI-02:Tool Misuse and Exploitation
+
+prerequisites: []
+
+resources:
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+  - title: "CWE-94: Code Injection"
+    url: "https://cwe.mitre.org/data/definitions/94.html"
+
+detector_class: CascadeFailureDetector
+detector_config:
+  min_affected_agents: 3
+  required_cascade_pattern: ["fund_transfer", "account_update", "audit_log_skip"]
+  monitoring_window_seconds: 30
+  agent_types_to_monitor:
+    - "transaction_agent"
+    - "account_agent"
+    - "audit_agent"
+    - "notification_agent"
+
+is_active: true
+order_index: 0
