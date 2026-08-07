@@ -1,0 +1,174 @@
+site_name: AEGIS Documentation
+site_url: https://docs.aegis.example.com
+site_author: Aegis Security Systems
+site_description: Comprehensive security framework for agentic AI systems
+
+# Repository
+repo_url: https://github.com/aegis/framework
+repo_name: aegis/framework
+
+# Copyright
+copyright: Copyright &copy; 2026 Aegis Security Systems
+
+# Theme
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slash
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.top
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.footer
+    - navigation.path
+    - header.autohide
+    - announce.dismiss
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+  icon:
+    logo: material/shield-lock
+    repo: fontawesome/brands/github
+
+# Plugins
+plugins:
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - minify:
+      minify_html: true
+  - redirect-maps:
+      redirect_maps:
+        # Add redirects as needed
+        'getting-started.md': 'overview/getting_started.md'
+
+# Markdown Extensions
+markdown_extensions:
+  - toc:
+      permalink: true
+  - sane_lists
+  - attr_list
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - pymdownx.highlight:
+      anchorlinenums: true
+      line_numbers: true
+      show_language: false
+      line_padding: '12px 4px'
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.twemoji
+  - pymdownx.details
+  - pymdownx.progressbar
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+
+# Navigation
+nav:
+  - Home: index.md
+  - Overview:
+    - Introduction: overview/introduction.md
+    - Getting Started: overview/getting_started.md
+    - Use Cases: overview/use_cases.md
+    - Glossary: overview/glossary.md
+  - Architecture:
+    - System Design: ../docs/aegis_architecture.md
+    - Components: ../docs/components/index.md
+    - Data Flow: ../docs/aegis_architecture.md#data-flow
+    - Deployment Models: ../docs/aegis_architecture.md#deployment-models
+  - Security:
+    - Threat Model: ../docs/defender_playbook.md#common-attack-scenarios
+    - OWASP ASI Coverage: ../docs/defender_playbook.md#owasp-agentic-ai-security-top-10
+    - Best Practices: ../docs/defender_playbook.md#mitigation-strategies
+    - Compliance: overview/compliance.md
+  - Detection:
+    - Detector Overview: guides/detector_guide.md
+    - Creating Detectors: ../docs/challenge_authoring_guide.md#detector-implementation
+    - Detection Rules: guides/detection_rules.md
+    - Tuning Detection: guides/detection_tuning.md
+  - Response:
+    - Response Mechanisms: guides/response_guide.md
+    - Automated Responses: guides/automated_responses.md
+    - Manual Intervention: guides/manual_intervention.md
+    - Playbooks: ../docs/defender_playbook.md
+  - Operations:
+    - Installation: operations/installation.md
+    - Configuration: operations/configuration.md
+    - Monitoring: operations/monitoring.md
+    - Maintenance: operations/maintenance.md
+    - Troubleshooting: operations/troubleshooting.md
+    - Upgrades: operations/upgrades.md
+  - Integration:
+    - API Reference: ../docs/api_reference.md
+    - SDKs: integration/sdks.md
+    - Webhooks: integration/webhooks.md
+    - Plugins: integration/plugins.md
+    - SIEM Integration: integration/siem.md
+  - Guides:
+    - Challenge Authoring: ../docs/challenge_authoring_guide.md
+    - Incident Response: guides/incident_response.md
+    - Threat Hunting: guides/threat_hunting.md
+    - Performance Optimization: guides/performance_optimization.md
+  - References:
+    - FAQ: references/faq.md
+    - Release Notes: references/release_notes.md
+    - Security Advisories: references/security_advisories.md
+    - API Versions: references/api_versions.md
+    - Licensing: references/licensing.md
+
+# Extra
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/aegis/framework
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/aegisecurity
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/aegis-security
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/aegis
+  version:
+    provider: mktwo
+
+# Extra CSS and JavaScript
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+  - https://kit.fontawesome.com/yourkitid.js
+
+# Copyright
+copyright: |
+  <div class="md-typeset__footer">
+    Copyright &copy; 2026 <a href="https://aegis.example.com" target="_blank" rel="noopener">Aegis Security Systems</a><br>
+    Documentation built with <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">MkDocs Material</a>.
+  </div>
