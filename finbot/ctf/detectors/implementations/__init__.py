@@ -43,6 +43,24 @@ from finbot.ctf.detectors.implementations.vendor_risk_downplay import (
 from finbot.ctf.detectors.implementations.vendor_status_flip import (
     VendorStatusFlipDetector,
 )
+from finbot.ctf.detectors.implementations.agent_impersonation import (
+    AgentImpersonationDetector,
+)
+from finbot.ctf.detectors.implementations.document_injection import (
+    DocumentInjectionDetector,
+)
+from finbot.ctf.detectors.implementations.cross_agent_trust import (
+    CrossAgentTrustDetector,
+)
+from finbot.ctf.detectors.implementations.role_hijack import (
+    RoleHijackDetector,
+)
+from finbot.ctf.detectors.implementations.email_injection import (
+    EmailInjectionDetector,
+)
+from finbot.ctf.detectors.implementations.tool_output_injection import (
+    ToolOutputInjectionDetector,
+)
 
 __all__ = [
     "CrossVendorDeletionDetector",
@@ -59,4 +77,9 @@ __all__ = [
     "ToolPoisoningExfilDetector",
     "VendorRiskDownplayDetector",
     "VendorStatusFlipDetector",
+    "AgentImpersonationDetector",
+    "DocumentInjectionDetector",
+    "RoleHijackDetector",
+    "EmailInjectionDetector",
+    "ToolOutputInjectionDetector",
 ]

@@ -367,7 +367,19 @@ class ChatAssistantBase:
                 user_message=user_message,
             )
 
-            stream = await self._client.responses.create(**stream_params)
+            try:
+                stream = await self._client.responses.create(**stream_params)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.error("%s LLM call failed: %s", self.agent_name, e)
+                error_msg = (
+                    "\n\n---\n*Sorry, I ran into an error talking to the AI model "
+                    "and couldn't complete that request. Please try again in a "
+                    "moment.*"
+                )
+                full_response += error_msg
+                yield f"data: {json.dumps({'type': 'token', 'content': error_msg})}\n\n"
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+                break
 
             pending_tool_calls: list[dict] = []
 
