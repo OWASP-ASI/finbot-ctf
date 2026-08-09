@@ -21,9 +21,16 @@ DEFAULT_BACK = ("/", "Back to Home")
 
 
 def is_api_request(request: Request) -> bool:
-    """Determine if the request is for an API endpoint."""
-    return request.url.path.startswith("/api/")
+    """Determine if the request is for an API endpoint.
 
+    In mounted sub-apps (e.g. /vendor, /ctf, /admin), request.url.path
+    already includes the mount prefix, so a request to the vendor API
+    looks like "/vendor/api/v1/chat" rather than "/api/v1/chat". We
+    check for "/api/" as a path segment anywhere in the path so this
+    works both for mounted sub-apps and any routes handled directly
+    by the root app.
+    """
+    return "/api/" in request.url.path
 
 def get_portal_context(request: Request) -> dict:
     """Derive back_url and back_label from the request path.
