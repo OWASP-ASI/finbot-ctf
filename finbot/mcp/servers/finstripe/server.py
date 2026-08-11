@@ -136,6 +136,9 @@ def create_finstripe_server(
 
         Returns the most recent transfers ordered by creation date.
         """
+        if limit < 0:
+            return {"error": "limit must be zero or a positive integer"}
+
         with db_session() as db:
             repo = PaymentTransactionRepository(db, session_context)
             transactions = repo.list_for_vendor(vendor_id, limit=limit)
