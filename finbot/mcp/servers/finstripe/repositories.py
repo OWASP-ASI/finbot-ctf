@@ -53,6 +53,10 @@ class PaymentTransactionRepository(NamespacedRepository):
         limit: int = 50,
         offset: int = 0,
     ) -> list[PaymentTransaction]:
+        if limit < 0:
+            raise ValueError("limit must be zero or a positive integer")
+        if offset < 0:
+            raise ValueError("offset must be zero or a positive integer")
         return (
             self._add_namespace_filter(
                 self.db.query(PaymentTransaction), PaymentTransaction
