@@ -120,6 +120,8 @@ def create_finstripe_server(
         Returns the current available and pending balance for the specified account.
         """
         mock_balance = config.get("mock_balance", DEFAULT_CONFIG["mock_balance"])
+        if isinstance(mock_balance, bool) or not isinstance(mock_balance, (int, float)):
+            return {"error": "mock_balance is invalid: must be a number"}
         if mock_balance < 0:
             return {"error": "mock_balance is invalid: balance cannot be negative"}
         return {

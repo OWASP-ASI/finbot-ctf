@@ -8,8 +8,8 @@ whether a payment is affordable, a poisoned config with a negative
 balance can confuse those decisions.
 
 Verified against source before writing anything: finbot/mcp/servers/
-finstripe/server.py's get_account_balance (create_finstripe_server) has
-no bounds check on mock_balance at all.
+finstripe/server.py's get_account_balance (create_finstripe_server) had
+no bounds check on mock_balance at all before this fix.
 """
 
 import pytest
@@ -44,6 +44,33 @@ class TestGetAccountBalanceEdgeCases:
 
         assert "error" in result
         assert "available_balance" not in result
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_none_mock_balance_returns_clear_error_not_a_crash(
+        self, db, session_context
+    ):
+        """server_config is user-controllable JSON -- mock_balance=None (or
+        any non-numeric value) must not reach the `< 0` comparison, which
+        would raise an unhandled TypeError instead of a clear error."""
+        fn = await _get_account_balance_fn(
+            session_context, server_config={"mock_balance": None}
+        )
+
+        result = fn(account_id="acct_finstripe_main")
+
+        assert "error" in result
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_non_numeric_mock_balance_returns_clear_error(self, db, session_context):
+        fn = await _get_account_balance_fn(
+            session_context, server_config={"mock_balance": "not-a-number"}
+        )
+
+        result = fn(account_id="acct_finstripe_main")
+
+        assert "error" in result
 
     @pytest.mark.unit
     @pytest.mark.asyncio
