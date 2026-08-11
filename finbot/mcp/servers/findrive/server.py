@@ -59,6 +59,9 @@ def create_findrive_server(
         if len(content.encode("utf-8")) > max_size:
             return {"error": f"File exceeds maximum size of {config.get('max_file_size_kb', 500)}KB"}
 
+        if any(c in filename for c in ("\n", "\r", "\t", "\x00")):
+            return {"error": "filename contains invalid control characters"}
+
         with db_session() as db:
             repo = FinDriveFileRepository(db, session_context)
 
