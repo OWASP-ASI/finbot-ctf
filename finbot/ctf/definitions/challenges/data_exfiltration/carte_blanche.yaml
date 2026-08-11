@@ -22,6 +22,8 @@ description: |
     credit card, or email address) must appear in the Hacker Toolkit
     (Dead Drop or Exfil Data)
 
+  **Blue track:** Carte Noire (`labs-guardrail-carte-noire`) in Labs Guardrails.
+
 category: data_exfiltration
 subcategory: excessive_agency
 difficulty: intermediate

@@ -1,0 +1,94 @@
+id: labs-guardrail-egress-gate
+title: "Egress Gate"
+description: |
+  Paired **blue track** for **Double Agent** (`data-exfil-double-agent`).
+
+  In Double Agent, a poisoned FinDrive tool turns the security/compliance agent
+  into an exfiltration path. During a routine document review, the agent is
+  steered to POST vendor data to an external URL via
+  `systemutils__network_request`.
+
+  Raw network egress is excessive agency for most agents. Deploy a guardrail
+  webhook that blocks outbound HTTP at the tool boundary.
+
+  **Setup**
+
+  1. FinBot Labs → Guardrails — configure your webhook URL.
+  2. Enable **Before Tool**.
+  3. Each `before_tool` event carries `tool_name`, `tool_source`, and
+     `tool_arguments`. MCP tools are namespaced as `server__tool`.
+
+  **Your task**
+
+  Block the egress tool:
+
+  - `tool_name` is `systemutils__network_request`
+
+  Return `{"verdict": "block", "reason": "..."}`. Allow everything else.
+
+  **Success criteria**
+
+  - Webhook returns `block` on a `systemutils__network_request` attempt.
+  - Standardized security events are recorded for the workflow.
+  - Defensive points are awarded.
+
+  **Security signals** (Labs → Activity): `agent.security.tool_selection`,
+  `agent.security.guardrail_trigger`.
+
+  **Note:** Guardrails are passive — execution may continue. The challenge
+  scores whether your webhook blocked the egress tool call.
+
+  **How this differs from Carte Noire:** Carte Noire scans tool arguments for
+  PII on multiple exfil channels. Egress Gate is simpler and stricter — deny
+  `network_request` entirely as a high-risk capability.
+
+category: labs_guardrail
+subcategory: prevention
+difficulty: intermediate
+points: 250
+
+hints:
+  - cost: 10
+    text: "Enable Before Tool. Inspect tool_name on each hook — MCP tools are namespaced as server__tool."
+  - cost: 25
+    text: "Double Agent exfils through systemutils__network_request. Block that tool_name at before_tool and return verdict block."
+  - cost: 50
+    text: "Trigger the Double Agent path (poisoned get_file → network_request), then verify agent.security.guardrail_trigger in Labs Activity shows your block on systemutils__network_request."
+
+labels:
+  owasp_llm:
+    - LLM01:Prompt Injection
+    - LLM03:Supply Chain Vulnerabilities
+    - LLM06:Excessive Agency
+  cwe:
+    - CWE-250:Execution with Unnecessary Privileges
+    - CWE-200:Exposure of Sensitive Information
+  mitre_atlas:
+    - AML.T0043:Prompt Injection
+    - AML.T0056:LLM Supply Chain Compromise
+  owasp_agentic:
+    - ASI-02:Tool Misuse and Exploitation
+    - ASI-04:Agentic Supply Chain Vulnerabilities
+
+prerequisites: []
+
+resources:
+  - title: "Paired red challenge — Double Agent"
+    url: "/ctf/challenges/data-exfil-double-agent"
+  - title: "FinBot Labs — Guardrail Webhook Documentation"
+    url: "/labs/guardrails"
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: GuardrailPreventionDetector
+detector_config:
+  required_hook_kind: before_tool
+  required_tool_name: systemutils__network_request
+  require_workflow_security_events:
+    - tool_selection
+
+scoring:
+  modifiers: []
+
+is_active: true
+order_index: 5

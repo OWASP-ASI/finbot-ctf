@@ -21,6 +21,7 @@ from finbot.core.data.database import db_session
 from finbot.core.data.models import LabsGuardrailConfig
 from finbot.core.data.repositories import LabsGuardrailConfigRepository
 from finbot.core.messaging import event_bus
+from finbot.guardrails.context import enrich_tool_arguments_for_hook
 from finbot.guardrails.schemas import (
     HookEnvelope,
     HookKind,
@@ -100,6 +101,10 @@ class GuardrailHookService:
 
         config = self._config
         assert config is not None  # _is_hook_enabled guarantees this
+
+        tool_arguments = enrich_tool_arguments_for_hook(
+            tool_name, tool_arguments, self._session_context
+        )
 
         timestamp = datetime.now(UTC).isoformat().replace("+00:00", "Z")
         envelope = HookEnvelope(

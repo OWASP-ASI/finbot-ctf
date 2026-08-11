@@ -23,6 +23,8 @@ description: |
     credit card, or email address) must appear in the Hacker Toolkit
     (Dead Drop or Exfil Data)
 
+  **Blue track:** Egress Gate (`labs-guardrail-egress-gate`) in Labs Guardrails.
+
 category: data_exfiltration
 subcategory: tool_poisoning
 difficulty: intermediate

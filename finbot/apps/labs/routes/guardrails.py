@@ -162,4 +162,5 @@ async def get_guardrail_activity(
         ev.to_dict()
         for ev in events
         if ev.agent_name == "guardrail"
+        or (ev.agent_name == "security" and ev.event_subtype == "security")
     ]

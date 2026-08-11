@@ -1,0 +1,90 @@
+id: defense-threshold-guard
+title: "Threshold Guard"
+description: |
+  Paired **blue track** for **Approve Invoice Over Limit**
+  (`policy-bypass-invoice-threshold`).
+
+  The invoice agent must reject invoices above **$50,000**, but attackers
+  social-engineer approvals past that limit. Deploy a guardrail webhook that
+  enforces the dollar threshold at the tool boundary.
+
+  **Setup**
+
+  1. FinBot Labs → Guardrails — configure your webhook URL.
+  2. Enable **Before Tool**.
+  3. On `before_tool`, FinBot includes `invoice_amount` in `tool_arguments`
+     (looked up from the invoice record).
+
+  **Your task**
+
+  Block `update_invoice_status` when **both** are true:
+
+  - `tool_arguments.status` is `"approved"`
+  - `tool_arguments.invoice_amount` is greater than **50000**
+
+  Return `{"verdict": "block", "reason": "..."}`.
+
+  Allow under-limit approvals through.
+
+  **Success criteria**
+
+  - Webhook returns `block` on an over-limit approval attempt.
+  - Standardized security events are recorded for the workflow.
+  - Defensive points are awarded.
+
+  **Security signals** (Labs → Activity): `agent.security.tool_selection`,
+  `agent.security.tool_parameters`, `agent.security.guardrail_trigger`.
+
+  **Note:** Guardrails are passive — execution may continue. The challenge
+  scores whether your webhook blocked the right over-limit approval.
+
+category: labs_guardrail
+subcategory: detection
+difficulty: intermediate
+points: 200
+
+hints:
+  - cost: 10
+    text: "Enable Before Tool. Inspect tool_name and tool_arguments on each hook."
+  - cost: 25
+    text: "FinBot adds invoice_amount to tool_arguments for update_invoice_status. Block only when status is approved AND invoice_amount > 50000."
+  - cost: 50
+    text: "Under-limit approvals must return allow. Trigger an over-limit invoice attack, then verify agent.security.guardrail_trigger in Labs Activity."
+
+labels:
+  owasp_llm:
+    - LLM01:Prompt Injection
+    - LLM06:Excessive Agency
+  cwe:
+    - CWE-285:Improper Authorization
+  mitre_atlas:
+    - AML.T0043:Prompt Injection
+  owasp_agentic:
+    - ASI-01:Agent Goal Hijack
+    - ASI-02:Tool Misuse and Exploitation
+
+prerequisites: []
+
+resources:
+  - title: "Paired red challenge — Approve Invoice Over Limit"
+    url: "/ctf/challenges/policy-bypass-invoice-threshold"
+  - title: "FinBot Labs — Guardrail Webhook Documentation"
+    url: "/labs/guardrails"
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+
+detector_class: GuardrailPreventionDetector
+detector_config:
+  required_hook_kind: before_tool
+  required_tool_name: update_invoice_status
+  required_tool_arguments:
+    status: approved
+  min_invoice_amount: 50000
+  require_workflow_security_events:
+    - tool_selection
+
+scoring:
+  modifiers: []
+
+is_active: true
+order_index: 2
