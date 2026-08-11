@@ -1,14 +1,25 @@
 """Tests for FinStripe's list_transfers limit validation.
 
-GitHub issue #330 (Bug_121_MUST_FIX, MCP-LIST-006): list_transfers passes
+GitHub issue #330 (Bug_121_MUST_FIX, MCP-LIST-006): list_transfers passed
 `limit` straight through to the repository's query with no bounds check
-at all -- a negative limit produces undefined database behavior instead
+at all -- a negative limit produced undefined database behavior instead
 of a clear, diagnosable error.
 
 Verified against source before writing anything: finbot/mcp/servers/
-finstripe/server.py's list_transfers (create_finstripe_server) has no
-validation on `limit`; it flows straight into PaymentTransactionRepository
-.list_for_vendor's SQLAlchemy .limit(limit) call.
+finstripe/server.py's list_transfers (create_finstripe_server) had no
+validation on `limit` before this fix; it flowed straight into
+PaymentTransactionRepository.list_for_vendor's SQLAlchemy .limit(limit)
+call.
+
+Per Copilot's review on PR #565: the original fix only guarded the MCP
+tool layer, but PaymentTransactionRepository.list_for_vendor is a shared
+repository with other real callers -- finbot/apps/vendor/routes/api.py's
+GET /payments/transactions route takes `limit`/`offset` directly as
+user-controlled query parameters with no validation of its own, and was
+still reachable with a negative limit even after the MCP-only fix.
+Moved the authoritative guard down into list_for_vendor itself (covering
+both limit and offset, since offset has the identical gap) so every
+caller is protected, not just the MCP tool.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -17,6 +28,7 @@ import pytest
 
 from finbot.core.auth.session import session_manager
 from finbot.core.data.repositories import InvoiceRepository, VendorRepository
+from finbot.mcp.servers.finstripe.repositories import PaymentTransactionRepository
 from finbot.mcp.servers.finstripe.server import create_finstripe_server
 
 
@@ -121,3 +133,33 @@ class TestListTransfersEdgeCases:
 
         assert "error" not in result
         assert result["count"] == 1
+
+
+class TestPaymentTransactionRepositoryBoundsGuard:
+    """The authoritative fix lives here, not just in the MCP tool wrapper --
+    every caller of list_for_vendor goes through this same guard,
+    including finbot/apps/vendor/routes/api.py's GET /payments/transactions
+    route, which takes limit/offset directly as user-controlled query
+    parameters."""
+
+    @pytest.mark.unit
+    def test_list_for_vendor_raises_on_negative_limit(self, db, session_context):
+        repo = PaymentTransactionRepository(db, session_context)
+
+        with pytest.raises(ValueError, match="limit"):
+            repo.list_for_vendor(vendor_id=1, limit=-1)
+
+    @pytest.mark.unit
+    def test_list_for_vendor_raises_on_negative_offset(self, db, session_context):
+        repo = PaymentTransactionRepository(db, session_context)
+
+        with pytest.raises(ValueError, match="offset"):
+            repo.list_for_vendor(vendor_id=1, limit=10, offset=-1)
+
+    @pytest.mark.unit
+    def test_list_for_vendor_allows_zero_limit_and_offset(self, db, session_context):
+        repo = PaymentTransactionRepository(db, session_context)
+
+        result = repo.list_for_vendor(vendor_id=1, limit=0, offset=0)
+
+        assert result == []

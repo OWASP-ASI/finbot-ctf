@@ -815,9 +815,12 @@ async def get_payment_transactions(
 
     with db_session() as db:
         txn_repo = PaymentTransactionRepository(db, session_context)
-        transactions = txn_repo.list_for_vendor(
-            session_context.current_vendor_id, limit=limit, offset=offset
-        )
+        try:
+            transactions = txn_repo.list_for_vendor(
+                session_context.current_vendor_id, limit=limit, offset=offset
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
 
         return {
             "transactions": [t.to_dict() for t in transactions],
