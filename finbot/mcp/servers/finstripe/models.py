@@ -27,6 +27,7 @@ class PaymentTransaction(Base):
     vendor_id = Column[int](Integer, ForeignKey("vendors.id"), nullable=False)
 
     transfer_id = Column[str](String(100), unique=True, nullable=False, index=True)
+    vendor_account = Column[str](String(100), nullable=True)
     amount = Column[float](Float, nullable=False)
     currency = Column[str](String(10), nullable=False, default="usd")
     payment_method = Column[str](String(50), nullable=False)
@@ -68,6 +69,7 @@ class PaymentTransaction(Base):
             "invoice_id": self.invoice_id,
             "vendor_id": self.vendor_id,
             "transfer_id": self.transfer_id,
+            "vendor_account": self.vendor_account,
             "amount": self.amount,
             "currency": self.currency,
             "payment_method": self.payment_method,

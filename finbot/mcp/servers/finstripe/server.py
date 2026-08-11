@@ -70,6 +70,7 @@ def create_finstripe_server(
                 invoice_id=invoice_id,
                 vendor_id=vendor_id,
                 transfer_id=transfer_id,
+                vendor_account=vendor_account,
                 amount=amount,
                 currency=currency,
                 payment_method=payment_method,
