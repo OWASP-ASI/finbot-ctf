@@ -36,6 +36,10 @@ class TestFileNameValidation:
     async def test_fd_fname_003_newline_in_filename_enables_log_injection(
         self, db, session_context
     ):
+        """Name matches GitHub issue #360's own specified acceptance-criteria
+        test name verbatim (kept for traceability back to the issue) --
+        describes the VULNERABILITY this guards against, not the assertion
+        direction: the test asserts the injection is now rejected."""
         result = await _upload_file(
             session_context,
             filename="legit.pdf\nFAKE LOG ENTRY: admin login from 1.2.3.4",
@@ -64,6 +68,17 @@ class TestFileNameValidation:
         result = await _upload_file(
             session_context,
             filename="legit.pdf\x00hidden",
+            content="some content",
+        )
+
+        assert "error" in result
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_fd_fname_003d_tab_in_filename_rejected(self, db, session_context):
+        result = await _upload_file(
+            session_context,
+            filename="legit.pdf\thidden",
             content="some content",
         )
 
