@@ -397,6 +397,11 @@ class Invoice(Base):
             except (ValueError, TypeError):
                 pass
 
+        if self.invoice_date is None:
+            raise ValueError(f"Invoice {self.id} has no invoice_date set")
+        if self.due_date is None:
+            raise ValueError(f"Invoice {self.id} has no due_date set")
+
         return {
             "id": self.id,
             "namespace": self.namespace,
