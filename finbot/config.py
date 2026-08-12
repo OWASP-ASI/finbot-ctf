@@ -94,6 +94,10 @@ class Settings(BaseSettings):
     # Event Bus Config
     EVENT_BUFFER_SIZE: int = 10000
 
+    # Agent Rate Limiting Config
+    AGENT_RATE_LIMIT_MAX: int = 10
+    AGENT_RATE_LIMIT_WINDOW_SECONDS: int = 60
+
     # LLM Config
     LLM_PROVIDER: str = "openai"
     LLM_DEFAULT_MODEL: str = "gpt-5-nano"
