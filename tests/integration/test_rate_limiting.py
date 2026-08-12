@@ -5,8 +5,8 @@ Tests verify that:
 - Requests within the limit are allowed through
 - Requests exceeding the limit receive HTTP 429
 - Different namespaces have independent counters
-- Redis errors fail closed with HTTP 503
-- INCR and EXPIRE are executed atomically via pipeline
+- INCR and expiry are applied atomically via a single Lua script call
+- The limiter fails open if Redis is unavailable
 """
 
 import pytest
@@ -31,15 +31,10 @@ def make_session_context(namespace: str) -> SessionContext:
 
 
 def make_mock_redis(current_count: int, ttl: int = 30):
-    """Create a mock Redis client returning the given counter value via pipeline."""
+    """Create a mock Redis client whose eval() (the atomic INCR+EXPIRE
+    Lua script) returns the given counter value."""
     mock_redis = MagicMock()
-    mock_pipeline = MagicMock()
-    mock_pipeline.__aenter__ = AsyncMock(return_value=mock_pipeline)
-    mock_pipeline.__aexit__ = AsyncMock(return_value=False)
-    mock_pipeline.incr = AsyncMock()
-    mock_pipeline.expire = AsyncMock()
-    mock_pipeline.execute = AsyncMock(return_value=[current_count, True])
-    mock_redis.pipeline = MagicMock(return_value=mock_pipeline)
+    mock_redis.eval = AsyncMock(return_value=current_count)
     mock_redis.ttl = AsyncMock(return_value=ttl)
     return mock_redis
 
@@ -52,9 +47,12 @@ async def test_first_request_is_allowed():
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
         mock_bus.redis = mock_redis
+        # Should not raise
         await check_agent_rate_limit(session_context=session_context)
 
-    mock_redis.pipeline.assert_called_once()
+    mock_redis.eval.assert_called_once()
+    args = mock_redis.eval.call_args[0]
+    assert args[2] == "finbot:ratelimit:ns_test_001:agent"
 
 
 @pytest.mark.asyncio
@@ -65,6 +63,7 @@ async def test_request_within_limit_is_allowed():
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
         mock_bus.redis = mock_redis
+        # Should not raise
         await check_agent_rate_limit(session_context=session_context)
 
 
@@ -72,10 +71,11 @@ async def test_request_within_limit_is_allowed():
 async def test_request_at_exact_limit_is_allowed():
     """A request exactly at the limit (count == max) should still be allowed."""
     session_context = make_session_context("ns_test_003")
-    mock_redis = make_mock_redis(current_count=10)
+    mock_redis = make_mock_redis(current_count=10)  # default max is 10
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
         mock_bus.redis = mock_redis
+        # Should not raise - count 10 == max 10, still allowed
         await check_agent_rate_limit(session_context=session_context)
 
 
@@ -92,6 +92,7 @@ async def test_request_exceeding_limit_raises_429():
 
     assert exc_info.value.status_code == 429
     assert "45" in exc_info.value.detail
+    assert exc_info.value.headers.get("Retry-After") == "45"
 
 
 @pytest.mark.asyncio
@@ -106,9 +107,26 @@ async def test_429_detail_contains_useful_info():
             await check_agent_rate_limit(session_context=session_context)
 
     detail = exc_info.value.detail
-    assert "15" in detail
-    assert "10" in detail
-    assert "30" in detail
+    assert "15" in detail   # current count
+    assert "10" in detail   # max requests
+    assert "30" in detail   # ttl / wait time
+
+
+@pytest.mark.asyncio
+async def test_negative_ttl_falls_back_to_window_seconds():
+    """If Redis returns a negative TTL (-1 or -2), the reported wait
+    time should fall back to the configured window length instead of
+    showing a confusing negative number."""
+    session_context = make_session_context("ns_test_009")
+    mock_redis = make_mock_redis(current_count=12, ttl=-1)
+
+    with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
+        mock_bus.redis = mock_redis
+        with pytest.raises(HTTPException) as exc_info:
+            await check_agent_rate_limit(session_context=session_context)
+
+    assert "60" in exc_info.value.detail  # falls back to window_seconds
+    assert exc_info.value.headers.get("Retry-After") == "60"
 
 
 @pytest.mark.asyncio
@@ -119,22 +137,17 @@ async def test_different_namespaces_are_independent():
 
     called_keys = []
 
-    mock_redis_a = make_mock_redis(current_count=1)
-    mock_redis_b = make_mock_redis(current_count=1)
-
-    async def capture_incr_a(key):
+    async def fake_eval(script, numkeys, key, *args):
         called_keys.append(key)
+        return 1
 
-    async def capture_incr_b(key):
-        called_keys.append(key)
-
-    mock_redis_a.pipeline.return_value.__aenter__.return_value.incr = capture_incr_a
-    mock_redis_b.pipeline.return_value.__aenter__.return_value.incr = capture_incr_b
+    mock_redis = MagicMock()
+    mock_redis.eval = fake_eval
+    mock_redis.ttl = AsyncMock(return_value=60)
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
-        mock_bus.redis = mock_redis_a
+        mock_bus.redis = mock_redis
         await check_agent_rate_limit(session_context=session_a)
-        mock_bus.redis = mock_redis_b
         await check_agent_rate_limit(session_context=session_b)
 
     assert "finbot:ratelimit:ns_aaa:agent" in called_keys
@@ -143,52 +156,41 @@ async def test_different_namespaces_are_independent():
 
 
 @pytest.mark.asyncio
-async def test_expire_always_set_in_pipeline():
-    """Redis expire should always be called in the pipeline on every request."""
+async def test_incr_and_expire_are_atomic_via_single_eval_call():
+    """INCR and EXPIRE must happen atomically in one Lua script call
+    (not as two separate round trips), so there is no window where a
+    crash could leave a key incremented but without a TTL."""
     session_context = make_session_context("ns_test_006")
-    mock_redis = make_mock_redis(current_count=5)
-
-    with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
-        mock_bus.redis = mock_redis
-        await check_agent_rate_limit(session_context=session_context)
-
-    mock_redis.pipeline.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_pipeline_execute_called():
-    """Pipeline execute should be called on every request."""
-    session_context = make_session_context("ns_test_007")
     mock_redis = make_mock_redis(current_count=1)
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
         mock_bus.redis = mock_redis
         await check_agent_rate_limit(session_context=session_context)
 
-    pipe = mock_redis.pipeline.return_value.__aenter__.return_value
-    pipe.execute.assert_called_once()
+    # Exactly one Redis round trip for the increment+expire, every time,
+    # regardless of whether this is the first request in the window.
+    mock_redis.eval.assert_called_once()
+    args = mock_redis.eval.call_args[0]
+    assert args[1] == 1  # numkeys
+    assert args[2] == "finbot:ratelimit:ns_test_006:agent"
+    assert args[3] == 60  # window_seconds passed as ARGV[1]
 
 
 @pytest.mark.asyncio
-async def test_redis_failure_returns_503():
-    """If Redis is unavailable, the request should be blocked with HTTP 503 (fail closed)."""
+async def test_redis_failure_allows_request_through():
+    """If Redis is unavailable, the request should be allowed through
+    (fail open). This is a deliberate design choice: rate limiting is
+    a soft quota guard, not an auth/security control, so a Redis outage
+    should not take down agent endpoints entirely."""
     session_context = make_session_context("ns_test_008")
 
     mock_redis = MagicMock()
-    mock_pipeline = MagicMock()
-    mock_pipeline.__aenter__ = AsyncMock(return_value=mock_pipeline)
-    mock_pipeline.__aexit__ = AsyncMock(return_value=False)
-    mock_pipeline.incr = AsyncMock()
-    mock_pipeline.expire = AsyncMock()
-    mock_pipeline.execute = AsyncMock(side_effect=ConnectionError("Redis unavailable"))
-    mock_redis.pipeline = MagicMock(return_value=mock_pipeline)
+    mock_redis.eval = AsyncMock(side_effect=ConnectionError("Redis unavailable"))
 
     with patch("finbot.core.ratelimit.limiter.event_bus") as mock_bus:
         mock_bus.redis = mock_redis
-        with pytest.raises(HTTPException) as exc_info:
-            await check_agent_rate_limit(session_context=session_context)
-
-    assert exc_info.value.status_code == 503
+        # Should NOT raise - fail open behavior
+        await check_agent_rate_limit(session_context=session_context)
 
 
 @pytest.mark.asyncio
@@ -201,7 +203,5 @@ async def test_redis_key_format():
         mock_bus.redis = mock_redis
         await check_agent_rate_limit(session_context=session_context)
 
-    pipe = mock_redis.pipeline.return_value.__aenter__.return_value
-    pipe.incr.assert_called_once_with(
-        "finbot:ratelimit:ns_vendor_xyz:agent"
-    )
+    args = mock_redis.eval.call_args[0]
+    assert args[2] == "finbot:ratelimit:ns_vendor_xyz:agent"
