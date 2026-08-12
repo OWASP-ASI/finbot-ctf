@@ -1,17 +1,43 @@
 """
 Agent Rate Limiter
+
 Provides per-namespace rate limiting for agent-triggering endpoints.
 Uses a fixed-window counter stored in Redis, reusing the existing
 EventBus Redis connection.
+
+INCR and EXPIRE are executed atomically via a Lua script (EVAL), so
+there is no window between the two operations where a crash could
+leave a key with no TTL.
+
+Design choice: fails OPEN if Redis is unavailable (allows the request
+through rather than blocking it). This is deliberate - rate limiting
+here is a soft quota guard on LLM usage, not a security/auth control,
+so an availability outage in Redis should not take down agent
+endpoints (chat, onboarding, invoices) entirely. See PR discussion on
+#532 for the fail-open vs fail-closed trade-off.
 """
 import logging
+
 from fastapi import Depends, HTTPException
+
 from finbot.config import settings
 from finbot.core.messaging.events import event_bus
 from finbot.core.auth.middleware import get_session_context
 from finbot.core.auth.session import SessionContext
 
 logger = logging.getLogger(__name__)
+
+# Atomically increments the counter and sets the expiry only on the
+# key's first increment in the window, in a single round trip. This
+# removes the INCR/EXPIRE race entirely (no separate fallback check
+# is needed, unlike a plain INCR + conditional EXPIRE).
+_INCR_AND_EXPIRE_SCRIPT = """
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count
+"""
 
 
 async def check_agent_rate_limit(
@@ -37,18 +63,8 @@ async def check_agent_rate_limit(
             logger.warning("Rate limiter: Redis not initialized, allowing request through")
             return
 
-        # Increment the counter for this namespace
-        count = await redis.incr(key)
-
-        # On the first request in a window, set the expiry
-        if count == 1:
-            await redis.expire(key, window_seconds)
-        else:
-            # Protect against orphaned keys from a previous crash
-            # (incr succeeded but expire was never called)
-            ttl_check = await redis.ttl(key)
-            if ttl_check == -1:
-                await redis.expire(key, window_seconds)
+        # Atomic increment + conditional expiry via Lua script
+        count = await redis.eval(_INCR_AND_EXPIRE_SCRIPT, 1, key, window_seconds)
 
         logger.debug(
             "Rate limit check: namespace=%s count=%d max=%d",
@@ -60,11 +76,9 @@ async def check_agent_rate_limit(
         if count > max_requests:
             # Get remaining TTL to report in the error message
             ttl = await redis.ttl(key)
-
             # Guard against negative TTL values (-1 = no expiry, -2 = key gone)
             if ttl < 0:
                 ttl = window_seconds
-
             # Include Retry-After header in the 429 response
             raise HTTPException(
                 status_code=429,
@@ -75,10 +89,11 @@ async def check_agent_rate_limit(
                 ),
                 headers={"Retry-After": str(ttl)},
             )
-
     except HTTPException:
         raise
     except Exception as e:
         # If Redis is unavailable, log and allow the request through
-        # rather than blocking all users due to an infrastructure issue
+        # rather than blocking all users due to an infrastructure issue.
+        # This is a deliberate fail-open design choice - see module
+        # docstring for reasoning.
         logger.error("Rate limit check failed (Redis error): %s", e)
