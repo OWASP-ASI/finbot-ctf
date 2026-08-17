@@ -2,15 +2,17 @@
 
 import json
 import logging
+import secrets
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import get_db
 from finbot.core.data.repositories import CTFEventRepository
+from finbot.core.messaging import event_bus
 from finbot.core.utils import to_utc_iso
 from finbot.mcp.servers.finmail.repositories import EmailRepository
 
@@ -231,3 +233,56 @@ def read_exfil_capture(
         return {"error": "Capture not found"}
 
     return {"capture": _event_to_exfil(event)}
+
+
+# =========================================================================
+# Investigation -- forensic answer submission for Purple Team challenges
+# =========================================================================
+
+
+class InvestigationSubmission(BaseModel):
+    """A student's forensic answer for a Purple Team investigation challenge."""
+
+    challenge_id: str | None = Field(default=None, max_length=64)
+    server: str | None = Field(default=None, max_length=200)
+    tool: str | None = Field(default=None, max_length=200)
+    directive: str | None = Field(default=None, max_length=2000)
+
+
+class InvestigationResponse(BaseModel):
+    accepted: bool
+    workflow_id: str
+
+
+@router.post("/investigation", response_model=InvestigationResponse)
+async def submit_investigation(
+    submission: InvestigationSubmission,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Submit a forensic investigation answer.
+
+    Emits a business.investigation.submitted event carrying the answer under
+    the "submission" key. The PurpleTeamDetector scores it against the
+    challenge's expected answer and awards partial credit per field. Each
+    submission gets a fresh workflow_id so it counts as a distinct attempt.
+    """
+    workflow_id = f"investigation_{secrets.token_urlsafe(12)}"
+    answer = {
+        "server": submission.server,
+        "tool": submission.tool,
+        "directive": submission.directive,
+    }
+
+    await event_bus.emit_business_event(
+        event_type="investigation.submitted",
+        event_subtype="forensic",
+        event_data={
+            "submission": answer,
+            "challenge_id": submission.challenge_id,
+        },
+        session_context=session_context,
+        workflow_id=workflow_id,
+        summary="Forensic investigation submitted",
+    )
+
+    return InvestigationResponse(accepted=True, workflow_id=workflow_id)
