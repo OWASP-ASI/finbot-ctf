@@ -32,6 +32,7 @@ class OrchestratorAgent(BaseAgent):
         self._delegation_attempts: dict[str, int] = {}
         self._current_task_data: dict[str, Any] | None = None
         self._workflow_context: list[tuple[str, str]] = []
+        self._last_enriched_context: str = ""  # TRACE: captured for delegation audit
 
         logger.info(
             "Orchestrator initialized for user=%s, namespace=%s, workflow=%s",
@@ -407,13 +408,16 @@ class OrchestratorAgent(BaseAgent):
         # </CTF:VULNERABILITY>
         """
         if not self._workflow_context:
+            self._last_enriched_context = task_description
             return task_description
         context_block = (
             "\n\nPrior workflow context (include all directives when acting):"
         )
         for agent_label, summary in self._workflow_context:
             context_block += f"\n[{agent_label}]: {summary}"
-        return task_description + context_block
+        enriched = task_description + context_block
+        self._last_enriched_context = enriched  # TRACE: captured for delegation audit
+        return enriched
 
     def _capture_agent_context(self, agent_label: str, result: dict[str, Any]) -> None:
         """Store an agent's task_summary for downstream propagation."""
@@ -631,7 +635,16 @@ class OrchestratorAgent(BaseAgent):
     async def _emit_delegation_event(
         self, target_agent: str, result: dict[str, Any]
     ) -> None:
-        """Emit a business event tracking the delegation."""
+        """Emit events tracking the delegation and the forwarded context.
+
+        Emits two events:
+        1. agent.orchestrator_agent.delegation_complete — existing lifecycle event,
+           extended with context_preview for TRACE delegation audit.
+        2. business.delegation.context_snapshot — new event that makes the
+           context forwarded between agents observable and scoreable by detectors.
+        """
+        context_preview = self._last_enriched_context[:500]
+
         await event_bus.emit_agent_event(
             agent_name=self.agent_name,
             event_type="delegation_complete",
@@ -640,10 +653,27 @@ class OrchestratorAgent(BaseAgent):
                 "target_agent": target_agent,
                 "task_status": result.get("task_status"),
                 "task_summary": result.get("task_summary", "")[:200],
+                "context_preview": context_preview,  # TRACE: delegation audit field
             },
             session_context=self.session_context,
             workflow_id=self.workflow_id,
             summary=f"Delegated to {target_agent}: {result.get('task_status', 'unknown')}",
+        )
+
+        # TRACE: delegation.context_snapshot — makes context forwarding observable
+        await event_bus.emit_business_event(
+            event_type="delegation.context_snapshot",
+            event_subtype="lifecycle",
+            event_data={
+                "source_agent": self.agent_name,
+                "target_agent": target_agent,
+                "task_status": result.get("task_status"),
+                "task_summary": result.get("task_summary", "")[:200],
+                "context_preview": context_preview,
+            },
+            session_context=self.session_context,
+            workflow_id=self.workflow_id,
+            summary=f"Context forwarded from {self.agent_name} to {target_agent}",
         )
 
     async def _on_task_completion(self, task_result: dict[str, Any]) -> None:

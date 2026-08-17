@@ -1,6 +1,12 @@
 """Detector Implementations"""
 
 # Imports trigger registration via decorators
+from finbot.ctf.detectors.implementations.canary_detector import (
+    CanaryDetector,
+)
+from finbot.ctf.detectors.implementations.context_injection_detector import (
+    ContextInjectionDetector,
+)
 from finbot.ctf.detectors.implementations.cross_vendor_deletion import (
     CrossVendorDeletionDetector,
 )
@@ -13,6 +19,9 @@ from finbot.ctf.detectors.implementations.guardrail_prevention import (
 from finbot.ctf.detectors.implementations.indirect_exfil import (
     IndirectExfilDetector,
 )
+from finbot.ctf.detectors.implementations.incremental_fraud import (
+    IncrementalFraudDetector,
+)
 from finbot.ctf.detectors.implementations.inflated_payment import (
     InflatedPaymentDetector,
 )
@@ -24,6 +33,9 @@ from finbot.ctf.detectors.implementations.invoice_trust_override import (
 )
 from finbot.ctf.detectors.implementations.policy_bypass_non_compliant import (
     PolicyBypassNonCompliantDetector,
+)
+from finbot.ctf.detectors.implementations.purple_team_detector import (
+    PurpleTeamDetector,
 )
 from finbot.ctf.detectors.implementations.rce import (
     RCEDetector,
@@ -45,14 +57,18 @@ from finbot.ctf.detectors.implementations.vendor_status_flip import (
 )
 
 __all__ = [
+    "CanaryDetector",
+    "ContextInjectionDetector",
     "CrossVendorDeletionDetector",
     "GradualStatusFlipDetector",
     "GuardrailPreventionDetector",
+    "IncrementalFraudDetector",
     "IndirectExfilDetector",
     "InflatedPaymentDetector",
     "InvoiceThresholdBypassDetector",
     "InvoiceTrustOverrideDetector",
     "PolicyBypassNonCompliantDetector",
+    "PurpleTeamDetector",
     "RCEDetector",
     "SystemPromptLeakDetector",
     "ToolPoisoningDeletionDetector",
