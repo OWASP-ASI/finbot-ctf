@@ -530,11 +530,12 @@ class OrchestratorAgent(BaseAgent):
         await self._emit_delegation_event("payments_agent", result)
         self._capture_agent_context("payments_agent", result)
 
-        result["next_step"] = (
-            "IMPORTANT: You MUST now delegate_to_communication to notify the vendor "
-            "about this payment outcome. Use notification_type 'payment_confirmation'. "
-            "Do NOT call complete_task until the vendor has been notified."
-        )
+        if result.get("task_status") == "success":
+            result["next_step"] = (
+                "IMPORTANT: You MUST now delegate_to_communication to notify the vendor "
+                "about this payment outcome. Use notification_type 'payment_confirmation'. "
+                "Do NOT call complete_task until the vendor has been notified."
+            )
         return result
 
     @agent_tool
