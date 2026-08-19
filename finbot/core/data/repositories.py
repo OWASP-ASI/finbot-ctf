@@ -1,8 +1,10 @@
 """Data Repositories for FinBot CTF Platform"""
 
+import asyncio
 import ipaddress
 import json
 import secrets
+import socket
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
@@ -1287,11 +1289,54 @@ _BLOCKED_NETWORKS = [
     ipaddress.ip_network("172.16.0.0/12"),
     ipaddress.ip_network("192.168.0.0/16"),
     ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("100.64.0.0/10"),  # RFC 6598 carrier-grade NAT -- used by
+    # several cloud providers for internal-only service traffic.
     ipaddress.ip_network("0.0.0.0/8"),
     ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("::/128"),  # unspecified IPv6; connect() to it behaves like
+    # loopback on some stacks, same reasoning as blocking 0.0.0.0/8 above.
     ipaddress.ip_network("fc00::/7"),
     ipaddress.ip_network("fe80::/10"),
 ]
+
+# Known, accepted gap: the deprecated IPv4-compatible IPv6 form (::127.0.0.1,
+# distinct from the IPv4-*mapped* ::ffff:127.0.0.1 form handled below) and the
+# NAT64 well-known prefix (64:ff9b::/96, which can embed an IPv4 address) are
+# not unwrapped here. Real-world exploitability is low -- the deprecated form
+# isn't routed by most modern kernels, and NAT64 requires the deployment to
+# actually run a NAT64 gateway -- but note it if extending this further.
+
+
+def _blocked_network_hit(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    if isinstance(addr, ipaddress.IPv6Address) and addr.ipv4_mapped is not None:
+        addr = addr.ipv4_mapped
+    return any(addr in net for net in _BLOCKED_NETWORKS)
+
+
+def _hostname_resolves_to_blocked_address(hostname: str) -> str | None:
+    """Resolve hostname and check every returned address against
+    _BLOCKED_NETWORKS -- not just a literal IP typed directly into the URL.
+    Returns an error message if blocked/unresolvable, else None.
+
+    This catches DNS-based SSRF: a hostname that isn't itself an IP literal
+    but resolves to a loopback/private/link-local address (e.g. a domain an
+    attacker controls the DNS for, pointed at 127.0.0.1 or the cloud
+    metadata endpoint 169.254.169.254).
+    """
+    try:
+        addrinfo = socket.getaddrinfo(hostname, None)
+    except (socket.gaierror, OSError, UnicodeError):
+        # gaierror/OSError: resolution failure. UnicodeError: malformed
+        # hostname (e.g. an overlong label the idna codec rejects) --
+        # confirmed socket.getaddrinfo raises UnicodeEncodeError, not
+        # gaierror, for that case.
+        return f"Could not resolve hostname '{hostname}'"
+
+    for _family, _type, _proto, _canonname, sockaddr in addrinfo:
+        addr = ipaddress.ip_address(sockaddr[0])
+        if _blocked_network_hit(addr):
+            return f"Hostname '{hostname}' resolves to a blocked address ({sockaddr[0]})"
+    return None
 
 
 def validate_webhook_url(url: str) -> tuple[bool, str | None]:
@@ -1329,11 +1374,16 @@ def validate_webhook_url(url: str) -> tuple[bool, str | None]:
 
         try:
             addr = ipaddress.ip_address(hostname)
-            for net in _BLOCKED_NETWORKS:
-                if addr in net:
-                    return False, f"IP address {hostname} is in a blocked range"
         except ValueError:
-            pass
+            # Not a literal IP -- resolve it and check every address it
+            # points at, so a hostname can't be used to bypass the check
+            # a bare IP literal would have failed.
+            err = _hostname_resolves_to_blocked_address(hostname)
+            if err:
+                return False, err
+        else:
+            if _blocked_network_hit(addr):
+                return False, f"IP address {hostname} is in a blocked range"
 
     if not parsed.port and parsed.scheme == "https":
         pass
@@ -1343,6 +1393,33 @@ def validate_webhook_url(url: str) -> tuple[bool, str | None]:
         return False, f"Port {parsed.port} is not in the allowed range (1024-65535)"
 
     return True, None
+
+
+_WEBHOOK_VALIDATION_TIMEOUT_SECONDS = 2.0
+
+
+async def validate_webhook_url_async(
+    url: str, *, timeout: float = _WEBHOOK_VALIDATION_TIMEOUT_SECONDS
+) -> tuple[bool, str | None]:
+    """Async wrapper around validate_webhook_url for use from async call sites.
+
+    validate_webhook_url can perform a real DNS lookup (socket.getaddrinfo),
+    which is a synchronous, unbounded call with no built-in per-call timeout
+    in the stdlib. Called directly from an async context, a slow or
+    non-responding attacker-controlled DNS server would block the entire
+    event loop -- not just the caller's own request, every concurrent
+    session on that worker -- for as long as the OS resolver takes to give
+    up (often well past 30s). This offloads the check to a worker thread and
+    bounds the wait, so the event loop is freed up immediately on timeout
+    even though the worker thread itself may still be blocked on DNS in the
+    background (threads can't be forcibly killed in Python).
+    """
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(validate_webhook_url, url), timeout=timeout
+        )
+    except asyncio.TimeoutError:
+        return False, "Timed out validating webhook URL"
 
 
 # =============================================================================
@@ -1379,14 +1456,26 @@ class LabsGuardrailConfigRepository(NamespacedRepository):
         hooks: dict[str, bool] | None = None,
         timeout_seconds: int = 5,
         enabled: bool = True,
+        *,
+        skip_url_validation: bool = False,
     ) -> tuple[LabsGuardrailConfig, bool]:
         """Create or update guardrail config for the current user.
 
+        skip_url_validation: set when the caller has already validated
+        webhook_url itself (e.g. via the async pre-check in the route
+        handler, which is timeout-bounded off the event loop). Re-running
+        the synchronous check here would perform a second, unbounded DNS
+        resolution while holding an open DB session -- worse than a bare
+        blocking call, and pure redundant work for a caller that already
+        validated. Callers that have NOT already validated (any other/future
+        caller of this repository method) get the check by default.
+
         Returns (config, created) where created=True if a new row was inserted.
         """
-        valid, err = validate_webhook_url(webhook_url)
-        if not valid:
-            raise ValueError(err)
+        if not skip_url_validation:
+            valid, err = validate_webhook_url(webhook_url)
+            if not valid:
+                raise ValueError(err)
 
         if hooks is not None:
             unknown = set(hooks.keys()) - self.VALID_HOOK_KINDS

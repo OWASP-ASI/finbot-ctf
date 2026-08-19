@@ -149,6 +149,35 @@ class TestWebhookInvocation:
 
     @pytest.mark.asyncio
     @patch("finbot.guardrails.service.event_bus")
+    async def test_rejects_webhook_url_resolving_to_blocked_address(
+        self, mock_bus, monkeypatch
+    ):
+        """Defense-in-depth against DNS rebinding (issue #535): even a
+        webhook_url that passed validation at registration time is
+        re-checked immediately before the actual outbound request. If its
+        hostname now resolves to a blocked address, the request must never
+        be made at all."""
+        mock_bus.emit_agent_event = AsyncMock()
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=[(2, 1, 6, "", ("127.0.0.1", 443))],
+        ), patch(
+            "httpx.AsyncClient.post", new_callable=AsyncMock
+        ) as mock_post:
+            svc = self._make_service()
+            outcome = await svc.invoke(
+                HookKind.before_tool, tool_name="approve_invoice"
+            )
+
+        mock_post.assert_not_called()
+        assert outcome == HookOutcome.error
+        call_kwargs = mock_bus.emit_agent_event.call_args.kwargs
+        assert "blocked" in call_kwargs["event_data"]["error_detail"].lower()
+
+    @pytest.mark.asyncio
+    @patch("finbot.guardrails.service.event_bus")
     async def test_block_verdict(self, mock_bus):
         mock_bus.emit_agent_event = AsyncMock()
 

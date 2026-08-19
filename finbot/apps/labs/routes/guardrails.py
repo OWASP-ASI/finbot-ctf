@@ -9,6 +9,7 @@ from finbot.core.data.database import db_session
 from finbot.core.data.repositories import (
     CTFEventRepository,
     LabsGuardrailConfigRepository,
+    validate_webhook_url_async,
 )
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
@@ -63,6 +64,16 @@ async def upsert_guardrail_config(
     session_context: SessionContext = Depends(get_session_context),
 ):
     """Create or update the guardrail webhook configuration."""
+    # Validated here first, off the event loop with a bounded timeout --
+    # validate_webhook_url can perform a real DNS lookup, which is a
+    # synchronous, unbounded call with no built-in timeout. repo.upsert()
+    # is told to skip its own internal check below: re-running it would be
+    # a second, unbounded DNS resolution while holding an open DB session,
+    # which is worse than what we're fixing, not better.
+    valid, err = await validate_webhook_url_async(body.webhook_url)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
+
     with db_session() as db:
         repo = LabsGuardrailConfigRepository(db, session_context)
         try:
@@ -71,6 +82,7 @@ async def upsert_guardrail_config(
                 hooks=body.hooks,
                 timeout_seconds=body.timeout_seconds,
                 enabled=body.enabled,
+                skip_url_validation=True,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
