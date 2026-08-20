@@ -90,6 +90,58 @@ def get_cache_path(cache_key: str) -> Path:
     return CACHE_DIR / f"{cache_key}.png"
 
 
+def _profile_card_cache_key(
+    username: str,
+    total_points: int,
+    badges_earned: int,
+    challenges_completed: int,
+    avatar_type: str | None,
+    avatar_url: str | None,
+    avatar_emoji: str | None,
+    user_email: str | None,
+    bio: str | None,
+    earned_badge_ids: list[str],
+    featured_badge_ids: list[str],
+) -> str:
+    """Build the cache key for a rendered profile share-card.
+
+    Must include every field that affects the rendered image, not just
+    the point/badge/challenge counts -- otherwise two profiles (or the
+    same profile before/after an avatar or bio change) that happen to
+    share the same stats collide on the same cached file, and one user's
+    card gets served to the other, or a stale card is served forever
+    until stats next change.
+
+    avatar_type == "gravatar" resolves its image from user_email (see
+    resolve_avatar_url in profile.py), not from avatar_url -- omitting
+    user_email from the key would leave that specific case still
+    collision-prone even with avatar_url/avatar_emoji/bio included.
+
+    earned_badge_ids and featured_badge_ids are needed too, not just
+    their counts: a user can re-curate which earned badges are featured
+    (PUT /featured-badges) with no change to total_points/badges_earned/
+    challenges_completed, which would otherwise leave the card
+    permanently stale after a re-curation. Same reasoning covers
+    "latest badge" staleness if badge composition changes at an
+    unchanged total count. earned_badge_ids is sorted (composition, not
+    order, is what matters there); featured_badge_ids is kept in its
+    given order, since the card renders featured badges in the order
+    the user chose.
+    """
+    # \x1f (unit separator) rather than "," -- badge IDs are developer-
+    # defined slugs (e.g. "first-blood"), never user input, so a comma
+    # can't appear in practice, but this removes even the theoretical
+    # ["a,b"] + ["c"] vs. ["a"] + ["b,c"] ambiguity for free.
+    sep = "\x1f"
+    cache_data = (
+        f"{username}:{total_points}:{badges_earned}:{challenges_completed}"
+        f":{avatar_type or ''}:{avatar_url or ''}:{avatar_emoji or ''}"
+        f":{user_email or ''}:{bio or ''}"
+        f":{sep.join(sorted(earned_badge_ids))}:{sep.join(featured_badge_ids)}"
+    )
+    return hashlib.sha256(cache_data.encode()).hexdigest()
+
+
 async def _fetch_avatar_b64(url: str) -> str:
     """Fetch a remote avatar image and return it as a base64 data URI.
 
@@ -284,10 +336,19 @@ async def get_profile_card(
     if html and settings.DEBUG:
         return HTMLResponse(_render_html("profile_card.html", template_context))
 
-    cache_data = (
-        f"{username}:{total_points}:{len(earned_badges)}:{len(completed_progress)}"
+    cache_key = _profile_card_cache_key(
+        username=username,
+        total_points=total_points,
+        badges_earned=len(earned_badges),
+        challenges_completed=len(completed_progress),
+        avatar_type=profile.avatar_type,
+        avatar_url=profile.avatar_url,
+        avatar_emoji=profile.avatar_emoji,
+        user_email=user.email,
+        bio=profile.bio,
+        earned_badge_ids=earned_badge_ids,
+        featured_badge_ids=featured_ids,
     )
-    cache_key = hashlib.md5(cache_data.encode()).hexdigest()
     cache_path = get_cache_path(cache_key)
 
     if cache_path.exists():
