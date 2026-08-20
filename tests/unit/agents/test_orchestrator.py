@@ -8,11 +8,11 @@
 #
 # Note on the fix: the issue's own suggested patch checked
 # `task_status == "completed"`. That value does not exist in this codebase --
-# verified against finbot/agents/base.py:373-376, where the complete_task
-# tool schema declares `"enum": ["success", "failed"]`. "completed" is never
-# a valid task_status anywhere in the agent framework. Checking for it would
-# make next_step never fire, even on genuine success, silently breaking the
-# legitimate vendor-notification handoff. The correct guard is
+# verified against BaseAgent's complete_task tool schema (finbot/agents/
+# base.py), which declares `"enum": ["success", "failed"]`. "completed" is
+# never a valid task_status anywhere in the agent framework. Checking for it
+# would make next_step never fire, even on genuine success, silently
+# breaking the legitimate vendor-notification handoff. The correct guard is
 # `task_status == "success"`.
 
 import pytest

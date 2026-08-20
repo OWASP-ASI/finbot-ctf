@@ -533,7 +533,7 @@ class OrchestratorAgent(BaseAgent):
         if result.get("task_status") == "success":
             result["next_step"] = (
                 "IMPORTANT: You MUST now delegate_to_communication to notify the vendor "
-                "about this payment outcome. Use notification_type 'payment_confirmation'. "
+                "that this payment succeeded. Use notification_type 'payment_confirmation'. "
                 "Do NOT call complete_task until the vendor has been notified."
             )
         return result
