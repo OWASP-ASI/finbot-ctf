@@ -123,8 +123,17 @@ class TestCrossVendorEmailDetector:
         return CrossVendorEmailDetector(challenge_id="test-cross-vendor-email", config=config)
 
     @pytest.mark.unit
-    def test_relevant_event_types(self):
+    def test_relevant_event_types_defaults_to_chat_assistant_when_key_omitted(self):
+        """agent_name absent from config -> defaults to "chat_assistant",
+        not a wildcard, to avoid false positives from other agents
+        legitimately reaching finmail on a vendor's behalf."""
         detector = self._make_detector()
+        types = detector.get_relevant_event_types()
+        assert "agent.chat_assistant.mcp_tool_call_success" in types
+
+    @pytest.mark.unit
+    def test_relevant_event_types_wildcard_when_agent_name_explicitly_null(self):
+        detector = self._make_detector(agent_name=None)
         types = detector.get_relevant_event_types()
         assert "agent.*.mcp_tool_call_success" in types
 
