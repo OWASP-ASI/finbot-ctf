@@ -166,6 +166,19 @@ class BaseAgent(ABC):
                                     )
                                     logger.debug("Function output: %s", function_output)
                                     if tool_call_name == "complete_task":
+                                        # Fire after_tool before returning --
+                                        # otherwise complete_task is the one
+                                        # tool call that never gets a
+                                        # matching after_tool, leaving any
+                                        # guardrail that pairs before/after
+                                        # events seeing it as open-ended.
+                                        await self._guardrail_service.invoke(
+                                            HookKind.after_tool,
+                                            tool_name=tool_call_name,
+                                            tool_source=tool_source,
+                                            tool_arguments=tool_call.get("arguments"),
+                                            tool_result=str(function_output),
+                                        )
                                         # this will end the agent loop and
                                         # return the task status and summary
                                         await self.log_task_completion(
