@@ -1078,4 +1078,172 @@ class TestBaseAgentFramework:
         print(f"✓ BAF-COM-001: AC3 - Errors: recovered from {len(metrics['errors'])}")
         print(f"✓ BAF-COM-001: AC4 - Tools: {len(tools)} registered")
         print(f"✓ BAF-COM-001: AC5 - process() returned success")
+
+
+# ==============================================================================
+# Guardrail hooks around tool calls (issue #525)
+# ==============================================================================
+# before_tool fires for every tool call including the internal complete_task
+# control-flow tool -- but complete_task returns immediately on success,
+# bypassing the after_tool invocation that every other tool call gets. A
+# guardrail that pairs before_tool/after_tool events (e.g. to measure tool
+# execution time or verify output) would see every complete_task call appear
+# open-ended, with no matching after_tool.
+
+
+from unittest.mock import AsyncMock, patch
+
+from finbot.core.data.models import LLMResponse
+from finbot.guardrails.schemas import HookKind
+
+
+class _AgentLoopTestAgent(BaseAgent):
+    """Minimal concrete BaseAgent for exercising the real _run_agent_loop,
+    including its async _get_user_prompt -- distinct from ConcreteTestAgent
+    above, whose _get_user_prompt is not async and was never actually run
+    through _run_agent_loop by any existing test."""
+
+    def _load_config(self) -> dict:
+        return {}
+
+    def _get_system_prompt(self) -> str:
+        return "You are a test agent."
+
+    async def _get_user_prompt(self, task_data: dict[str, Any] | None = None) -> str:
+        return "Test task"
+
+    def _get_tool_definitions(self) -> list[dict[str, Any]]:
+        return []
+
+    def _get_callables(self) -> dict[str, Callable[..., Any]]:
+        return {}
+
+    async def process(self, task_data: dict[str, Any], **kwargs) -> dict[str, Any]:
+        return await self._run_agent_loop(task_data=task_data)
+
+
+class TestGuardrailHooksAroundToolCalls:
+
+    def _create_session_context(self, email: str) -> SessionContext:
+        session = session_manager.create_session(email=email, user_agent="TestAgent/1.0")
+        created_at = datetime.now(UTC)
+        return SessionContext(
+            session_id=session.session_id,
+            user_id=f"user_{email.split('@')[0]}",
+            email=email,
+            namespace=f"user_{email.split('@')[0]}",
+            is_temporary=False,
+            created_at=created_at,
+            expires_at=created_at + timedelta(hours=24),
+        )
+
+    def _make_agent(self, email: str) -> _AgentLoopTestAgent:
+        return _AgentLoopTestAgent(session_context=self._create_session_context(email))
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_after_tool_fires_for_complete_task(self):
+        """The actual bug: this must include a before_tool/after_tool pair
+        for complete_task, not just before_tool."""
+        agent = self._make_agent("guardrail_hooks_1@example.com")
+        agent._guardrail_service.invoke = AsyncMock(return_value=None)
+
+        llm_response = LLMResponse(
+            content=None,
+            tool_calls=[{
+                "name": "complete_task",
+                "call_id": "call_1",
+                "arguments": {"task_status": "success", "task_summary": "done"},
+            }],
+        )
+
+        with patch("finbot.agents.base.event_bus") as mock_bus, \
+             patch("finbot.core.llm.contextual_client.event_bus", mock_bus), \
+             patch(
+                 "finbot.core.llm.contextual_client.ContextualLLMClient.chat",
+                 new_callable=AsyncMock,
+                 return_value=llm_response,
+             ):
+            mock_bus.emit_agent_event = AsyncMock()
+            mock_bus.emit_business_event = AsyncMock()
+            mock_bus.set_workflow_context = lambda *a, **kw: None
+            result = await agent._run_agent_loop(task_data={})
+
+        assert result["task_status"] == "success"
+
+        hook_kinds_fired = [
+            call.args[0] if call.args else call.kwargs.get("kind")
+            for call in agent._guardrail_service.invoke.call_args_list
+        ]
+        assert HookKind.before_tool in hook_kinds_fired
+        assert HookKind.after_tool in hook_kinds_fired
+
+        after_tool_calls = [
+            call for call in agent._guardrail_service.invoke.call_args_list
+            if (call.args[0] if call.args else call.kwargs.get("kind")) == HookKind.after_tool
+        ]
+        assert len(after_tool_calls) == 1
+        assert after_tool_calls[0].kwargs["tool_name"] == "complete_task"
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_after_tool_still_fires_for_normal_tools(self):
+        """Regression guard: fixing complete_task's missing after_tool must
+        not change behavior for ordinary tool calls, which already fire
+        after_tool correctly today."""
+
+        class AgentWithOneTool(_AgentLoopTestAgent):
+            def _get_tool_definitions(self):
+                return [{
+                    "type": "function",
+                    "name": "do_something",
+                    "description": "test tool",
+                    "parameters": {"type": "object", "properties": {}},
+                }]
+
+            def _get_callables(self):
+                return {"do_something": self._do_something}
+
+            async def _do_something(self):
+                return {"result": "ok"}
+
+        agent = AgentWithOneTool(
+            session_context=self._create_session_context("guardrail_hooks_2@example.com")
+        )
+        agent._guardrail_service.invoke = AsyncMock(return_value=None)
+
+        responses = [
+            LLMResponse(
+                content=None,
+                tool_calls=[{"name": "do_something", "call_id": "call_1", "arguments": {}}],
+            ),
+            LLMResponse(
+                content=None,
+                tool_calls=[{
+                    "name": "complete_task",
+                    "call_id": "call_2",
+                    "arguments": {"task_status": "success", "task_summary": "done"},
+                }],
+            ),
+        ]
+
+        with patch("finbot.agents.base.event_bus") as mock_bus, \
+             patch("finbot.core.llm.contextual_client.event_bus", mock_bus), \
+             patch(
+                 "finbot.core.llm.contextual_client.ContextualLLMClient.chat",
+                 new_callable=AsyncMock,
+                 side_effect=responses,
+             ):
+            mock_bus.emit_agent_event = AsyncMock()
+            mock_bus.emit_business_event = AsyncMock()
+            mock_bus.set_workflow_context = lambda *a, **kw: None
+            await agent._run_agent_loop(task_data={})
+
+        tool_names_after_tool = [
+            call.kwargs["tool_name"]
+            for call in agent._guardrail_service.invoke.call_args_list
+            if (call.args[0] if call.args else call.kwargs.get("kind")) == HookKind.after_tool
+        ]
+        assert tool_names_after_tool.count("do_something") == 1
+        assert tool_names_after_tool.count("complete_task") == 1
         print(f"✓ BAF-COM-001: ALL ACCEPTANCE CRITERIA MET")

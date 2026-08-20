@@ -7,6 +7,7 @@ execution on the verdict.
 
 import hashlib
 import hmac
+import json
 import logging
 import time
 from datetime import UTC, datetime
@@ -29,6 +30,64 @@ from finbot.guardrails.schemas import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Fields large enough to realistically push a hook envelope over the
+# payload byte limit. Truncated in this order if the envelope is oversized.
+_TRUNCATABLE_STRING_FIELDS = ("tool_result", "user_message", "model_output")
+
+
+def _truncate_envelope_for_payload_limit(
+    envelope: HookEnvelope, max_payload: int
+) -> HookEnvelope:
+    """Return a copy of envelope with its long variable-size fields
+    truncated individually, targeting at most max_payload bytes, rather
+    than slicing the already-serialized JSON bytes.
+
+    Raw byte-slicing a serialized JSON body can cut a multi-byte UTF-8
+    character or a string/object literal in half, producing a body that
+    is neither valid UTF-8 nor valid JSON -- while an HMAC signature
+    computed over those broken bytes still "validates" fine, since the
+    receiver has no way to detect the corruption from the signature
+    alone. Truncating the Python string values themselves before
+    serialization is always safe: json.dumps re-escapes correctly no
+    matter where a string is cut -- the result is always valid JSON.
+
+    Not an absolute size guarantee: if max_payload is smaller than the
+    envelope's own fixed-field overhead (schema_version, hook_kind,
+    session_id, workflow_id, tool_name, tool_source, timestamp), the
+    returned envelope can still exceed max_payload even with every
+    truncatable field emptied. LABS_GUARDRAIL_MAX_PAYLOAD_BYTES defaults
+    to 64 KiB, far above that overhead, so this is not reachable with the
+    default config -- only with a misconfigured, unrealistically small
+    override. Still always returns valid JSON either way.
+    """
+    if len(envelope.model_dump_json().encode()) <= max_payload:
+        return envelope
+
+    truncated = envelope.model_copy()
+
+    # A dict can't be safely character-truncated without risking invalid
+    # JSON -- replace it with a small, valid marker instead. Keep the
+    # top-level key names (not values) so a receiver can still see which
+    # arguments existed, useful for correlating/auditing the call even
+    # without the actual (possibly large) values.
+    if truncated.tool_arguments is not None:
+        original_size = len(json.dumps(truncated.tool_arguments).encode())
+        truncated.tool_arguments = {
+            "_truncated": True,
+            "original_size_bytes": original_size,
+            "keys": list(truncated.tool_arguments.keys()),
+        }
+
+    for field_name in _TRUNCATABLE_STRING_FIELDS:
+        if len(truncated.model_dump_json().encode()) <= max_payload:
+            break
+        value = getattr(truncated, field_name)
+        while value and len(truncated.model_dump_json().encode()) > max_payload:
+            value = value[: len(value) // 2]
+            setattr(truncated, field_name, value)
+
+    return truncated
 
 
 class GuardrailHookService:
@@ -91,8 +150,48 @@ class GuardrailHookService:
         """Fire a passive guardrail hook.
 
         Returns the outcome for informational purposes — callers must
-        NOT branch on the outcome (execution always proceeds).
+        NOT branch on the outcome (execution always proceeds). This method
+        is guaranteed to never raise: any failure in its own plumbing
+        (config load, envelope construction, truncation, signing, or the
+        HTTP call itself) is caught and reported as HookOutcome.error, so
+        a bug or outage in guardrail delivery can never affect the
+        success/failure of the tool call or task it's observing -- callers
+        (e.g. the agent loop's own try/except around a tool call) must be
+        free to place this call wherever is natural without worrying about
+        it masking or corrupting an unrelated outcome.
         """
+        try:
+            return await self._invoke(
+                kind,
+                tool_name=tool_name,
+                tool_source=tool_source,
+                tool_arguments=tool_arguments,
+                tool_result=tool_result,
+                model=model,
+                user_message=user_message,
+                model_output=model_output,
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.error(
+                "Unhandled guardrail invoke() failure: hook=%s tool=%s: %s",
+                kind.value,
+                tool_name,
+                exc,
+            )
+            return HookOutcome.error
+
+    async def _invoke(
+        self,
+        kind: HookKind,
+        *,
+        tool_name: str | None = None,
+        tool_source: str | None = None,
+        tool_arguments: dict[str, Any] | None = None,
+        tool_result: str | None = None,
+        model: str | None = None,
+        user_message: str | None = None,
+        model_output: str | None = None,
+    ) -> HookOutcome:
         if not self._is_hook_enabled(kind):
             return (
                 HookOutcome.no_config if not self._config else HookOutcome.hook_disabled
@@ -116,19 +215,20 @@ class GuardrailHookService:
             timestamp=timestamp,
         )
 
-        body_bytes = envelope.model_dump_json().encode()
-
         max_payload = settings.LABS_GUARDRAIL_MAX_PAYLOAD_BYTES
-        if len(body_bytes) > max_payload:
+        original_size = len(envelope.model_dump_json().encode())
+        was_truncated = original_size > max_payload
+        if was_truncated:
+            envelope = _truncate_envelope_for_payload_limit(envelope, max_payload)
             logger.info(
                 "guardrail payload truncated: %d -> %d bytes, hook=%s tool=%s",
-                len(body_bytes),
-                max_payload,
+                original_size,
+                len(envelope.model_dump_json().encode()),
                 kind.value,
                 tool_name,
             )
-            body_bytes = body_bytes[:max_payload]
 
+        body_bytes = envelope.model_dump_json().encode()
         signature = self._sign_payload(body_bytes, config.signing_secret, timestamp)
 
         headers = {
@@ -136,6 +236,8 @@ class GuardrailHookService:
             "X-Guardrail-Signature": signature,
             "X-Guardrail-Timestamp": timestamp,
         }
+        if was_truncated:
+            headers["X-Guardrail-Truncated"] = "true"
 
         start = time.monotonic()
         outcome: HookOutcome
