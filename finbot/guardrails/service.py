@@ -19,7 +19,10 @@ from finbot.config import settings
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.models import LabsGuardrailConfig
-from finbot.core.data.repositories import LabsGuardrailConfigRepository
+from finbot.core.data.repositories import (
+    LabsGuardrailConfigRepository,
+    validate_webhook_url_async,
+)
 from finbot.core.messaging import event_bus
 from finbot.guardrails.schemas import (
     HookEnvelope,
@@ -145,6 +148,14 @@ class GuardrailHookService:
         error_detail: str | None = None
 
         try:
+            # Re-validated here (not just at registration time) as a second
+            # layer against DNS rebinding: a hostname that resolved to a
+            # public address when the webhook was registered could resolve
+            # to an internal address by the time this hook actually fires.
+            valid, err = await validate_webhook_url_async(config.webhook_url)
+            if not valid:
+                raise ValueError(err)
+
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
                     config.webhook_url,

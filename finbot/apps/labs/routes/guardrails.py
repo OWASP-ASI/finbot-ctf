@@ -3,12 +3,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from finbot.core.auth.middleware import get_session_context
+from finbot.core.auth.middleware import (
+    get_authenticated_session_context,
+    get_session_context,
+)
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import (
     CTFEventRepository,
     LabsGuardrailConfigRepository,
+    validate_webhook_url_async,
 )
 from finbot.guardrails.schemas import HookKind
 from finbot.guardrails.service import GuardrailHookService
@@ -60,9 +64,19 @@ async def get_guardrail_config(
 @router.put("", response_model=GuardrailConfigResponse, status_code=200)
 async def upsert_guardrail_config(
     body: GuardrailConfigRequest,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Create or update the guardrail webhook configuration."""
+    # Validated here first, off the event loop with a bounded timeout --
+    # validate_webhook_url can perform a real DNS lookup, which is a
+    # synchronous, unbounded call with no built-in timeout. repo.upsert()
+    # is told to skip its own internal check below: re-running it would be
+    # a second, unbounded DNS resolution while holding an open DB session,
+    # which is worse than what we're fixing, not better.
+    valid, err = await validate_webhook_url_async(body.webhook_url)
+    if not valid:
+        raise HTTPException(status_code=422, detail=err)
+
     with db_session() as db:
         repo = LabsGuardrailConfigRepository(db, session_context)
         try:
@@ -71,6 +85,7 @@ async def upsert_guardrail_config(
                 hooks=body.hooks,
                 timeout_seconds=body.timeout_seconds,
                 enabled=body.enabled,
+                skip_url_validation=True,
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -82,7 +97,7 @@ async def upsert_guardrail_config(
 
 @router.post("/toggle", response_model=GuardrailConfigResponse)
 async def toggle_guardrail_enabled(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Toggle the enabled flag on the guardrail config."""
     with db_session() as db:
@@ -99,7 +114,7 @@ async def toggle_guardrail_enabled(
 
 @router.post("/rotate-secret", response_model=GuardrailConfigResponse)
 async def rotate_signing_secret(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Rotate the HMAC signing secret."""
     with db_session() as db:
@@ -116,7 +131,7 @@ async def rotate_signing_secret(
 
 @router.delete("", status_code=204)
 async def delete_guardrail_config(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Delete the guardrail webhook configuration."""
     with db_session() as db:
@@ -130,7 +145,7 @@ async def delete_guardrail_config(
 
 @router.post("/test")
 async def test_webhook_delivery(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Send a test before_tool hook to the user's webhook and return the result."""
     svc = GuardrailHookService(

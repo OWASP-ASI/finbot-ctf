@@ -1,12 +1,24 @@
 """Tests for Labs guardrail config: SSRF validation + repository CRUD."""
 
+import socket
+from unittest.mock import patch
+
 import pytest
 
 from finbot.core.auth.session import session_manager
 from finbot.core.data.repositories import (
     LabsGuardrailConfigRepository,
     validate_webhook_url,
+    validate_webhook_url_async,
 )
+
+
+def _fake_addrinfo(*ip_strs: str):
+    """Build a socket.getaddrinfo-shaped return value for the given IPs."""
+    return [
+        (2, 1, 6, "", (ip, 443)) if ":" not in ip else (10, 1, 6, "", (ip, 443, 0, 0))
+        for ip in ip_strs
+    ]
 
 
 # =============================================================================
@@ -79,6 +91,180 @@ class TestValidateWebhookUrl:
         assert ok is False
         assert expected_fragment.lower() in err.lower()
 
+    def test_hostname_resolving_to_blocked_ip_is_rejected_in_production(self, monkeypatch):
+        """DNS-based SSRF bypass: a hostname is not itself a literal IP, so
+        the pre-fix check (ipaddress.ip_address(hostname)) would silently
+        pass it through unchecked. It must still be blocked once it
+        actually resolves to an internal address."""
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("127.0.0.1"),
+        ):
+            ok, err = validate_webhook_url("https://attacker-controlled.example/hook")
+        assert ok is False
+        assert "blocked" in err.lower()
+
+    def test_hostname_resolving_to_metadata_ip_is_rejected_in_production(self, monkeypatch):
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("169.254.169.254"),
+        ):
+            ok, err = validate_webhook_url("https://looks-legit.example/hook")
+        assert ok is False
+        assert "blocked" in err.lower()
+
+    def test_hostname_with_one_safe_and_one_unsafe_resolved_ip_is_rejected(self, monkeypatch):
+        """If ANY resolved address is unsafe, reject -- an attacker (or a
+        multi-homed/round-robin DNS setup) can control which address the
+        actual outbound request happens to use."""
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("8.8.8.8", "127.0.0.1"),
+        ):
+            ok, err = validate_webhook_url("https://mixed.example/hook")
+        assert ok is False
+
+    def test_hostname_resolving_to_public_ip_is_allowed_in_production(self, monkeypatch):
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("8.8.8.8"),
+        ):
+            ok, err = validate_webhook_url("https://real-webhook-receiver.example/hook")
+        assert ok is True
+        assert err is None
+
+    def test_unresolvable_hostname_is_rejected_in_production(self, monkeypatch):
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            side_effect=socket.gaierror("Name or service not known"),
+        ):
+            ok, err = validate_webhook_url("https://does-not-exist.invalid/hook")
+        assert ok is False
+        assert "resolve" in err.lower()
+
+    def test_ipv4_mapped_ipv6_private_address_is_rejected_in_production(self, monkeypatch):
+        """::ffff:10.0.0.5 is IPv4-mapped IPv6 -- must unwrap and check the
+        underlying IPv4 address, not just the IPv6 shell."""
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("::ffff:10.0.0.5"),
+        ):
+            ok, err = validate_webhook_url("https://mapped.example/hook")
+        assert ok is False
+
+    def test_overlong_hostname_rejected_cleanly_in_production(self, monkeypatch):
+        """socket.getaddrinfo raises UnicodeEncodeError (a UnicodeError
+        subclass), not socket.gaierror, for a hostname whose label is too
+        long for the idna codec -- confirmed directly against the real
+        stdlib, not assumed. Must be rejected with a clean error, not an
+        unhandled exception."""
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        ok, err = validate_webhook_url(f"https://{'x' * 300}.example/hook")
+        assert ok is False
+        assert "resolve" in err.lower()
+
+    def test_hostname_resolution_not_triggered_in_debug_mode(self):
+        """DEBUG mode's local-testing carve-out must still short-circuit
+        before any DNS resolution happens -- no behavior change for the
+        existing, intentional local-dev workflow."""
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo"
+        ) as mock_getaddrinfo:
+            ok, err = validate_webhook_url("https://anything.example/hook")
+        assert ok is True
+        mock_getaddrinfo.assert_not_called()
+
+
+# =============================================================================
+# Async wrapper -- offloads DNS resolution off the event loop, bounded by a
+# timeout. See finbot/core/data/repositories.py:validate_webhook_url_async.
+# =============================================================================
+
+
+class TestValidateWebhookUrlAsync:
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_delegates_to_sync_validator_for_safe_url(self, monkeypatch):
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            return_value=_fake_addrinfo("8.8.8.8"),
+        ):
+            ok, err = await validate_webhook_url_async("https://real.example/hook")
+        assert ok is True
+        assert err is None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_delegates_to_sync_validator_for_unsafe_url(self, monkeypatch):
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        ok, err = await validate_webhook_url_async("https://127.0.0.1/hook")
+        assert ok is False
+        assert "blocked" in err.lower()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_does_not_block_the_event_loop(self, monkeypatch):
+        """The core DoS fix: a slow resolution must not block other
+        concurrently-scheduled coroutines on the same event loop. Run a
+        slow validation alongside a trivial coroutine and confirm the
+        trivial one completes first -- proof the slow call actually ran on
+        a separate thread rather than inline on the event loop."""
+        import asyncio
+        import time
+
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+
+        def _slow_getaddrinfo(*args, **kwargs):
+            time.sleep(0.2)
+            return _fake_addrinfo("8.8.8.8")
+
+        order: list[str] = []
+
+        async def _trivial():
+            await asyncio.sleep(0)
+            order.append("trivial")
+
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            side_effect=_slow_getaddrinfo,
+        ):
+            async def _slow():
+                await validate_webhook_url_async("https://slow.example/hook")
+                order.append("slow")
+
+            await asyncio.gather(_slow(), _trivial())
+
+        assert order == ["trivial", "slow"]
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_times_out_on_slow_resolution(self, monkeypatch):
+        import time
+
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+
+        def _hanging_getaddrinfo(*args, **kwargs):
+            time.sleep(1.0)
+            return _fake_addrinfo("8.8.8.8")
+
+        with patch(
+            "finbot.core.data.repositories.socket.getaddrinfo",
+            side_effect=_hanging_getaddrinfo,
+        ):
+            ok, err = await validate_webhook_url_async(
+                "https://hangs.example/hook", timeout=0.05
+            )
+        assert ok is False
+        assert "timed out" in err.lower()
+
 
 # =============================================================================
 # Repository CRUD
@@ -126,6 +312,20 @@ class TestLabsGuardrailConfigRepository:
         monkeypatch.setattr("finbot.config.settings.DEBUG", False)
         with pytest.raises(ValueError, match="blocked range"):
             self.repo.upsert(webhook_url="https://127.0.0.1/hook")
+
+    def test_upsert_skip_url_validation_bypasses_the_check(self, monkeypatch):
+        """skip_url_validation is for callers (the route handler) that
+        already validated the URL themselves via the async, timeout-bounded
+        pre-check -- re-running the sync check here would be a second,
+        unbounded DNS resolution performed while holding an open DB
+        session. Default (skip_url_validation=False) must still validate,
+        confirmed by test_upsert_rejects_ssrf_url above."""
+        monkeypatch.setattr("finbot.config.settings.DEBUG", False)
+        config, created = self.repo.upsert(
+            webhook_url="https://127.0.0.1/hook", skip_url_validation=True
+        )
+        assert created is True
+        assert config.webhook_url == "https://127.0.0.1/hook"
 
     def test_upsert_rejects_unknown_hook_kinds(self):
         with pytest.raises(ValueError, match="Unknown hook kinds"):
