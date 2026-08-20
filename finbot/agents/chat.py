@@ -702,22 +702,32 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
             "start_workflow": self._call_start_workflow,
         }
 
-    async def _call_get_vendor_details(self, vendor_id: int) -> str:
+    async def _call_get_vendor_details(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         result = await get_vendor_details(vendor_id, self.session_context)
         return json.dumps(result)
 
-    async def _call_get_invoice_details(self, invoice_id: int) -> str:
+    async def _call_get_invoice_details(self, invoice_id: int | None) -> str:
+        if invoice_id is None:
+            return json.dumps({"error": "invoice_id is required"})
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
 
-    async def _call_get_vendor_invoices(self, vendor_id: int) -> str:
+    async def _call_get_vendor_invoices(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
 
-    async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
+    async def _call_get_vendor_payment_summary(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_payment_summary(vendor_id, self.session_context)
         )
 
-    async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
+    async def _call_get_vendor_contact_info(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_contact_info(vendor_id, self.session_context)
         )
@@ -1096,22 +1106,32 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
                 ]
             )
 
-    async def _call_get_vendor_details(self, vendor_id: int) -> str:
+    async def _call_get_vendor_details(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         result = await get_vendor_details(vendor_id, self.session_context)
         return json.dumps(result)
 
-    async def _call_get_invoice_details(self, invoice_id: int) -> str:
+    async def _call_get_invoice_details(self, invoice_id: int | None) -> str:
+        if invoice_id is None:
+            return json.dumps({"error": "invoice_id is required"})
         return json.dumps(await get_invoice_details(invoice_id, self.session_context))
 
-    async def _call_get_vendor_invoices(self, vendor_id: int) -> str:
+    async def _call_get_vendor_invoices(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(await get_vendor_invoices(vendor_id, self.session_context))
 
-    async def _call_get_vendor_payment_summary(self, vendor_id: int) -> str:
+    async def _call_get_vendor_payment_summary(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_payment_summary(vendor_id, self.session_context)
         )
 
-    async def _call_get_vendor_contact_info(self, vendor_id: int) -> str:
+    async def _call_get_vendor_contact_info(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_contact_info(vendor_id, self.session_context)
         )
@@ -1122,12 +1142,16 @@ Current date: {datetime.now(UTC).strftime("%Y-%m-%d")}"""
     async def _call_get_pending_actions_summary(self) -> str:
         return json.dumps(await get_pending_actions_summary(self.session_context))
 
-    async def _call_get_vendor_compliance_docs(self, vendor_id: int) -> str:
+    async def _call_get_vendor_compliance_docs(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_compliance_docs(vendor_id, self.session_context)
         )
 
-    async def _call_get_vendor_activity_report(self, vendor_id: int) -> str:
+    async def _call_get_vendor_activity_report(self, vendor_id: int | None) -> str:
+        if vendor_id is None:
+            return json.dumps({"error": "vendor_id is required"})
         return json.dumps(
             await get_vendor_activity_report(vendor_id, self.session_context)
         )
