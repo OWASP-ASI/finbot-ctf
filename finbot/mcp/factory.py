@@ -36,10 +36,19 @@ def _import_factory(dotted_path: str) -> Any:
 
 
 async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
-    """Apply user-supplied tool description overrides to a FastMCP server.
+    """Apply user-supplied tool overrides to a FastMCP server.
 
-    Modifies tool descriptions (the text the LLM sees) via the provider's
-    get_tool() API. This is the primary CTF attack surface for tool poisoning.
+    Modifies tool descriptions and/or parameter schemas (the text and
+    schema the LLM sees) via the provider's get_tool() API. This is the
+    primary CTF attack surface for tool poisoning -- both description
+    poisoning and parameter-schema poisoning.
+
+    Accepts "parameters" or "inputSchema" as the override key for the
+    schema (both are used in the wild -- "inputSchema" is the MCP
+    wire-protocol field name, "parameters" is fastmcp's internal Tool
+    attribute name that actually needs to be set for the override to take
+    effect; setting an "inputSchema" attribute directly on a Tool object
+    does nothing, since that name isn't a declared field there).
     """
     if not overrides:
         return
@@ -49,17 +58,76 @@ async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
         return
 
     for tool_name, override in overrides.items():
+        if not isinstance(override, dict):
+            # Malformed top-level structure (e.g. a tool's override is a
+            # bare string, not an object). The API-level validator rejects
+            # this at write time, but nothing guarantees every row in the
+            # DB went through that path (a future direct write, a seed
+            # script, a migration). override.get(...) below would raise
+            # AttributeError on a non-dict, uncaught -- crashing server
+            # creation entirely, not just tool listing. Skip it instead.
+            logger.warning(
+                "Ignoring malformed override for '%s': expected an object, got %r",
+                tool_name,
+                type(override).__name__,
+            )
+            continue
+
         new_description = override.get("description")
-        if new_description:
-            try:
-                tool = await provider.get_tool(tool_name)
-                if tool:
-                    tool.description = new_description
-                    logger.debug(
-                        "Applied tool override for '%s': description updated", tool_name
-                    )
-            except Exception:
-                logger.debug("Tool '%s' not found for override", tool_name)
+        if new_description is not None and not isinstance(new_description, str):
+            # Same failure shape as the parameters case below: succeeds
+            # silently on plain attribute assignment, then fails later in
+            # to_mcp_tool() when this server's tools are next listed.
+            logger.warning(
+                "Ignoring non-string description override for '%s': %r",
+                tool_name,
+                type(new_description).__name__,
+            )
+            new_description = None
+
+        # Presence-check, not truthiness: a deliberate "parameters": {}
+        # override (stripping every param off a tool) is falsy and must
+        # not be silently dropped the same way the original bug dropped
+        # parameters entirely.
+        if "parameters" in override:
+            new_parameters = override["parameters"]
+        elif "inputSchema" in override:
+            new_parameters = override["inputSchema"]
+        else:
+            new_parameters = None
+
+        if new_parameters is not None and not isinstance(new_parameters, dict):
+            # A non-dict schema doesn't fail here (pydantic doesn't
+            # validate on plain attribute assignment) -- it fails later,
+            # in unrelated code that lists this server's tools, breaking
+            # tool discovery entirely until the override is reset. Reject
+            # it at the one place that actually writes to the live tool.
+            logger.warning(
+                "Ignoring non-dict parameters override for '%s': %r",
+                tool_name,
+                type(new_parameters).__name__,
+            )
+            new_parameters = None
+
+        if not new_description and new_parameters is None:
+            continue
+
+        try:
+            tool = await provider.get_tool(tool_name)
+            if not tool:
+                continue
+            if new_description:
+                tool.description = new_description
+            if new_parameters is not None:
+                tool.parameters = new_parameters
+            logger.debug(
+                "Applied tool override for '%s': description=%s parameters=%s",
+                tool_name,
+                bool(new_description),
+                new_parameters is not None,
+            )
+        except Exception:
+            logger.debug("Tool '%s' not found for override", tool_name)
 
 
 async def create_mcp_server(

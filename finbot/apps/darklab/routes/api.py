@@ -5,7 +5,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from finbot.core.auth.middleware import get_session_context
@@ -35,6 +35,41 @@ def _get_mcp_defaults() -> dict:
 
 class ToolOverridesUpdate(BaseModel):
     tool_overrides: dict
+
+    @field_validator("tool_overrides")
+    @classmethod
+    def _validate_override_shape(cls, value: dict) -> dict:
+        """A malformed override -- a non-object entry, or a non-dict
+        "parameters"/"inputSchema", or a non-string "description" -- none
+        of these fail here or when applied to the live tool (fastmcp's
+        Tool doesn't validate on plain attribute assignment) -- they fail
+        later, in unrelated code that lists this server's tools, breaking
+        tool discovery (or, for a non-object entry, breaking server
+        creation entirely) until the override is reset. Reject all of
+        these at write time instead, with a clear error, rather than
+        letting a malformed override silently break a future, unrelated
+        request.
+        """
+        for tool_name, override in value.items():
+            if not isinstance(override, dict):
+                raise ValueError(
+                    f"Tool override for '{tool_name}' must be an object, "
+                    f"got {type(override).__name__}"
+                )
+            if "description" in override and not isinstance(
+                override["description"], str
+            ):
+                raise ValueError(
+                    f"Tool override for '{tool_name}': 'description' must "
+                    f"be a string, got {type(override['description']).__name__}"
+                )
+            for key in ("parameters", "inputSchema"):
+                if key in override and not isinstance(override[key], dict):
+                    raise ValueError(
+                        f"Tool override for '{tool_name}': '{key}' must be "
+                        f"an object, got {type(override[key]).__name__}"
+                    )
+        return value
 
 
 @router.get("/supply-chain/servers")
