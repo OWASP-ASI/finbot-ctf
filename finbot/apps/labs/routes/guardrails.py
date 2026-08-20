@@ -3,7 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from finbot.core.auth.middleware import get_session_context
+from finbot.core.auth.middleware import (
+    get_authenticated_session_context,
+    get_session_context,
+)
 from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import (
@@ -61,7 +64,7 @@ async def get_guardrail_config(
 @router.put("", response_model=GuardrailConfigResponse, status_code=200)
 async def upsert_guardrail_config(
     body: GuardrailConfigRequest,
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Create or update the guardrail webhook configuration."""
     # Validated here first, off the event loop with a bounded timeout --
@@ -94,7 +97,7 @@ async def upsert_guardrail_config(
 
 @router.post("/toggle", response_model=GuardrailConfigResponse)
 async def toggle_guardrail_enabled(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Toggle the enabled flag on the guardrail config."""
     with db_session() as db:
@@ -111,7 +114,7 @@ async def toggle_guardrail_enabled(
 
 @router.post("/rotate-secret", response_model=GuardrailConfigResponse)
 async def rotate_signing_secret(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Rotate the HMAC signing secret."""
     with db_session() as db:
@@ -128,7 +131,7 @@ async def rotate_signing_secret(
 
 @router.delete("", status_code=204)
 async def delete_guardrail_config(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Delete the guardrail webhook configuration."""
     with db_session() as db:
@@ -142,7 +145,7 @@ async def delete_guardrail_config(
 
 @router.post("/test")
 async def test_webhook_delivery(
-    session_context: SessionContext = Depends(get_session_context),
+    session_context: SessionContext = Depends(get_authenticated_session_context),
 ):
     """Send a test before_tool hook to the user's webhook and return the result."""
     svc = GuardrailHookService(
