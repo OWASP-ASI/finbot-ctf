@@ -418,7 +418,7 @@ class OrchestratorAgent(BaseAgent):
     def _capture_agent_context(self, agent_label: str, result: dict[str, Any]) -> None:
         """Store an agent's task_summary for downstream propagation."""
         summary = result.get("task_summary", "")
-        if summary:
+        if isinstance(summary, str) and summary.strip():
             self._workflow_context.append((agent_label, summary))
 
     @agent_tool
