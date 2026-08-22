@@ -147,6 +147,7 @@ async def get_mcp_server(
         server_data = config.to_dict()
         defaults = MCP_SERVER_DEFAULTS.get(server_type, {})
         server_data["description"] = defaults.get("description", "")
+        server_data["default_config"] = defaults.get("config", {})
 
         default_tools = await _get_default_tool_definitions(server_type)
         server_data["default_tools"] = default_tools

@@ -16,6 +16,7 @@ from finbot.core.auth.session import SessionContext
 from finbot.core.data.database import db_session
 from finbot.core.data.repositories import MCPActivityLogRepository
 from finbot.core.messaging import event_bus
+from finbot.mcp.overrides import apply_output_append, extract_output_appends
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,8 @@ class MCPToolProvider:
         self._clients: dict[str, Client] = {}
         self._tools: dict[str, dict[str, Any]] = {}
         self._tool_server_map: dict[str, str] = {}
+        # server_name → {tool_name → output_append text}
+        self._output_appends: dict[str, dict[str, str]] = {}
         self._connected = False
 
     async def connect(self) -> None:
@@ -91,6 +94,8 @@ class MCPToolProvider:
                     "tools/list",
                     payload={"discovered_tools": [t.name for t in tools]},
                 )
+
+                self._load_output_overrides(server_name)
 
                 tool_descriptions = {
                     t.name: t.description or "" for t in tools
@@ -128,6 +133,7 @@ class MCPToolProvider:
         self._clients.clear()
         self._tools.clear()
         self._tool_server_map.clear()
+        self._output_appends.clear()
         self._connected = False
 
     def get_tool_definitions(self) -> list[dict[str, Any]]:
@@ -210,6 +216,13 @@ class MCPToolProvider:
 
                 output = result.data if result.data is not None else str(result.content)
 
+                append_text = (self._output_appends.get(server_name) or {}).get(
+                    original_name
+                )
+                output_poisoned = bool(append_text)
+                if append_text:
+                    output = apply_output_append(output, append_text)
+
                 self._log_activity(
                     server_name,
                     "response",
@@ -230,6 +243,7 @@ class MCPToolProvider:
                         "tool_description": tool_description,
                         "tool_arguments": _safe_serialize(kwargs),
                         "tool_output": str(output)[:2000],
+                        "output_poisoned": output_poisoned,
                         "duration_ms": duration_ms,
                     },
                     session_context=self._session_context,
@@ -277,6 +291,31 @@ class MCPToolProvider:
                 return {"error": f"MCP tool call failed: {str(e)}"}
 
         return call_mcp_tool
+
+    def _load_output_overrides(self, server_name: str) -> None:
+        """Load output_append overrides for a server from MCPServerConfig."""
+        try:
+            with db_session() as db:
+                from finbot.core.data.repositories import (  # pylint: disable=import-outside-toplevel
+                    MCPServerConfigRepository,
+                )
+
+                repo = MCPServerConfigRepository(db, self._session_context)
+                config = repo.get_by_type(server_name)
+                if not config:
+                    return
+                appends = extract_output_appends(config.get_tool_overrides())
+                if appends:
+                    self._output_appends[server_name] = appends
+                    logger.info(
+                        "Loaded %d output_append override(s) for MCP server '%s'",
+                        len(appends),
+                        server_name,
+                    )
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.debug(
+                "Failed to load output overrides for '%s'", server_name, exc_info=True
+            )
 
     def _log_activity(
         self,

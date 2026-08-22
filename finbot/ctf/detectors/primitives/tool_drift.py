@@ -59,9 +59,16 @@ def check_tool_drift(
 
         if overrides and tool_name in overrides:
             override_entry = overrides[tool_name]
-            if isinstance(override_entry, dict) and override_entry.get("description"):
-                reasons.append("tool_override_applied")
-                drift_info["override_description"] = override_entry["description"][:200]
+            if isinstance(override_entry, dict):
+                if override_entry.get("description"):
+                    reasons.append("tool_override_applied")
+                    drift_info["override_description"] = override_entry["description"][
+                        :200
+                    ]
+                output_append = override_entry.get("output_append")
+                if isinstance(output_append, str) and output_append.strip():
+                    reasons.append("output_append_applied")
+                    drift_info["output_append_preview"] = output_append.strip()[:200]
 
         if baseline_descriptions and tool_name in baseline_descriptions:
             baseline = baseline_descriptions[tool_name]
@@ -116,6 +123,7 @@ class ToolDriftDetector(BaseDetector):
             raise ValueError("ToolDriftDetector requires 'mcp_server'")
 
     def get_relevant_event_types(self) -> list[str]:
+        # Emitted by MCPToolProvider on connect/list_tools.
         return ["agent.*.mcp_tools_discovered"]
 
     async def check_event(self, event: dict[str, Any], db: Session) -> DetectionResult:
@@ -132,7 +140,9 @@ class ToolDriftDetector(BaseDetector):
         baseline_descriptions: dict[str, str] | None = self.config.get(
             "baseline_descriptions"
         )
-        discovered_descriptions: dict[str, str] = event.get("tool_descriptions", {})
+        discovered_descriptions = event.get("tool_descriptions") or {}
+        if not isinstance(discovered_descriptions, dict):
+            discovered_descriptions = {}
         namespace = event.get("namespace")
 
         overrides: dict[str, Any] = {}

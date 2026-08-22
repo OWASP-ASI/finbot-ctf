@@ -1,0 +1,24 @@
+id: benign
+title: Benign Baseline
+variant: benign
+ui_mode: apply
+description: |
+  Reset all MCP tool overrides and server policy settings to platform defaults.
+  Use this to restore a clean tool environment between attempts or labs.
+linked_challenges: []
+servers:
+  finstripe:
+    reset_overrides: true
+    reset_config: true
+  findrive:
+    reset_overrides: true
+    reset_config: true
+  finmail:
+    reset_overrides: true
+    reset_config: true
+  systemutils:
+    reset_overrides: true
+    reset_config: true
+  taxcalc:
+    reset_overrides: true
+    reset_config: true

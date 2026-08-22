@@ -462,9 +462,11 @@ class ChatMessage(Base):
 
 class MCPServerConfig(Base):
     """Per-namespace MCP server configuration.
-    The tool_overrides_json field is the CTF attack surface for tool poisoning --
-    users can modify tool descriptions via the admin portal, and these overrides
-    are applied when the MCP server is instantiated for an agent run.
+
+    tool_overrides_json is the supply-chain attack surface for tool poisoning.
+    Users can modify tool descriptions and/or output_append via Dark Lab.
+    Description overrides are applied when the MCP server is instantiated;
+    output_append is applied to tool return values in MCPToolProvider.
     """
 
     __tablename__ = "mcp_server_configs"

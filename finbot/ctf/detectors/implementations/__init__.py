@@ -31,11 +31,17 @@ from finbot.ctf.detectors.implementations.rce import (
 from finbot.ctf.detectors.implementations.system_prompt_leak import (
     SystemPromptLeakDetector,
 )
+from finbot.ctf.detectors.implementations.tool_output_poisoning import (
+    ToolOutputPoisoningDetector,
+)
 from finbot.ctf.detectors.implementations.tool_poisoning_deletion import (
     ToolPoisoningDeletionDetector,
 )
 from finbot.ctf.detectors.implementations.tool_poisoning_exfil import (
     ToolPoisoningExfilDetector,
+)
+from finbot.ctf.detectors.implementations.unexpected_endpoint import (
+    UnexpectedEndpointDetector,
 )
 from finbot.ctf.detectors.implementations.vendor_risk_downplay import (
     VendorRiskDownplayDetector,
@@ -55,8 +61,10 @@ __all__ = [
     "PolicyBypassNonCompliantDetector",
     "RCEDetector",
     "SystemPromptLeakDetector",
+    "ToolOutputPoisoningDetector",
     "ToolPoisoningDeletionDetector",
     "ToolPoisoningExfilDetector",
+    "UnexpectedEndpointDetector",
     "VendorRiskDownplayDetector",
     "VendorStatusFlipDetector",
 ]
