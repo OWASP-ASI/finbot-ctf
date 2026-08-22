@@ -19,6 +19,10 @@ async function loadServerConfig(serverType) {
         if (!response.ok) throw new Error('Failed to load server config');
         const data = await response.json();
         serverData = data.server;
+        // Preserve default_config from platform defaults when API includes it
+        if (!serverData.default_config && data.default_config) {
+            serverData.default_config = data.default_config;
+        }
 
         document.getElementById('config-page-title').textContent = serverData.display_name + ' Configuration';
         document.getElementById('config-page-subtitle').textContent = serverData.description || `Configure ${serverData.display_name} MCP server`;
@@ -36,11 +40,15 @@ function renderConfig(server) {
 
     let configFieldsHtml = '';
     for (const [key, value] of Object.entries(config)) {
+        const label = configLabel(key);
+        const help = configHelp(key, server.default_config ? server.default_config[key] : undefined);
+
         if (typeof value === 'object' && value !== null) {
             const jsonStr = JSON.stringify(value, null, 2);
             configFieldsHtml += `
                 <div class="py-3">
-                    <label class="text-sm text-text-secondary font-medium block mb-2">${esc(key)}</label>
+                    <label class="text-sm text-text-secondary font-medium block mb-1">${esc(label)}</label>
+                    ${help ? `<p class="text-xs text-text-secondary mb-2">${help}</p>` : ''}
                     <textarea class="tool-textarea config-json-input" data-config-key="${esc(key)}"
                         rows="${Math.min(Math.max(jsonStr.split('\n').length, 3), 12)}">${esc(jsonStr)}</textarea>
                 </div>
@@ -48,10 +56,15 @@ function renderConfig(server) {
         } else {
             const type = typeof value === 'number' ? 'number' : 'text';
             configFieldsHtml += `
-                <div class="flex items-center justify-between py-2">
-                    <label class="text-sm text-text-secondary font-medium">${esc(key)}</label>
-                    <input type="${type}" name="config-${key}" value="${esc(String(value))}"
-                        class="config-input w-48 text-right" data-config-key="${esc(key)}">
+                <div class="py-3">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <label class="text-sm text-text-secondary font-medium block">${esc(label)}</label>
+                            ${help ? `<p class="text-xs text-text-secondary mt-1">${help}</p>` : ''}
+                        </div>
+                        <input type="${type}" name="config-${key}" value="${esc(String(value))}"
+                            class="config-input w-48 text-right" data-config-key="${esc(key)}">
+                    </div>
                 </div>
             `;
         }
@@ -86,7 +99,10 @@ function renderConfig(server) {
         ${configFieldsHtml ? `
         <div class="bg-portal-bg-secondary border border-admin-primary/20 rounded-xl overflow-hidden mb-8">
             <div class="px-6 py-4 border-b border-admin-primary/10 flex items-center justify-between">
-                <h2 class="text-lg font-bold text-text-bright">Server Settings</h2>
+                <div>
+                    <h2 class="text-lg font-bold text-text-bright">Server Policy & Settings</h2>
+                    <p class="text-xs text-text-secondary mt-1">Payment limits and enabled tools act as authorization policy for agents.</p>
+                </div>
                 <button id="save-config-btn" class="text-sm px-4 py-1.5 rounded-lg bg-admin-primary/20 text-admin-primary border border-admin-primary/30 hover:bg-admin-primary/30 transition-colors">
                     Save Settings
                 </button>
@@ -97,6 +113,30 @@ function renderConfig(server) {
         </div>
         ` : ''}
     `;
+}
+
+function configLabel(key) {
+    const labels = {
+        max_payment: 'Max payment (authorization limit)',
+        mock_balance: 'Mock account balance',
+        currency: 'Currency',
+        account_id: 'Account ID',
+        enabled_tools: 'Enabled tools (permission set)',
+        mock_hostname: 'Mock hostname',
+        mock_os: 'Mock OS',
+    };
+    return labels[key] || key;
+}
+
+function configHelp(key, defaultVal) {
+    if (key === 'max_payment') {
+        const tip = defaultVal !== undefined ? ` Default: ${defaultVal} (permissive).` : '';
+        return `FinStripe rejects transfers above this amount.${tip} Lower it to harden policy; raise it further to weaken.`;
+    }
+    if (key === 'enabled_tools') {
+        return 'Only listed tools are exposed to agents. High-risk tools include network_request and execute_script.';
+    }
+    return '';
 }
 
 function attachConfigHandlers(serverType) {

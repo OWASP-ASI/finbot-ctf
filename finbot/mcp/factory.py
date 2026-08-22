@@ -39,7 +39,8 @@ async def _apply_tool_overrides(server: FastMCP, overrides: dict) -> None:
     """Apply user-supplied tool description overrides to a FastMCP server.
 
     Modifies tool descriptions (the text the LLM sees) via the provider's
-    get_tool() API. This is the primary CTF attack surface for tool poisoning.
+    get_tool() API. Output poisoning (``output_append``) is applied at call
+    time in MCPToolProvider — see finbot.mcp.overrides.
     """
     if not overrides:
         return

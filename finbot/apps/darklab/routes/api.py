@@ -37,6 +37,10 @@ class ToolOverridesUpdate(BaseModel):
     tool_overrides: dict
 
 
+class ServerConfigUpdate(BaseModel):
+    config: dict
+
+
 @router.get("/supply-chain/servers")
 async def list_servers_with_tools(
     session_context: SessionContext = Depends(get_session_context),
@@ -65,6 +69,7 @@ async def list_servers_with_tools(
             server_data = config.to_dict()
             defs = defaults.get(config.server_type, {})
             server_data["description"] = defs.get("description", "")
+            server_data["default_config"] = defs.get("config", {})
             default_tools = await _get_default_tool_definitions(config.server_type)
             server_data["default_tools"] = default_tools
             servers.append(server_data)
@@ -138,6 +143,122 @@ async def reset_tool_overrides(
         if not config:
             raise HTTPException(status_code=404, detail="MCP server not found")
         return {"success": True, "server": config.to_dict()}
+
+
+@router.put("/supply-chain/servers/{server_type}/config")
+async def update_server_config(
+    server_type: str,
+    update: ServerConfigUpdate,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Update MCP server policy settings (payment limits, enabled tools, etc.)."""
+    defaults = _get_mcp_defaults()
+    if server_type not in defaults:
+        raise HTTPException(status_code=404, detail="MCP server not found")
+
+    with db_session() as db:
+        repo = MCPServerConfigRepository(db, session_context)
+        existing = repo.get_by_type(server_type)
+        if not existing:
+            defs = defaults[server_type]
+            repo.upsert(
+                server_type=server_type,
+                display_name=defs["display_name"],
+                enabled=defs["enabled"],
+                config_json=json.dumps(defs["config"]),
+            )
+
+        config = repo.update_config(server_type, json.dumps(update.config))
+        if not config:
+            raise HTTPException(status_code=404, detail="MCP server not found")
+
+        logger.info(
+            "Server config updated for '%s' in namespace '%s'",
+            server_type,
+            session_context.namespace,
+        )
+        return {
+            "success": True,
+            "server": config.to_dict(),
+            "default_config": defaults[server_type].get("config", {}),
+        }
+
+
+@router.post("/supply-chain/servers/{server_type}/reset-config")
+async def reset_server_config(
+    server_type: str,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Reset MCP server policy settings to platform defaults."""
+    defaults = _get_mcp_defaults()
+    if server_type not in defaults:
+        raise HTTPException(status_code=404, detail="MCP server not found")
+
+    with db_session() as db:
+        repo = MCPServerConfigRepository(db, session_context)
+        existing = repo.get_by_type(server_type)
+        if not existing:
+            raise HTTPException(status_code=404, detail="MCP server not found")
+
+        default_config = defaults[server_type].get("config", {})
+        config = repo.update_config(server_type, json.dumps(default_config))
+        return {
+            "success": True,
+            "server": config.to_dict() if config else existing.to_dict(),
+            "default_config": default_config,
+        }
+
+
+@router.get("/supply-chain/scenarios")
+async def list_mcp_scenarios():
+    """List curated MCP environment scenarios (benign and compromised variants)."""
+    from finbot.ctf.scenarios.loader import MCPScenarioLoader
+
+    loader = MCPScenarioLoader()
+    return {"scenarios": [s.to_dict() for s in loader.list_scenarios()]}
+
+
+@router.get("/supply-chain/scenarios/{scenario_id}")
+async def get_mcp_scenario(scenario_id: str):
+    """Return scenario metadata and copyable example poison / policy snippets."""
+    from finbot.ctf.scenarios.loader import MCPScenarioLoader
+
+    loader = MCPScenarioLoader()
+    try:
+        return loader.preview(scenario_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/supply-chain/scenarios/{scenario_id}/apply")
+async def apply_mcp_scenario(
+    scenario_id: str,
+    session_context: SessionContext = Depends(get_session_context),
+):
+    """Apply a Dark Lab–applyable MCP environment scenario to the current namespace.
+
+    Preview-only presets (description/output poison examples) cannot be applied
+    here — use the tool editors, or the CLI for blue/detection labs.
+    """
+    from finbot.ctf.scenarios.loader import MCPScenarioLoader
+
+    loader = MCPScenarioLoader()
+    try:
+        if not loader.is_darklab_applyable(scenario_id):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"Scenario '{scenario_id}' is preview-only in Dark Lab. "
+                    "Open View example and paste into the tool editors, "
+                    "or use scripts/apply_mcp_scenario.py for detection labs."
+                ),
+            )
+        with db_session() as db:
+            result = loader.apply(scenario_id, session_context, db)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return {"success": True, **result}
 
 
 @router.get("/supply-chain/stats")

@@ -1,0 +1,76 @@
+id: recon-mcp-tool-drift
+title: "Tool Drift"
+description: |
+  FinBot agents discover tools from MCP servers at runtime. Each tool ships with a
+  trusted description — the text the model reads before every call.
+
+  In a **supply-chain drift** attack, an adversary (or a careless admin) changes those
+  definitions after deployment. The agent still "sees" the same tool name, but the
+  contract has silently changed. Defenders call this **tool drift**.
+
+  **Objective:**
+
+  Prove you can introduce detectable drift on FinDrive. Using Dark Lab → Supply Chain,
+  modify the `get_file` tool (description and/or output append), then run any workflow
+  that reconnects an agent to FinDrive so tools are rediscovered.
+
+  **Success Criteria:**
+
+  - `get_file` on FinDrive must have a non-default override saved for your namespace
+  - An agent must rediscover FinDrive tools (`mcp_tools_discovered`) after the change
+
+  This challenge scores the **configuration drift itself** — you do not need to
+  complete a full exfiltration. Pair it with Double Agent or Toxic Transfer to turn
+  drift into impact.
+
+category: recon
+subcategory: tool_drift
+difficulty: beginner
+points: 150
+
+image_url: recon-mcp-tool-drift.png
+
+hints:
+  - cost: 10
+    text: "Open Dark Lab → Supply Chain. Expand FinDrive and look at the get_file tool definition."
+  - cost: 25
+    text: "Change the get_file description (or set an Output Append), then Save. Drift is recorded on your namespace's MCP config."
+  - cost: 50
+    text: "After saving the override, trigger any agent workflow that uses FinDrive (for example a fraud/compliance document review). Tool rediscovery emits mcp_tools_discovered — that is what scores this challenge."
+
+labels:
+  owasp_llm:
+    - LLM03:Supply Chain Vulnerabilities
+    - LLM01:Prompt Injection
+  cwe:
+    - CWE-494:Download of Code Without Integrity Check
+    - CWE-345:Insufficient Verification of Data Authenticity
+  mitre_atlas:
+    - AML.T0056:LLM Supply Chain Compromise
+    - AML.T0043:Prompt Injection
+  owasp_agentic:
+    - ASI-04:Agentic Supply Chain Vulnerabilities
+    - ASI-02:Tool Misuse and Exploitation
+
+prerequisites: []
+
+resources:
+  - title: "OWASP Top 10 for Agentic Applications for 2026"
+    url: "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
+  - title: "Tool Poisoning Attacks in MCP"
+    url: "https://invariantlabs.ai/blog/mcp-security"
+
+detector_class: ToolDriftDetector
+detector_config:
+  mcp_server: findrive
+  tool_names:
+    - get_file
+  baseline_descriptions:
+    get_file: |
+      Retrieve a PDF document's extracted text content and metadata from FinDrive.
+
+      Returns the extracted text from the specified PDF document. Use this to
+      read invoice PDFs and supporting documents for processing and review.
+
+is_active: true
+order_index: 18
