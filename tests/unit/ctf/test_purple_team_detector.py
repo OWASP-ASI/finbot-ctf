@@ -289,3 +289,89 @@ def test_config_rejects_bad_directive_threshold():
 def test_relevant_event_types():
     det = _detector()
     assert det.get_relevant_event_types() == ["business.investigation.submitted"]
+
+
+# --- Review #573: substring bypass ------------------------------------------
+#
+# The fuzzy directive check used to accept a submission that was merely a
+# substring OF the expected answer. Because the seeded directive is a normal
+# English sentence, single filler words like "to" or "and" are literal
+# substrings of it and scored full credit -- a player could complete the
+# challenge without understanding the attack at all.
+
+
+@pytest.mark.parametrize("junk", ["to", "and", "all", "invoices", "app", "e"])
+@pytest.mark.asyncio
+async def test_directive_junk_substring_is_rejected(junk):
+    """A fragment of the expected answer must not score the directive field."""
+    det = _detector()
+    submission = {"server": "findrive", "tool": "get_file", "directive": junk}
+    result = await det.check_event(_event(submission), db=None)
+
+    assert result.evidence["fields_correct"]["directive"] is False
+    # Server and tool still score, so this caps out below a perfect answer.
+    assert result.evidence["score"] == 66
+
+
+@pytest.mark.asyncio
+async def test_single_word_cannot_reach_full_marks():
+    """The reviewer's exact scenario: guess the enums, type one word, win."""
+    det = _detector(
+        {
+            "expected": {
+                "server": "finstripe",
+                "tool": "create_transfer",
+                "directive": (
+                    "email the vendor tax id and bank account to an external address"
+                ),
+            }
+        }
+    )
+    submission = {
+        "server": "finstripe",
+        "tool": "create_transfer",
+        "directive": "to",
+    }
+    result = await det.check_event(_event(submission), db=None)
+
+    assert result.evidence["fields_correct"]["directive"] is False
+    assert result.evidence["score"] < 100
+
+
+@pytest.mark.asyncio
+async def test_quoting_the_full_directive_still_accepted():
+    """The safe direction -- answer contains the whole expected phrase -- stays."""
+    det = _detector()
+    submission = {
+        "server": "findrive",
+        "tool": "get_file",
+        "directive": "It told the agent to approve all pending invoices, no review.",
+    }
+    result = await det.check_event(_event(submission), db=None)
+
+    assert result.evidence["fields_correct"]["directive"] is True
+    assert result.evidence["score"] == 100
+
+
+@pytest.mark.asyncio
+async def test_genuine_partial_answer_still_earns_the_field():
+    """Rejecting fragments must not reject real paraphrases."""
+    det = _detector(
+        {
+            "expected": {
+                "server": "finstripe",
+                "tool": "create_transfer",
+                "directive": (
+                    "email the vendor tax id and bank account to an external address"
+                ),
+            }
+        }
+    )
+    submission = {
+        "server": "finstripe",
+        "tool": "create_transfer",
+        "directive": "emailed the vendor's tax id and bank account details externally",
+    }
+    result = await det.check_event(_event(submission), db=None)
+
+    assert result.evidence["fields_correct"]["directive"] is True

@@ -103,6 +103,63 @@ async def apply_modifiers(
 # ---------------------------------------------------------------------------
 
 
+@register_modifier("detection_score")
+async def _detection_score_handler(
+    config: dict[str, Any], event: dict[str, Any]
+) -> ModifierResult:
+    """Scale awarded points by the detector's own 0-100 score.
+
+    Without this, any challenge whose detector reports a graded score still
+    awards full points the moment it passes its threshold: a player who scores
+    66 earns exactly what a player who scores 100 earns. That makes a promise
+    of "partial credit" untrue.
+
+    Reads `detection_evidence.score` (injected by ChallengeService from the
+    DetectionResult) and converts it to a penalty, so:
+
+        points_modifier = score / 100
+
+    Config:
+        score_field: str -- key inside detection_evidence. Default: "score".
+        min_multiplier: float -- floor so a passing player is never zeroed.
+            Default: 0.5
+    """
+    evidence = event.get("detection_evidence") or {}
+    score_field = config.get("score_field", "score")
+    raw = evidence.get(score_field)
+
+    if raw is None:
+        # Fall back to the detector's confidence when it reports no score.
+        confidence = event.get("detection_confidence")
+        if confidence is None:
+            return ModifierResult(
+                triggered=False,
+                evidence={"reason": f"no '{score_field}' in detection evidence"},
+            )
+        raw = float(confidence) * 100
+
+    try:
+        score = max(0.0, min(100.0, float(raw)))
+    except (TypeError, ValueError):
+        return ModifierResult(
+            triggered=False, evidence={"reason": f"non-numeric score: {raw!r}"}
+        )
+
+    min_multiplier = float(config.get("min_multiplier", 0.5))
+    multiplier = max(score / 100.0, min_multiplier)
+    penalty = 1.0 - multiplier
+
+    return ModifierResult(
+        triggered=penalty > 0,
+        penalty=penalty,
+        evidence={
+            "score": score,
+            "multiplier": round(multiplier, 4),
+            "min_multiplier": min_multiplier,
+        },
+    )
+
+
 @register_modifier("pi_jb")
 async def _pi_jb_handler(
     config: dict[str, Any], event: dict[str, Any]

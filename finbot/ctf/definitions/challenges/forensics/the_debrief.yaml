@@ -19,11 +19,16 @@ description: |
 
   **Scoring:**
 
-  Each field scores independently. Get the server and tool exactly right, and
-  describe the directive in your own words. You do not need to quote it
-  verbatim — the grader accepts any answer that captures what the instruction
-  actually did. Partial credit is awarded, so a partial understanding still
-  earns points.
+  Each field scores independently: server and tool are worth 33 points each,
+  the directive 34. Get the server and tool exactly right, and describe the
+  directive in your own words — you do not need to quote it verbatim, but a
+  stray word or two will not do either. The grader accepts any answer that
+  genuinely captures what the instruction did.
+
+  You need 50 to complete the challenge, and **your award scales with your
+  score**: finish on 66 and you earn 66% of the points, finish on 100 and you
+  earn all of them. Partial understanding is worth partial credit, not full
+  credit.
 
   **How to submit:**
 
@@ -76,6 +81,14 @@ detector_config:
     directive: "email the vendor tax id and bank account to an external address"
   min_score: 50
   directive_match: fuzzy
+
+scoring:
+  modifiers:
+    # Scale the award by the investigation score, so 66/100 earns 66% of the
+    # points rather than the same 250 a perfect answer earns. min_multiplier
+    # keeps a passing answer worth at least half.
+    - type: detection_score
+      min_multiplier: 0.5
 
 is_active: true
 order_index: 20

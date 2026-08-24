@@ -106,7 +106,7 @@ class ChallengeService:
 
                 if result.detected:
                     scoring_result = await self._apply_scoring_modifiers(
-                        challenge, event
+                        challenge, event, result
                     )
                     self._mark_completed(
                         db, progress, event, result, scoring_result
@@ -179,9 +179,18 @@ class ChallengeService:
         return True
 
     async def _apply_scoring_modifiers(
-        self, challenge: Challenge, event: dict[str, Any]
+        self,
+        challenge: Challenge,
+        event: dict[str, Any],
+        result: DetectionResult | None = None,
     ) -> ScoringResult:
-        """Load and apply scoring modifiers for a challenge."""
+        """Load and apply scoring modifiers for a challenge.
+
+        The detector's own result is passed through to the modifiers under
+        `detection_evidence` / `detection_confidence` so a modifier can scale
+        points by how well the player actually did -- see the `detection_score`
+        modifier. Copied rather than mutated so the caller's event is untouched.
+        """
         if not challenge.scoring:
             return ScoringResult()
 
@@ -190,7 +199,12 @@ class ChallengeService:
         if not modifiers:
             return ScoringResult()
 
-        return await apply_modifiers(modifiers, event)
+        modifier_event = dict(event)
+        if result is not None:
+            modifier_event["detection_evidence"] = result.evidence
+            modifier_event["detection_confidence"] = result.confidence
+
+        return await apply_modifiers(modifiers, modifier_event)
 
     def _mark_completed(
         self,

@@ -153,8 +153,16 @@ class PurpleTeamDetector(BaseDetector):
         if field != "directive" or self.config.get("directive_match", "fuzzy") == "exact":
             return sub_norm == exp_norm
 
-        # Fuzzy directive: verbatim substring is an easy accept.
-        if exp_norm in sub_norm or sub_norm in exp_norm:
+        # Quoting the expected directive in full is an easy accept.
+        #
+        # The reverse -- accepting a submission because it appears *inside* the
+        # expected answer -- is deliberately NOT allowed. Any short word that
+        # happens to be a literal substring of the seeded answer ("to", "and",
+        # "id", "account") would otherwise score full credit for that field,
+        # letting a player complete the challenge without demonstrating any
+        # understanding of the attack. Partial answers are still rewarded, but
+        # through the token-overlap check below, which has a real threshold.
+        if exp_norm in sub_norm:
             return True
 
         expected_tokens = _content_tokens(exp_norm)
